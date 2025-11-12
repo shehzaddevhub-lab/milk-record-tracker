@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#1e40af"> 
     
     <!-- IMPORTANT: This manifest now correctly points to your external icon files for PWA installation -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk1pbGsgUmVjb3JkIFRyYWNrZXIiLAogICJzaG9ydF9uYW1lIjogIk1pbGsgVHJhY2tlciIsCiAgImRlc2NyaXB0aW9uIjogIkRhaWx5IE1pbGsgUmVjb3JkIGFuZCBQYXltZW50IFRyYWNrZXIgaW4gVXJkdS4gKOCq4oOz4oGj4oGu8oKkIeKCp+KCnOKCp+KCp+KBjOKBp+KCp+KCmOKCp+KBjOKCp+KCpOKBquKAjuKCnOKCp+KAk+KCuOKBr+KCp+KAk+KAo+KBqOKAp+KAk+KAoeKBlOOCguKCmOKCp+KCo+KAkOKAgjApIiwKICAic3RhcnRfdXJsIjogIi4vIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzFlNDBhZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogIi9pY29uLTE5MngxOTIucG5nIiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogIi9pY29uLTUxMngxNTEyLnBuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2UvcG5nIgogICAgfQogIF0KfQ==">
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk1pbGsgUmVjb3JkIFRyYWNrZXIiLAogICJzaG9ydF9uYW1lIjogIk1pbGsgVHJhY2tlciIsCiAgImRlc2NyaXB0aW9uIjogIkRhaWx5IE1pbGsgUmVjb3JkIGFuZCBQYXltZW50IFRyYWNrZXIgaW4gVXJkdS4gKOCq4oOz4oGj4oGu8oKkIeKCp+KCnOKCp+KCp+KBjOKBp+KCp+KCmOKCp+KBjOKCp+KCpOKBquKAjuKCnOKCp+KAk+KCuOKBr+KCp+KAk+KAo+KBqOKAp+KAk+KAoeKBlOOCguKCmOKCp+KCo+KAkOKAgjApIiwKICAic3RhcnRfdXJsIjogIi4vIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzFlNDBhZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogIi9pY29uLTE5MngxOTIucG5nIiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogIi9pY29uLTUxMngxNTEyLnBuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGU6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
     
     <!-- Apple and Standard Icons (Requires files to be in the root directory) -->
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -484,7 +484,7 @@
                                 </tr>
                             </thead>
                             <tbody id="milk-history-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Milk History Records will be injected here -->
+                                <!-- Milk Records will be injected here -->
                             </tbody>
                         </table>
                     </div>
@@ -571,8 +571,24 @@
         // --- GLOBAL SETUP ---
         setLogLevel('Debug');
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
+        // ---------------------------------------------------------------------
+        // ********** 🛑 IMPORTANT: REPLACE THIS CONFIG WITH YOUR OWN FIREBASE DETAILS 🛑 **********
+        // ---------------------------------------------------------------------
+        // 
+        // 🚨 آپ کو اپنا Firebase Config یہاں لگانا ہے! 🚨
+        const appId = "milk-tracker-default-id"; // آپ کا Firebase App ID (اگر config میں نہیں ہے)
+        const firebaseConfig = {
+            // آپ کو اس {} بلاک کو اپنے اصلی Firebase config سے بدلنا ہے
+            // فی الحال یہ ایک فرضی کوڈ ہے تاکہ آپ اس HTML فائل کو GitHub پر اپلوڈ کر سکیں
+            apiKey: "DUMMY_API_KEY_TO_AVOID_CRITICAL_ERROR",
+            authDomain: "dummy-milk-tracker.firebaseapp.com",
+            projectId: "dummy-milk-tracker-project",
+            storageBucket: "dummy-milk-tracker.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdefg"
+        };
+        // ---------------------------------------------------------------------
+
         
         // Define the group ID for shared access based on the key
         const SHARED_BASE_UID = 'shared_milk_tracker_'; 
@@ -906,6 +922,11 @@
         async function initializeFirebase() {
             showLoading();
             try {
+                // 🛑 CHECK FOR CONFIG BEFORE INITIALIZING 🛑
+                if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+                    throw new Error("Firebase config is missing or invalid. Please check the config object in index.html.");
+                }
+
                 const app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -954,7 +975,13 @@
             } catch (error) {
                 console.error("Firebase Initialization Failed:", error);
                 hideLoading();
-                showModal('Firebase Initialization Failed. Check internet/config. (فائر بیس شروع کرنے میں ناکامی)', 'Critical Error'); 
+                // Show a clear error to the user if config is the problem
+                if (error.message.includes("config is missing")) {
+                     showModal('Firebase Config is missing! Please update index.html with your Firebase credentials.', 'Critical Config Error');
+                } else {
+                     showModal('Firebase Initialization Failed. Check internet/config. (فائر بیس شروع کرنے میں ناکامی)', 'Critical Error'); 
+                }
+               
             }
         }
         
@@ -1566,7 +1593,7 @@
                 const paymentHeaders = ['Date (تاریخ)', 'Amount Paid (Rs.)', '', '']; // Empty columns for alignment
                 const paymentCSV = convertToCSV(paymentRecords, paymentHeaders, 'payment');
                 
-                const milkRecordsTitle = `\n\n--- MILK RECORDS (दूध का रिकॉर्ड, Price: Rs. ${pricePerUnit}) ---\n`;
+                const milkRecordsTitle = `\n\n--- MILK RECORDS (दूध का ریکارڈ, Price: Rs. ${pricePerUnit}) ---\n`;
                 const paymentRecordsTitle = `\n\n--- PAYMENT HISTORY (ادائیگی کی تاریخ) ---\n`;
 
                 // Combine all data into one file
