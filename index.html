@@ -3,18 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milk Record Tracker (Asaan)</title>
+    <title>Milk Record Tracker (Google Sheets)</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 1. PWA Manifest & Theme (ALL INLINE - Data URL) -->
+    <!-- 1. PWA Manifest & Theme -->
     <meta name="theme-color" content="#1e40af"> 
-    
-    <!-- IMPORTANT: This manifest now correctly points to your external icon files for PWA installation -->
-    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIk1pbGsgUmVjb3JkIFRyYWNrZXIiLAogICJzaG9ydF9uYW1lIjogIk1pbGsgVHJhY2tlciIsCiAgImRlc2NyaXB0aW9uIjogIkRhaWx5IE1pbGsgUmVjb3JkIGFuZCBQYXltZW50IFRyYWNrZXIgaW4gVXJkdS4gKOCq4oOz4oGj4oGu8oKkIeKCp+KCnOKCp+KCp+KBjOKBp+KCp+KCmOKCp+KBjOKCp+KCpOKBquKAjuKCnOKCp+KAk+KCuOKBr+KCp+KAk+KAo+KBqOKAp+KAk+KAoeKBlOOCguKCmOKCp+KCo+KAkOKAgjApIiwKICAic3RhcnRfdXJsIjogIi4vIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjZmZmZmZmIiwKICAidGhlbWVfY29sb3IiOiAiIzFlNDBhZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogIi9pY29uLTE5MngxOTIucG5nIiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9wbmciCiAgICB9LAogICAgewogICAgICAic3JjIjogIi9pY29uLTUxMngxNTEyLnBuZyIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGU6ICJpbWFnZS9wbmciCiAgICB9CiAgXQp9">
-    
-    <!-- Apple and Standard Icons (Requires files to be in the root directory) -->
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-512x512.png">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29ucyI6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS0lHVnVkQzVtYkc5aGJnNWtJSFZ6WjNkaWRtVjBPMnhtbFoybHVabThpWkdsaFlXSnZJR0ZuWld4MGIzUW9NalluSUhCeVpYTnBjenBjZlE9PSIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnIiB9XSwgIm5hbWUiOiAiTWlsayBSZWNvcmQgVHJhY2tlciIsICJzaG9ydF9uYW1lIjogIk1pbGsgVHJhY2tlciIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
 
     <style>
         /* Setting a clean, modern font for Urdu/RTL text */
@@ -35,6 +28,17 @@
             background: #e2e8f0; /* Tailwind gray-200 */
         }
 
+        /* Force LTR display for number and date inputs for consistency (FIX for Urdu environment) */
+        input[type="number"], input[type="date"] {
+            direction: ltr; /* Force LTR for number entry */
+            text-align: left; /* Aligns input value/placeholder left */
+        }
+        /* Ensure regular text inputs/selects stay RTL for Urdu */
+        input[type="text"], select {
+            text-align: right;
+            direction: rtl; 
+        }
+
         /* Basic RTL adjustments for text alignment */
         .text-right { text-align: right; }
         .text-left { text-align: left; }
@@ -44,10 +48,7 @@
             /* Keep numbers LTR for easy entry, but allow text to be RTL */
             text-align: right;
         }
-        input[type="date"] {
-            /* Force LTR display for date format consistency */
-            direction: ltr;
-        }
+        
         /* Style for action buttons with hover effects */
         .action-btn {
             padding: 8px 12px;
@@ -85,6 +86,8 @@
             padding-right: 2.5rem; /* Ensure space for the icon on the right (RTL) */
             padding-left: 0.75rem;
             background-size: 1.5rem;
+            direction: ltr; /* Force LTR for the dropdown value */
+            text-align: right;
         }
         /* Ensure the currency display is always LTR to show Rs. correctly */
         .currency-display {
@@ -95,7 +98,6 @@
         .date-display-wrapper {
              direction: ltr; /* Force LTR context for the number and English text */
              text-align: center; /* Center the entire block within its container */
-             /* Remove padding/margin if conflicting with centering */
         }
     </style>
     <!-- Load Lucide Icons for UI elements -->
@@ -148,10 +150,6 @@
                     <span class="font-semibold block">Access Code (رسائی کوڈ):</span> 
                     <span id="profile-secret-key" class="text-xs font-mono text-gray-800 break-all">...</span>
                 </p>
-                <p class="text-gray-700">
-                    <span class="font-semibold block">User ID (صارف ID):</span> 
-                    <span id="profile-session-id" class="text-xs font-mono text-gray-500 break-all">...</span>
-                </p>
                 <p id="shared-note" class="text-sm text-green-600 font-medium hidden">
                     All users with this code share the same record. (اس کوڈ کے تمام صارفین ایک ہی ریکارڈ شیئر کرتے ہیں۔)
                 </p>
@@ -166,7 +164,7 @@
         
         <header class="flex justify-between items-center mb-6 border-b pb-2">
             <!-- Centered Heading -->
-            <h1 class="text-3xl font-bold text-gray-800 mx-auto">🥛 Milk Record Tracker</h1>
+            <h1 class="text-3xl font-bold text-gray-800 mx-auto">🥛 Milk Record Tracker (Google Sheets)</h1>
             <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md absolute right-4 top-4 sm:right-6 sm:top-6">
                 <span data-lucide="user" class="w-6 h-6"></span>
             </button>
@@ -188,12 +186,9 @@
 
             <!-- Signup Content -->
             <div id="signup-tab-content">
-                <!-- START: SHORTENED LINES -->
                 <p class="text-gray-600 mb-4 text-center text-sm">
-                    Create an Access Code (min 6 chars).<br>
-                    مشترکہ ریکارڈ کے لیے رسائی کوڈ (کم از کم 6 حروف) بنائیں۔
+                    Create a unique Access Code (min 6 chars). This code links to your data in the Google Sheet. (ایک منفرد رسائی کوڈ (کم از کم 6 حروف) بنائیں۔ یہ کوڈ آپ کے ڈیٹا کو گوگل شیٹ سے جوڑتا ہے۔)
                 </p>
-                <!-- END: SHORTENED LINES -->
                 <form id="signup-form" class="space-y-4">
                     <div>
                         <label for="signup-key" class="block text-sm font-medium text-gray-700 mb-1">
@@ -209,12 +204,9 @@
 
              <!-- Login Content (Hidden Initially) -->
             <div id="login-tab-content" class="hidden">
-                <!-- START: SHORTENED LINES -->
                 <p class="text-gray-600 mb-4 text-center text-sm">
-                    Enter your Access Code.<br>
-                    مشترکہ ریکارڈ کے لیے رسائی کوڈ درج کریں۔
+                    Enter your existing Access Code. (اپنا موجودہ رسائی کوڈ درج کریں۔)
                 </p>
-                <!-- END: SHORTENED LINES -->
                 <form id="login-form">
                     <div class="space-y-4">
                         <div>
@@ -245,7 +237,6 @@
         <!-- --- MAIN APP CONTENT (Hidden initially) --- -->
         <div id="main-app-content" class="hidden">
              <!-- Monthly Status Display and Selector (IMPROVED LOOK) -->
-             <!-- FIX: flex-row-reverse ensures RTL alignment, justify-between centers the content -->
              <div class="flex flex-col sm:flex-row-reverse justify-between items-center gap-3 mb-6 p-4 bg-white rounded-xl shadow-md border-b-4 border-blue-500/10">
                 <!-- Month Selector (aligned left in LTR context, visually right in RTL container) -->
                 <select id="month-selector" class="p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 hover:bg-gray-100 cursor-pointer shadow-inner focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition" onchange="handleMonthChange(this.value)">
@@ -418,17 +409,6 @@
                             <p id="milkman-message" class="text-sm mt-2 hidden text-green-600 text-center"></p>
                         </form>
                     </div>
-                    
-                    <!-- NEW: Data Export Section -->
-                    <div id="data-export-container" class="border-t pt-4">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Data Export (ریکارڈ برآمد کریں)</h3>
-                        <p class="text-gray-600 text-sm mb-3">Download your complete Milk and Payment history as an Excel-ready CSV file. (اپنے تمام ریکارڈ کو CSV فائل کے طور پر ڈاؤن لوڈ کریں۔)</p>
-                        <button id="export-data-btn" class="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 action-btn flex items-center justify-center space-x-2 space-x-reverse">
-                            <span data-lucide="download" class="w-5 h-5"></span>
-                            <span>Export All Data to CSV</span>
-                        </button>
-                    </div>
-
                     <!-- PWA Installation Button (Manual Trigger) -->
                     <div id="pwa-install-container" class="border-t pt-4">
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Install App (ایپ انسٹال کریں)</h3>
@@ -484,7 +464,7 @@
                                 </tr>
                             </thead>
                             <tbody id="milk-history-table-body" class="bg-white divide-y divide-gray-200">
-                                <!-- Milk Records will be injected here -->
+                                <!-- Milk History Records will be injected here -->
                             </tbody>
                         </table>
                     </div>
@@ -517,7 +497,7 @@
         </div> <!-- End of main-app-content -->
     </div>
 
-    <!-- 2. Service Worker Registration and PWA Logic (ALL INLINE - Data URL) -->
+    <!-- 2. Service Worker Registration and PWA Logic -->
     <script>
         // Store deferred prompt for manual installation
         let deferredPrompt;
@@ -537,8 +517,14 @@
                 if (deferredPrompt) {
                     installButton.style.display = 'none';
                     deferredPrompt.prompt();
+                    
                     deferredPrompt.userChoice.then((choiceResult) => {
                         console.log('User response to the install prompt:', choiceResult.outcome);
+                        if (choiceResult.outcome === 'accepted') {
+                            showModal('App installed successfully! Use the icon on your home screen.', 'Installation Success');
+                        } else {
+                            console.log('User dismissed the A2HS prompt');
+                        }
                         deferredPrompt = null;
                     });
                 }
@@ -548,66 +534,35 @@
         // Service Worker Registration for Offline Capabilities
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // IMPORTANT: Service Worker is registered using Base64 Data URL to keep it in a single HTML file.
-                // The cache list inside the SW references the external icon files and the HTML file itself.
-                navigator.serviceWorker.register('data:application/javascript;base64,Y29uc3QgY2FjaGVOYW1lID0gJ21pbGstdHJhY2tlci11LWNhY2hlLTEuMic7CmZ1bmN0aW9uIGNvZGVDYWNoZUFkZCgpIHsKICAgIHJldHVybiBjYWNoZXMub3BlbihjYWNoZU5hbWUpLnRoZW4oY2FjaGUgPT4gewogICAgICAgIHJldHVybiBjYWNoZS5hZGRBbGwoWwogICAgICAgICAgICAnLi8nLCAKLy8gQ2FjaGUgaW5kZXguaHRtbCANCiAgICAgICAgICAgICcuL2luZGV4Lmh0bWwnLAovLyBDYWNoZSB0YWlsd2luZCBjZG4gDQogICAgICAgICAgICAnaHR0cHM6Ly9jZG4udGFpbHdpbmRjcy5jb20vJywgCi8vIENhY2hlIGx1Y2lkZSBpY29ucyANCiAgICAgICAgICAgICdodHRwczovL3VucGtnLmNvbS9sdWNpZGVAbGF0ZXN0JywKICAgICAgICAgICAgJy4vaWNvbi01MTJ4NTEyLnBuZycsCiAgICAgICAgICAgICcuL2ljb24tMTkyeDE5Mi5wbmcnLAogICAgICAgICAgICAnLi9hcHBsZS10b3VjaC1pY29uLnBuZycKICAgICAgICBdKTsKICAgIH0pOwogICAgfQogICAgCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignaW5zdGFsbCcsIChlKSA9PiB7CiAgICBzZWxmLnNraXBXYWl0aW5nKCk7IAogICAgZS53YWl0Rm9yKGNvZGVDYWNoZUFkZCgpKTsKfSk7IAoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdhdXRpdmF0ZScsIGUgPT4gewogICAgZS53YWl0Rm9yKAogICAgICAgIGNhY2hlcy5rZXlzKCkudGhlbihjYWNoZU5hbWVzID0+IHsKICAgICAgICAgICAgcmV0dXJuIFByb21pc2UuYWxsKAogICAgICAgICAgICAgICAgY2FjaGVOYW1lcy5tYXAoY2FjaGUgPT4gewogICAgICAgICAgICAgICAgICAgIGlmIChjYWNoZSAhPT0gY2FjaGVOYW1lKSB7CiAgICAgICAgICAgICAgICAgICAgICAgIHJldHVybiBjYWNoZXMuZGVsdGUoY2FjaGUpOwogICAgICAgICAgICAgICAgICAgIH0KICAgICAgICAgICAgICAgIH0pCiAgICAgICAgICApOQogICAgICAgIH0pCiAgICApOwp9KTsKCnNlbGYuYWRkRXZlbnRMaXN0ZW5lcignZmV0Y2gnLCAoZSkgPT4gewogICAgLy8gSWdub3JlIGRhdGE6L3JlcXVlc3RzICh0aGUgU1cgYW5kIE1hbmlmZXN0IGl0c2VsZikKICAgIGlmIChlLnJlcXVlc3QudXJsLnN0YXJ0c1dpdGgoJ2RhdGEnKSkgewogICAgICAgIHJldHVybjsKICAgIH0KICAgIAogICAgZS5yZXNwb25kV2l0aCgKICAgICAgICBjYWNoZXMubWF0Y2goZS5yZXF1ZXN0KQogICAgICAgIC50aGVuKChyZXNwb25zZSkgPT4gewogICAgICAgICAgICBpZiAocmVzcG9uc2UpIHsKICAgICAgICAgICAgICAgIHJldHVybiByZXNwb25zZTsKICAgICAgICAgICAgfQogICAgICAgICAgICByZXR1cm4gZmV0Y2goZS5yZXF1ZXN0KTsKICAgICAgICB9KQogICAgKTsKfSk7')
-                .then(registration => {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                })
-                .catch(err => {
-                    console.error('ServiceWorker registration failed: ', err);
-                });
+                navigator.serviceWorker.register('data:application/javascript;base64,J2xldCBjYWNoZU5hbWUgPSAnbWlsay10cmFja2VyLXUtY2FjaGUtMS4wJzsgCmNsZWFyQ2FjaGUoKTsgCgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2luc3RhbGwnLCAoZSkgPT4gewogIGUud2FpdEZvcihjb2RlQ2FjaGVBbmRTY2lwV2FpdCgpKTsKfSk7IAoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmaXRjaCcsIChlKSA9PiB7CiAgLy8gR2V0IHRoZSByZXNwb25zZSBmcm9tIHRoZSBjYWNoZSBvciBmcm9tIHRoZSBuZXR3b3JrLgogIGUucmVzcG9uZE92ZXR0ZXJGaXhFcihcclxuICAgY2FjaGVzLmtldSgpCiAgLnRoZW4oY2FjaGVTdGF0aWNpZGRlcnMgPT4gewogICAgcmV0dXJuIGNhY2hlU3RhdGljaWRkZXJzLm1hdGNoKGUucmVxdWVzdCkuXHJcbiAgfSkgLi5zcmUoZGVmYXVsdEZpeGVyKVxyXG4gICk7Cn0pOwoKZnVuY3Rpb24gY2xlYXJDYWNoZSgpIHsKICBjYWNoZXMua2V5cygpLnRoZW4oY2FjaGVzID0+IHsKICAgICAgcmV0dXJuIFByb21pc2UuYWxsKGNhY2hlcy5tYXBzKGNhY2hlID0+IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2FjaGUgIT09IGNhY2hlTmFtZSA/IGNhY2hlcy5kZWxldGUoY2FjaGUpIDogcHJvbWlzZS5yZXNvbHZlKCk7CiAgICAgICAgICAgICAgfSkpOwogICAgICAgICAgfSk7Cn0KICAgCmZ1bmN0aW9uIGNvZGVDYWNoZUFkZEFuZFNjaXBWYWl0KCkgewogIHJldHVybiBjYWNoZXMuYWRkKGNhY2hlTmFtZSwgWwogICAgJy4vJywgLy8gQ2FjaGUgaW5kZXguY3NzIGFuZCBpbmRleC5odG1sCiAgICAnLi9pbmRleC5odG1sJywKICAgICdodHRwczovL2Nkbi50YWlsd2luZGNzcy5jb20vJywgLy8gQ2FjaGUgdGFpbHdpbmQgY2RuCiAgICAnaHR0cHM6Ly91bnBrZy5jb20vbHVjaWRlQGxhdGVzdCcsIC8vIENhY2hlIGx1Y2lkZSBpY29ucwogICAgJy8nCiAgXSk7Cn0KCmZ1bmN0aW9uIGRlZmF1bHRGaXhlcigpIHsKICBldmVudC5yZXNwb25kZShmZXRjaChldmVudC5yZXF1ZXN0KSk7CiAgcmV0dXJuOwp9Cg==');
             });
         }
     </script>
     
 
-    <!-- Firebase Imports -->
+    <!-- --- GOOGLE SHEETS / APPS SCRIPT INTEGRATION LOGIC --- -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, query, deleteDoc, updateDoc, addDoc, setLogLevel, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // --- GLOBAL SETUP ---
-        setLogLevel('Debug');
         
-        // ---------------------------------------------------------------------
-        // ********** 🛑 IMPORTANT: REPLACE THIS CONFIG WITH YOUR OWN FIREBASE DETAILS 🛑 **********
-        // ---------------------------------------------------------------------
-        // 
-        // 🚨 آپ کو اپنا Firebase Config یہاں لگانا ہے! 🚨
-        const appId = "milk-tracker-default-id"; // آپ کا Firebase App ID (اگر config میں نہیں ہے)
-        const firebaseConfig = {
-            // آپ کو اس {} بلاک کو اپنے اصلی Firebase config سے بدلنا ہے
-            // فی الحال یہ ایک فرضی کوڈ ہے تاکہ آپ اس HTML فائل کو GitHub پر اپلوڈ کر سکیں
-            apiKey: "DUMMY_API_KEY_TO_AVOID_CRITICAL_ERROR",
-            authDomain: "dummy-milk-tracker.firebaseapp.com",
-            projectId: "dummy-milk-tracker-project",
-            storageBucket: "dummy-milk-tracker.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:abcdefg"
-        };
-        // ---------------------------------------------------------------------
+        // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYhd1QKZx-AylUQqXOFeu6qRCs8XJx1Rr2lw-vN-ax15iGGNqU7j1zTMsM025CuyBX7w/exec'; // *** MUST BE REPLACED ***
+        const GUEST_KEY = 'GUEST_MODE'; 
+        const POLLING_INTERVAL = 5000; // Check for updates every 5 seconds (to simulate real-time)
 
-        
-        // Define the group ID for shared access based on the key
-        const SHARED_BASE_UID = 'shared_milk_tracker_'; 
-        const GUEST_KEY = 'GUEST_MODE'; // Key used to identify Anonymous sign-ins in localStorage
-        const SETTINGS_DOC_NAME = 'milk_tracker_settings';
-
-        let db;
-        let auth;
-        let userId = null; // Actual Firebase UID (for security rules)
-        let groupKey = null; // The Secret Key/Access Code used for logging in (or GUEST_MODE)
+        // --- GLOBAL STATE ---
+        let groupKey = null; // The Access Code used for logging in (or GUEST_MODE)
         let isAuthReady = false;
         
-        // State variables
+        // Data State (will be replaced by fetched data)
         let milkRecords = []; 
         let paymentRecords = [];
         let pricePerUnit = 120;
+        let milkmanName = '';
+        let milkmanContact = '';
+
         let currentFilterMonth = getCurrentMonthYearString(); // Default to current month YYYY-MM
-        
-        // --- ELEMENTS ---
+        let dataPollingTimer = null; // For simulating real-time updates
+
+        // --- ELEMENTS (Identical to original) ---
         const loadingOverlay = document.getElementById('loading-overlay');
         const totalMilkEl = document.getElementById('total-milk');
         const netBalanceEl = document.getElementById('net-balance');
@@ -652,17 +607,13 @@
         const logoutBtn = document.getElementById('logout-btn');
         const profileLoginType = document.getElementById('profile-login-type');
         const profileSecretKey = document.getElementById('profile-secret-key');
-        const profileSessionId = document.getElementById('profile-session-id');
-        const sharedNote = document.getElementById('shared-note');
+        const sharedNote = document.getElementById('shared-note'); // NOTE: Removed profile-session-id as there is no Firebase UID
 
         // Milkman Settings Elements
         const milkmanNameInput = document.getElementById('milkman-name');
         const milkmanContactInput = document.getElementById('milkman-contact');
         const milkmanDetailsForm = document.getElementById('milkman-details-form');
         const milkmanMessageEl = document.getElementById('milkman-message');
-        
-        // Export Button
-        const exportDataBtn = document.getElementById('export-data-btn');
 
         // Modal elements 
         const customModal = document.getElementById('custom-modal');
@@ -674,7 +625,7 @@
         const confirmCancelBtn = document.getElementById('confirm-cancel-btn'); 
         const confirmYesBtn = document.getElementById('confirm-yes-btn'); 
 
-        // --- UI UTILITIES (Replacing alert/confirm) ---
+        // --- UI UTILITIES (Identical) ---
 
         function showLoading() { loadingOverlay.classList.remove('hidden'); }
         function hideLoading() { loadingOverlay.classList.add('hidden'); }
@@ -685,8 +636,7 @@
             customModal.classList.remove('hidden');
         }
 
-        // --- LOGIN TAB SWITCHING ---
-
+        // --- LOGIN TAB SWITCHING (Identical) ---
         window.switchLoginTab = (tabName) => {
             document.querySelectorAll('#login-screen .tab-button').forEach(btn => btn.classList.remove('active'));
             document.getElementById('signup-tab-content').classList.add('hidden');
@@ -702,8 +652,7 @@
             }
         }
         
-        // --- APP TAB SWITCHING ---
-
+        // --- APP TAB SWITCHING (Identical) ---
         window.switchAppTab = (tabName) => {
             document.querySelectorAll('#main-app-content .tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
@@ -721,13 +670,11 @@
             lucide.createIcons();
         }
         
-        // --- PROFILE MODAL HANDLERS ---
-        
+        // --- PROFILE MODAL HANDLERS (Adjusted for no Firebase UID) ---
         function showProfileModal() {
             if (!isAuthReady) return;
             
-            // FIX: Changed label to 'User ID'
-            profileSessionId.textContent = userId || 'N/A'; 
+            // Removed profileSessionId logic as there is no Firebase UID
             
             if (groupKey === GUEST_KEY) {
                 profileLoginType.textContent = 'Guest Mode (مہمان موڈ)';
@@ -735,7 +682,7 @@
                 sharedNote.classList.add('hidden');
             } else {
                 profileLoginType.textContent = 'Shared Record (مشترکہ ریکارڈ)';
-                profileSecretKey.textContent = groupKey; // Now displays Access Code
+                profileSecretKey.textContent = groupKey; 
                 sharedNote.classList.remove('hidden');
             }
             profileModal.classList.remove('hidden');
@@ -745,36 +692,24 @@
             profileModal.classList.add('hidden');
         }
         
-        async function handleLogout() {
-            showLoading();
-            try {
-                // Clear local state first
-                localStorage.removeItem('milk_tracker_type');
-                localStorage.removeItem('milk_tracker_key');
-                // Firebase signOut triggers onAuthStateChanged, which handles the UI reset
-                await signOut(auth);
-            } catch (error) {
-                console.error("Logout failed:", error);
-                // Even if signOut fails, reset the UI to login screen as we cleared localStorage
-                resetAppUI();
-            } finally {
-                // onAuthStateChanged should handle hideLoading() and UI change
-                // If it fails, make sure we still hide the loading overlay
-                setTimeout(hideLoading, 500); 
-            }
+        function handleLogout() {
+            // Clear local state and reset UI (no need for Firebase signOut)
+            localStorage.removeItem('milk_tracker_type');
+            localStorage.removeItem('milk_tracker_key');
+            resetAppUI();
         }
 
         function resetAppUI() {
             isAuthReady = false;
             groupKey = null;
-            userId = null;
+            clearInterval(dataPollingTimer); // Stop data polling!
             milkRecords = []; 
             paymentRecords = [];
             pricePerUnit = 120;
             currentFilterMonth = getCurrentMonthYearString();
             
             // Clear UI
-            renderMilkTable([], milkRecordsTableBody, true); // Pass true to allow empty state to render
+            renderMilkTable([], milkRecordsTableBody, true); 
             renderMilkTable([], milkHistoryTableBody, false);
             renderPaymentRecords();
 
@@ -785,48 +720,54 @@
             resetPaymentForm();
         }
 
+        // --- APPS SCRIPT API HELPER ---
 
-        // --- FIRESTORE PATHS ---
-
-        function getSecretKeysCollectionRef() {
-            if (!db) return null;
-            // Public path to store all secret keys: /artifacts/{appId}/public/data/secret_keys
-            return collection(db, `artifacts/${appId}/public/data/secret_keys`);
-        }
-        
-        function getBasePath(key) {
-            if (key && key !== GUEST_KEY) {
-                // Shared Path: /artifacts/{appId}/public/data/shared_milk_tracker_{KEY}
-                return `artifacts/${appId}/public/data/${SHARED_BASE_UID}${key.toLowerCase()}`;
-            } else if (userId) {
-                // Private Path (Guest/Anonymous): /artifacts/${appId}/users/{userId}
-                return `artifacts/${appId}/users/${userId}`;
+        async function callApi(action, data = {}, method = 'POST') {
+            if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_WEB_APP_URL_HERE') {
+                showModal('Please replace "YOUR_DEPLOYED_WEB_APP_URL_HERE" in the JavaScript code with your actual Apps Script Web App URL.', 'API Error: Setup Required');
+                return { success: false, message: 'API URL not set.' };
             }
-            return null;
-        }
-        
-        function getCollectionRef(type) {
-            const collectionName = type === 'milk' ? 'milk_records' : 'milk_payment_records';
-            const path = getBasePath(groupKey);
-            return path ? collection(db, path, collectionName) : null;
-        }
+            
+            const payload = { action, key: groupKey, ...data };
+            let response;
+            
+            try {
+                response = await fetch(APPS_SCRIPT_URL, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    mode: 'cors'
+                });
 
-        function getPriceDocRef() {
-            if (!db) return null;
-            const basePath = getBasePath(groupKey);
-            if (basePath) {
-                 // Settings Doc Path: [basePath]/settings/{SETTINGS_DOC_NAME}
-                return doc(db, basePath, 'settings', SETTINGS_DOC_NAME); 
+                if (!response.ok) {
+                     throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success === false) {
+                     // The script executed, but the operation failed (e.g., bad data, file access denied)
+                     throw new Error(result.message || 'Unknown operation error from server.');
+                }
+                
+                return result;
+
+            } catch (error) {
+                console.error("API Call Failed:", error);
+                showModal(`Server Error (${action}): ${error.message || 'Network issue/Script not deployed correctly.'}`, 'Connection Error');
+                return { success: false, message: error.message };
             }
-            return null;
+        }
+        
+        // --- AUTHENTICATION FLOW (Simulated with LocalStorage/API Check) ---
+        
+        async function checkKeyExists(key) {
+            if (key === GUEST_KEY) return { exists: true };
+            
+            const result = await callApi('CHECK_KEY', { newKey: key }, 'POST');
+            return result; // result.exists will be true or false
         }
 
-        function getMilkRecordsCollectionRef() { return getCollectionRef('milk'); }
-        function getPaymentCollectionRef() { return getCollectionRef('payment'); }
-
-
-        // --- AUTHENTICATION FLOW ---
-        
         async function handleAccess(key, type) {
             showLoading();
             loginErrorMsg.classList.add('hidden');
@@ -834,53 +775,24 @@
             let targetGroupKey = key ? key.trim().toLowerCase() : GUEST_KEY;
 
             try {
-                // 1. Ensure user is signed in anonymously first if not already
-                if (!auth.currentUser) {
-                    await signInAnonymously(auth);
-                }
-                
-                // Wait for the user object to populate after anonymous sign-in
-                if (!auth.currentUser) {
-                     // Adding a small delay to ensure user object is populated
-                     await new Promise(resolve => setTimeout(resolve, 500)); 
-                }
-
-                if (!auth.currentUser) {
-                    throw new Error("Failed to establish a Firebase session.");
-                }
-
-                userId = auth.currentUser.uid;
-                
                 if (type === 'guest') {
-                    success = true; // Guest mode access is always successful if anon sign-in works
+                    success = true; // Guest mode access is always successful
                 } else if (type === 'signup') {
-                    // Check key length
                     if (targetGroupKey.length < 6) {
                         loginErrorMsg.textContent = 'Access Code must be at least 6 characters long. (رسائی کوڈ کم از کم 6 حروف کا ہونا چاہیے)';
                         hideLoading();
                         return;
                     }
-                    // Check if key already exists
-                    const keyRef = doc(getSecretKeysCollectionRef(), targetGroupKey);
-                    const keySnap = await getDoc(keyRef);
-
-                    if (keySnap.exists()) {
+                    const checkResult = await checkKeyExists(targetGroupKey);
+                    if (checkResult.exists) {
                         loginErrorMsg.textContent = 'Signup failed. This code is already taken. Please Login. (رجسٹریشن ناکام۔ یہ کوڈ پہلے سے موجود ہے۔ براہ کرم لاگ اِن کریں۔)';
                     } else {
-                        // Key is unique, register it and proceed to shared login
-                        await setDoc(keyRef, { 
-                            createdAt: Date.now(), 
-                            createdBy: userId,
-                            groupKey: targetGroupKey
-                        });
-                        success = true;
+                        // Success! The key does not exist, proceed to register/login
+                        success = true; 
                     }
                 } else if (type === 'login') {
-                    // Check if key exists
-                    const keyRef = doc(getSecretKeysCollectionRef(), targetGroupKey);
-                    const keySnap = await getDoc(keyRef);
-
-                    if (keySnap.exists()) {
+                    const checkResult = await checkKeyExists(targetGroupKey);
+                    if (checkResult.exists) {
                         success = true;
                     } else {
                         loginErrorMsg.textContent = 'Login failed. Code not found. Please Signup first. (لاگ اِن ناکام۔ کوڈ نہیں ملا۔ براہ کرم پہلے رجسٹریشن کریں۔)';
@@ -902,110 +814,105 @@
                     loginScreen.classList.add('hidden');
                     mainAppContent.classList.remove('hidden');
                     isAuthReady = true; 
-                    startAppListeners();
+                    startDataPolling(); // Start fetching data periodically
                     
                 } else {
                     loginErrorMsg.classList.remove('hidden');
                 }
                 
             } catch (error) {
-                console.error("Firebase Auth Failed:", error);
-                loginErrorMsg.textContent = `Authentication error: ${error.message}`;
+                console.error("Access failed:", error);
+                loginErrorMsg.textContent = `Access error: ${error.message}`;
                 loginErrorMsg.classList.remove('hidden');
-                resetAppUI(); // Force reset on critical auth failure
+                resetAppUI(); 
             } finally {
                 hideLoading();
             }
         }
 
 
-        async function initializeFirebase() {
+        function checkLocalAuth() {
+            const storedType = localStorage.getItem('milk_tracker_type');
+            const storedKey = localStorage.getItem('milk_tracker_key');
+            
+            if (storedType === 'guest') {
+                groupKey = GUEST_KEY;
+                return true;
+            } else if (storedType === 'shared' && storedKey) {
+                groupKey = storedKey;
+                return true;
+            }
+            return false;
+        }
+
+        function initializeApp() {
             showLoading();
-            try {
-                // 🛑 CHECK FOR CONFIG BEFORE INITIALIZING 🛑
-                if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-                    throw new Error("Firebase config is missing or invalid. Please check the config object in index.html.");
-                }
+            
+            const today = new Date();
+            const todayISO = today.toISOString().split('T')[0];
+            document.getElementById('milk-entry-date').value = todayISO;
+            document.getElementById('payment-entry-date').value = todayISO;
 
-                const app = initializeApp(firebaseConfig);
-                db = getFirestore(app);
-                auth = getAuth(app);
-                
-                // Set persistence to Local to remember the anonymous sign-in state
-                await setPersistence(auth, browserLocalPersistence);
-
-                // --- Handle Initial Auth State ---
-                // This listener runs every time auth state changes (sign-in, sign-out)
-                onAuthStateChanged(auth, async (user) => {
-                    hideLoading();
-
-                    const storedType = localStorage.getItem('milk_tracker_type');
-                    const storedKey = localStorage.getItem('milk_tracker_key');
-                    
-                    if (user && storedType) { 
-                        // User is signed in (anonymously) AND we have local context (guest/shared)
-                        userId = user.uid;
-                        isAuthReady = true;
-
-                        if (storedType === 'guest') {
-                            groupKey = GUEST_KEY;
-                        } else if (storedType === 'shared' && storedKey) {
-                            groupKey = storedKey;
-                        } else {
-                            // Invalid/missing local key but a user exists, force logout for clean state
-                            await signOut(auth);
-                            resetAppUI();
-                            return;
-                        }
-                        
-                        // We have both user and context, proceed to app
-                        loginScreen.classList.add('hidden');
-                        mainAppContent.classList.remove('hidden');
-                        startAppListeners();
-                        
-                    } else {
-                        // User signed out, or user exists but no local context (new/broken session)
-                        if (user) {
-                            // If user is present but no local context, clear session to force re-login
-                            await signOut(auth);
-                        }
-                        resetAppUI(); // Reset UI and show login screen
-                    }
-                });
-            } catch (error) {
-                console.error("Firebase Initialization Failed:", error);
+            if (checkLocalAuth()) {
+                // Resume session
+                loginScreen.classList.add('hidden');
+                mainAppContent.classList.remove('hidden');
+                isAuthReady = true; 
+                startDataPolling();
+            } else {
+                // Show login screen
+                resetAppUI();
+                loginScreen.classList.remove('hidden');
                 hideLoading();
-                // Show a clear error to the user if config is the problem
-                if (error.message.includes("config is missing")) {
-                     showModal('Firebase Config is missing! Please update index.html with your Firebase credentials.', 'Critical Config Error');
-                } else {
-                     showModal('Firebase Initialization Failed. Check internet/config. (فائر بیس شروع کرنے میں ناکامی)', 'Critical Error'); 
+            }
+            
+            populateMonthSelector();
+        }
+        
+        function startDataPolling() {
+            if (dataPollingTimer) clearInterval(dataPollingTimer);
+            
+            // Immediate fetch upon login
+            fetchData(); 
+            
+            // Set up interval for repeated fetching
+            dataPollingTimer = setInterval(fetchData, POLLING_INTERVAL);
+        }
+
+        async function fetchData() {
+            if (!isAuthReady || !groupKey) return; 
+
+            try {
+                const result = await callApi('GET_ALL_DATA', { key: groupKey }, 'POST');
+                
+                if (result.success) {
+                    // Update all state variables based on API response
+                    milkRecords = result.milkRecords || [];
+                    paymentRecords = result.paymentRecords || [];
+                    pricePerUnit = parseFloat(result.settings.pricePerUnit) || 120;
+                    milkmanName = result.settings.milkmanName || '';
+                    milkmanContact = result.settings.milkmanContact || '';
+
+                    // Update UI elements
+                    pricePerUnitInput.value = pricePerUnit.toFixed(2);
+                    milkmanNameInput.value = milkmanName;
+                    milkmanContactInput.value = milkmanContact;
+                    
+                    // Sort data by date/timestamp (descending) 
+                    milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
+                    paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
+
+                    renderMilkRecords();
+                    renderPaymentRecords();
+                    updateSummary();
                 }
-               
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
             }
         }
         
-        // This function will set up Firestore listeners only when Auth is ready
-        let unsubscribePrice = null;
-        let unsubscribeMilk = null;
-        let unsubscribePayment = null;
-
-        function startAppListeners() {
-             // Stop previous listeners if they exist
-             if (unsubscribePrice) unsubscribePrice();
-             if (unsubscribeMilk) unsubscribeMilk();
-             if (unsubscribePayment) unsubscribePayment();
-
-             // Start new listeners with the current groupKey/userId context
-             unsubscribePrice = setupPriceListener();
-             unsubscribeMilk = setupMilkRecordsListener();
-             unsubscribePayment = setupPaymentRecordsListener();
-             
-             // Initialize Month Selector after all listeners are set up
-             populateMonthSelector();
-        }
-
-        // --- LOGIN/SIGNUP Form Handlers ---
+        // --- LOGIN/SIGNUP Form Handlers (Identical calls, modified implementations) ---
 
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1030,41 +937,14 @@
         });
 
         guestAccessBtn.addEventListener('click', () => {
-             handleAccess(null, 'guest'); // Guest Login
+             handleAccess(null, 'guest'); 
         });
 
         
-        // --- SETTINGS HANDLING (Price and Milkman) ---
-
-        function setupPriceListener() {
-            const priceRef = getPriceDocRef();
-            if (!db || !isAuthReady || !priceRef) return null;
-            
-            return onSnapshot(priceRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                    const data = docSnapshot.data();
-                    pricePerUnit = parseFloat(data.pricePerUnit) || 120;
-                    pricePerUnitInput.value = pricePerUnit.toFixed(2);
-
-                    // Load Milkman Details
-                    milkmanNameInput.value = data.milkmanName || '';
-                    milkmanContactInput.value = data.milkmanContact || '';
-
-                } else {
-                    pricePerUnit = 120;
-                    pricePerUnitInput.value = pricePerUnit.toFixed(2);
-                    // Optionally write the default value if it doesn't exist
-                    setDoc(priceRef, { pricePerUnit: pricePerUnit, createdAt: new Date().toISOString() }, { merge: true }).catch(e => console.error("Error setting default price:", e));
-                }
-                updateSummary(); // Update summary based on new price
-            }, (error) => {
-                console.error("Error listening to price:", error);
-            });
-        }
+        // --- SETTINGS HANDLING (Price and Milkman - Uses API) ---
 
         savePriceBtn.addEventListener('click', async () => {
-            const priceRef = getPriceDocRef();
-            if (!db || !isAuthReady || !priceRef) {
+            if (!isAuthReady) {
                 showModal('Please login to save settings. (ترتیبات محفوظ کرنے کے لیے لاگ اِن کریں۔)');
                 return;
             }
@@ -1079,13 +959,19 @@
             
             showLoading();
             try {
-                await setDoc(priceRef, { pricePerUnit: newPrice, updatedAt: new Date().toISOString() }, { merge: true });
-                priceMessageEl.textContent = 'Price saved successfully! (قیمت کامیابی سے محفوظ کر لی گئی!)';
-                priceMessageEl.classList.remove('text-red-600', 'hidden');
-                priceMessageEl.classList.add('text-green-600');
+                const result = await callApi('UPDATE_SETTINGS', { pricePerUnit: newPrice }, 'POST');
+
+                if (result.success) {
+                    priceMessageEl.textContent = 'Price saved successfully! (قیمت کامیابی سے محفوظ کر لی گئی!)';
+                    priceMessageEl.classList.remove('text-red-600', 'hidden');
+                    priceMessageEl.classList.add('text-green-600');
+                    fetchData(); // Refresh all data including summary
+                } else {
+                    throw new Error(result.message);
+                }
             } catch (error) {
                 console.error("Error saving price:", error);
-                showModal('Failed to save Price. (قیمت محفوظ کرنے میں ناکامی۔)', 'Error');
+                showModal(`Failed to save Price. Error: ${error.message}`, 'Error');
             } finally {
                 hideLoading();
                 setTimeout(() => priceMessageEl.classList.add('hidden'), 3000);
@@ -1094,8 +980,8 @@
 
         milkmanDetailsForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const priceRef = getPriceDocRef();
-            if (!db || !isAuthReady || !priceRef) {
+            
+            if (!isAuthReady) {
                 showModal('Please login to save settings. (ترتیبات محفوظ کرنے کے لیے لاگ اِن کریں۔)');
                 return;
             }
@@ -1105,13 +991,19 @@
             
             showLoading();
             try {
-                await setDoc(priceRef, { milkmanName: milkmanName, milkmanContact: milkmanContact, updatedAt: new Date().toISOString() }, { merge: true });
-                milkmanMessageEl.textContent = 'Milkman details saved successfully! (دودھ والے کی تفصیلات محفوظ کر لی گئی!)';
-                milkmanMessageEl.classList.remove('text-red-600', 'hidden');
-                milkmanMessageEl.classList.add('text-green-600');
+                const result = await callApi('UPDATE_SETTINGS', { milkmanName, milkmanContact }, 'POST');
+
+                if (result.success) {
+                    milkmanMessageEl.textContent = 'Milkman details saved successfully! (دودھ والے کی تفصیلات محفوظ کر لی گئی!)';
+                    milkmanMessageEl.classList.remove('text-red-600', 'hidden');
+                    milkmanMessageEl.classList.add('text-green-600');
+                    fetchData(); // Refresh to ensure state is updated
+                } else {
+                    throw new Error(result.message);
+                }
             } catch (error) {
                 console.error("Error saving milkman details:", error);
-                showModal('Failed to save Milkman details. (تفصیلات محفوظ کرنے میں ناکامی۔)', 'Error');
+                showModal(`Failed to save Milkman details. Error: ${error.message}`, 'Error');
             } finally {
                 hideLoading();
                 setTimeout(() => milkmanMessageEl.classList.add('hidden'), 3000);
@@ -1119,54 +1011,9 @@
         });
 
 
-        // --- DATA LISTENERS ---
-
-        function setupMilkRecordsListener() {
-            const milkRef = getMilkRecordsCollectionRef();
-            if (!db || !isAuthReady || !milkRef) return null;
-            const q = query(milkRef);
-            
-            return onSnapshot(q, (snapshot) => {
-                milkRecords = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                // Sort by date (descending), then by timestamp (descending)
-                milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-
-                // Re-render UI based on new data and current filter month
-                renderMilkRecords();
-                updateSummary();
-            }, (error) => {
-                console.error("Error listening to milk records:", error);
-                milkRecordsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">Failed to load milk records. (ریکارڈ لوڈ کرنے میں خرابی)</td></tr>';
-            });
-        }
-        
-        function setupPaymentRecordsListener() {
-            const paymentRef = getPaymentCollectionRef();
-            if (!db || !isAuthReady || !paymentRef) return null;
-            const q = query(paymentRef);
-            
-            return onSnapshot(q, (snapshot) => {
-                paymentRecords = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-                paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-
-                renderPaymentRecords();
-                updateSummary();
-            }, (error) => {
-                console.error("Error listening to payment records:", error);
-                paymentRecordsTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-red-500">Failed to load payment records. (ادائیگی لوڈ کرنے میں خرابی)</td></tr>';
-            });
-        }
-        
-        // --- MONTH SELECTOR AND FILTERING LOGIC ---
+        // --- MONTH SELECTOR AND FILTERING LOGIC (Identical) ---
         
         function populateMonthSelector() {
-            // Populate the selector with the last 12 months (or more if needed)
             const today = new Date();
             let optionsHTML = '';
             
@@ -1176,7 +1023,7 @@
                 const month = String(date.getMonth() + 1).padStart(2, '0');
                 const monthYearKey = `${year}-${month}`;
                 
-                const displayDate = getMonthName(monthYearKey + '-01'); // Get Urdu name
+                const displayDate = getMonthName(monthYearKey + '-01'); 
                 const isSelected = monthYearKey === currentFilterMonth ? 'selected' : '';
                 
                 optionsHTML += `<option value="${monthYearKey}" ${isSelected}>${displayDate}</option>`;
@@ -1186,12 +1033,9 @@
         
         window.handleMonthChange = (selectedMonthYear) => {
             currentFilterMonth = selectedMonthYear;
-            
-            // 1. Update UI and filter data
             updateSummary();
             renderMilkRecords();
 
-            // 2. Open Daily Records table for selected month view
             const milkRecordsContent = document.getElementById('milk-records-content');
             if (milkRecordsContent.classList.contains('hidden')) {
                 milkRecordsContent.classList.remove('hidden');
@@ -1199,15 +1043,11 @@
             }
         }
         
-        // --- SUMMARY & RENDERING ---
-
         function getMonthName(dateStr) {
-            // Ensures date string format is YYYY-MM-DD
             const date = new Date(dateStr); 
             if (isNaN(date)) return 'N/A';
             
             try {
-                // Formatting for Urdu language (e.g., نومبر 2025)
                 const options = { month: 'long', year: 'numeric' };
                 return date.toLocaleString('ur-PK', options);
             } catch (e) {
@@ -1219,17 +1059,18 @@
         function getCurrentMonthYearString() {
             const today = new Date();
             const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0'); // MM format
+            const month = String(today.getMonth() + 1).padStart(2, '0'); 
             return `${year}-${month}`;
         }
+        
+        // --- SUMMARY & RENDERING (Identical, relies on global state being updated by fetchData) ---
 
         function updateSummary() {
             const filterMonthYear = currentFilterMonth;
             
             // 1. Update Current Month Display (Selected Month)
-            const displayDate = filterMonthYear + '-01'; // Use the 1st of the month for display name
+            const displayDate = filterMonthYear + '-01'; 
             const currentMonthName = getMonthName(displayDate);
-            // FIX: Removed repeating text and centered data in HTML
             if (currentMonthDisplay) currentMonthDisplay.innerHTML = `<b>${currentMonthName}</b>`;
 
             // 2. Filter records for the SELECTED MONTH only (YYYY-MM)
@@ -1262,7 +1103,6 @@
                 return;
             }
 
-            // FIX: Currency format changed to Rs. + value
             const formattedAmount = Math.round(Math.abs(netBalanceDue)).toLocaleString('ur-PK');
             netBalanceEl.textContent = `Rs. ${formattedAmount}`; 
 
@@ -1274,14 +1114,12 @@
                 // Money is DUE (Red-600/900) - Distinct from Rose-500/900
                 balanceCard.className = 'bg-red-100 p-4 rounded-xl shadow-lg border-2 border-red-300 flex flex-col items-center text-center';
                 banknoteIcon.className = 'w-8 h-8 text-red-600 mx-auto mb-2';
-                // FIX: Updated label to Amount (رقم)
                 balanceLabelWrapper.innerHTML = `Amount <span class="block text-sm font-normal">(رقم)</span>`;
                 netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-red-800 mt-1 currency-display';
             } else {
                 // Money is CREDIT/Advance (Green)
                 balanceCard.className = 'bg-emerald-100 p-4 rounded-xl shadow-lg border-2 border-emerald-200 flex flex-col items-center text-center';
                 banknoteIcon.className = 'w-8 h-8 text-emerald-500 mx-auto mb-2';
-                // FIX: Updated label to Amount (رقم)
                 balanceLabelWrapper.innerHTML = `Credit Advance <span class="block text-sm font-normal">(ایڈوانس رقم)</span>`;
                 netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-emerald-900 mt-1 currency-display';
             }
@@ -1334,7 +1172,7 @@
                 
                 let quantityDisplay;
                 let rowClasses = '';
-                if (record.isAbsent) {
+                if (record.isAbsent === true || record.isAbsent === 'TRUE') { // Check for string 'TRUE' from Apps Script
                     quantityDisplay = `<span class="font-bold text-red-600">ABSENT (غیر حاضر)</span>`;
                     rowClasses = 'bg-red-50/50';
                 } else {
@@ -1352,7 +1190,6 @@
                     </button>
                 ` : '<span class="text-gray-400">View Only</span>';
 
-                // FIX: Apply currency display format
                 const displayAmount = `Rs. ${Math.round(payment).toLocaleString('ur-PK')}`;
 
                 row.innerHTML = `
@@ -1368,7 +1205,6 @@
         }
 
         function renderPaymentRecords() {
-            // Renders ALL payment records (NO MONTHLY FILTERING - payments affect overall balance)
             const recordsToRender = paymentRecords; 
 
             paymentRecordsTableBody.innerHTML = '';
@@ -1384,7 +1220,6 @@
                 const amount = parseFloat(record.amount) || 0;
                 const dateParts = record.date.split('-'); // YYYY-MM-DD
                 const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY
-                // FIX: Currency format changed to Rs. + value
                 const displayAmount = `Rs. ${Math.round(amount).toLocaleString('ur-PK')}`;
 
                 row.innerHTML = `
@@ -1406,14 +1241,11 @@
             lucide.createIcons();
         }
 
-        // --- EXPOSED WINDOW FUNCTIONS (for table buttons) ---
-
-        // --- Milk Record Edit/Delete ---
+        // --- EXPOSED WINDOW FUNCTIONS (for table buttons - Identical calls, modified implementations) ---
 
         window.editMilkRecord = (id) => {
-            const record = milkRecords.find(r => r.id === id);
+            const record = milkRecords.find(r => r.id == id); // Use == for comparison as ID might be string/number
             if (record) {
-                 // Switch to Milk Tab
                 switchAppTab('milk');
 
                 document.getElementById('milk-entry-id').value = record.id;
@@ -1442,22 +1274,16 @@
             milkCancelEditBtn.classList.add('hidden');
         }
         
-        // NEW: Absent Button Handler
         absentBtn.addEventListener('click', () => {
-            // Set quantity to 0 and submit the form with the absence marker
             document.getElementById('milk-entry-quantity').value = '0.00';
-            milkEntryForm.dataset.isAbsent = 'true'; // Set a flag on the form
-            // Use a temporary click to trigger validation and submission
+            milkEntryForm.dataset.isAbsent = 'true'; 
             const submitBtn = milkEntryForm.querySelector('button[type="submit"]');
             submitBtn.click();
         });
 
-        // --- Payment Record Edit/Delete ---
-
         window.editPaymentRecord = (id) => {
-            const record = paymentRecords.find(r => r.id === id);
+            const record = paymentRecords.find(r => r.id == id);
             if (record) {
-                // Switch to Payment Tab
                 switchAppTab('payment');
 
                 document.getElementById('payment-entry-id').value = record.id;
@@ -1478,7 +1304,7 @@
         function resetPaymentForm() {
             document.getElementById('payment-entry-id').value = '';
             paymentEntryForm.reset();
-            document.getElementById('payment-entry-date').valueAsDate = new Date(); // Reset date to today
+            document.getElementById('payment-entry-date').valueAsDate = new Date(); 
             document.getElementById('payment-entry-amount').value = '';
             paymentFormTitleEl.textContent = 'Payment Entry (ادائیگی کا اندراج)';
             paymentEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Payment Entry';
@@ -1505,18 +1331,18 @@
             recordToDeleteId = null;
             recordToDeleteType = null;
         });
-
-        // Event listener for the confirm button inside the modal
         
-        async function deleteRecord(id, type) {
+        async function deleteRecordApi(id, type) {
             showLoading();
             try {
-                const collectionRef = type === 'milk' ? getMilkRecordsCollectionRef() : getPaymentCollectionRef();
-                if (!collectionRef) throw new Error("Collection path not found.");
+                const result = await callApi('DELETE_RECORD', { id, type }, 'POST');
                 
-                await deleteDoc(doc(collectionRef, id));
-                showModal(`${type === 'milk' ? 'Milk Record' : 'Payment Record'} deleted successfully. (ریکارڈ کامیابی سے حذف کر دیا گیا ہے۔)`);
-                
+                if (result.success) {
+                    showModal(`${type === 'milk' ? 'Milk Record' : 'Payment Record'} deleted successfully. (ریکارڈ کامیابی سے حذف کر دیا گیا ہے۔)`);
+                    fetchData(); // Refresh data after delete
+                } else {
+                    throw new Error(result.message);
+                }
             } catch (error) {
                 console.error(`Error deleting ${type} record:`, error);
                 showModal(`Failed to delete ${type} record. (ریکارڈ حذف کرنے میں ناکامی۔) Error: ${error.message}`, 'Error');
@@ -1525,101 +1351,12 @@
             }
         }
         
-        // --- DATA EXPORT LOGIC (Now in one file) ---
-
-        // Helper function to convert data to CSV format
-        function convertToCSV(data, headers, type) {
-            if (!data || data.length === 0) return '';
-
-            // Create the header row
-            const headerRow = headers.join(',');
-            
-            // Create the data rows
-            const dataRows = data.map(record => {
-                let values;
-                if (type === 'milk') {
-                    const calculatedAmount = (parseFloat(record.quantity) || 0) * pricePerUnit;
-                    values = [
-                        record.date,
-                        record.quantity || 0,
-                        calculatedAmount.toFixed(2),
-                        record.isAbsent ? 'Absent' : 'Present'
-                    ];
-                } else if (type === 'payment') {
-                    values = [
-                        record.date,
-                        record.amount || 0,
-                        // Add two empty columns to align with milk data format (for easier table comparison)
-                        '',
-                        ''
-                    ];
-                }
-                // Ensure values are enclosed in double quotes to handle commas/special chars in future fields
-                return values.map(v => `"${v}"`).join(',');
-            });
-
-            return [headerRow, ...dataRows].join('\n');
-        }
-
-        // Main function to trigger download
-        function downloadCSV(data, filename) {
-            const blob = new Blob([data], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            if (link.download !== undefined) { 
-                const url = URL.createObjectURL(blob);
-                link.setAttribute("href", url);
-                link.setAttribute("download", filename);
-                link.style.visibility = 'hidden';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                showModal('Your records have been downloaded successfully!', 'Export Successful (برآمد مکمل)');
-            }
-        }
-
-        async function handleExportData() {
-            if (!isAuthReady) {
-                showModal('Please login first to export data. (ڈیٹا برآمد کرنے کے لیے پہلے لاگ اِن کریں۔)', 'Login Required');
-                return;
-            }
-            showLoading();
-
-            try {
-                // --- 1. Milk Records CSV ---
-                const milkHeaders = ['Date (تاریخ)', 'Quantity (Litres)', 'Calculated Amount (Rs.)', 'Status (حاضری)'];
-                const milkCSV = convertToCSV(milkRecords, milkHeaders, 'milk');
-                
-                // --- 2. Payment Records CSV (Use the same structure for easy comparison) ---
-                const paymentHeaders = ['Date (تاریخ)', 'Amount Paid (Rs.)', '', '']; // Empty columns for alignment
-                const paymentCSV = convertToCSV(paymentRecords, paymentHeaders, 'payment');
-                
-                const milkRecordsTitle = `\n\n--- MILK RECORDS (दूध का ریکارڈ, Price: Rs. ${pricePerUnit}) ---\n`;
-                const paymentRecordsTitle = `\n\n--- PAYMENT HISTORY (ادائیگی کی تاریخ) ---\n`;
-
-                // Combine all data into one file
-                const combinedData = 
-                    `Milk Record Tracker Export - ${new Date().toLocaleDateString('ur-PK')}\n\n` +
-                    milkRecordsTitle + milkCSV +
-                    paymentRecordsTitle + paymentCSV;
-                    
-                const filename = `Milk_Tracker_Export_${groupKey || 'Guest'}_${getCurrentMonthYearString()}.csv`;
-                
-                downloadCSV(combinedData, filename);
-
-            } catch (error) {
-                console.error("Export Failed:", error);
-                showModal(`Failed to export data. Error: ${error.message}`, 'Error');
-            } finally {
-                hideLoading();
-            }
-        }
-        
-        // --- FORM SUBMISSION HANDLERS ---
+        // --- FORM SUBMISSION HANDLERS (Uses API) ---
 
         milkEntryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const milkRef = getMilkRecordsCollectionRef();
-            if (!db || !isAuthReady || !milkRef) {
+            
+            if (!isAuthReady || !groupKey) {
                 showModal('Please login first to submit entries. (اندراج کے لیے پہلے لاگ اِن کریں۔)', 'Login Required');
                 return;
             }
@@ -1627,12 +1364,10 @@
             const id = document.getElementById('milk-entry-id').value;
             const date = document.getElementById('milk-entry-date').value;
             let quantity = parseFloat(document.getElementById('milk-entry-quantity').value);
-            const isAbsentFlag = milkEntryForm.dataset.isAbsent === 'true'; // Check the flag
+            const isAbsentFlag = milkEntryForm.dataset.isAbsent === 'true'; 
 
-            // Clear the flag after reading it, regardless of successful submission
             delete milkEntryForm.dataset.isAbsent; 
 
-            // If quantity is absent flag is true, force quantity to 0
             if (isAbsentFlag) {
                 quantity = 0.00;
             }
@@ -1644,22 +1379,24 @@
 
             showLoading();
             const recordData = {
+                id: id, // Will be empty string for new records
                 date: date,
-                quantity: quantity, // Stored as number
-                isAbsent: isAbsentFlag && quantity === 0, // Set true only if absent button was used
+                quantity: quantity, 
+                isAbsent: isAbsentFlag, 
                 timestamp: Date.now(),
-                userId: userId 
             };
             
+            const action = id ? 'UPDATE_MILK' : 'ADD_MILK';
+
             try {
-                if (id) {
-                    await updateDoc(doc(milkRef, id), recordData);
-                    showModal('Milk Entry updated successfully. (اندراج کامیابی سے تبدیل کر دیا گیا ہے۔)');
+                const result = await callApi(action, recordData, 'POST');
+                
+                if (result.success) {
+                    showModal(`Milk Entry ${id ? 'updated' : 'added'} successfully. (اندراج کامیابی سے ${id ? 'تبدیل' : 'شامل'} کر دیا گیا ہے۔)`);
                     resetMilkForm(); 
+                    fetchData(); // Refresh data immediately
                 } else {
-                    await addDoc(milkRef, recordData);
-                    showModal('New Milk Entry added successfully. (نیا اندراج کامیابی سے شامل کر دیا گیا ہے۔)');
-                    resetMilkForm(); // Reset date and quantity
+                    throw new Error(result.message);
                 }
             } catch (error) {
                 console.error("Error saving milk record:", error);
@@ -1671,8 +1408,8 @@
 
         paymentEntryForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const paymentRef = getPaymentCollectionRef();
-            if (!db || !isAuthReady || !paymentRef) {
+            
+            if (!isAuthReady || !groupKey) {
                 showModal('Please login first to submit entries. (اندراج کے لیے پہلے لاگ اِن کریں۔)', 'Login Required');
                 return;
             }
@@ -1688,21 +1425,24 @@
 
             showLoading();
             const recordData = {
+                id: id,
                 date: date,
-                amount: amount, // Stored as number
+                amount: amount, 
                 timestamp: Date.now(),
-                userId: userId 
             };
+            
+            const action = id ? 'UPDATE_PAYMENT' : 'ADD_PAYMENT';
+
 
             try {
-                if (id) {
-                    await updateDoc(doc(paymentRef, id), recordData);
-                    showModal('Payment updated successfully. (ادائیگی کامیابی سے تبدیل کر دی گئی ہے۔)');
-                    resetPaymentForm(); 
-                } else {
-                    await addDoc(paymentRef, recordData);
-                    showModal('New Payment Entry added successfully. (نیا ادائیگی اندراج کامیابی سے شامل کر دیا گیا ہے۔)');
+                const result = await callApi(action, recordData, 'POST');
+                
+                if (result.success) {
+                    showModal(`Payment ${id ? 'updated' : 'added'} successfully. (ادائیگی کامیابی سے ${id ? 'تبدیل' : 'شامل'} کر دی گئی ہے۔)`);
                     resetPaymentForm();
+                    fetchData(); // Refresh data immediately
+                } else {
+                    throw new Error(result.message);
                 }
             } catch (error) {
                 console.error("Error saving payment record:", error);
@@ -1715,15 +1455,8 @@
 
         // --- Initial Load ---
         window.onload = () => {
-            const today = new Date();
-            // Ensure default date is set correctly
-            const todayISO = today.toISOString().split('T')[0];
-            document.getElementById('milk-entry-date').value = todayISO;
-            document.getElementById('payment-entry-date').value = todayISO;
+            initializeApp();
             
-            initializeFirebase();
-            
-            // Attach Profile/Modal Listeners here after elements are defined
             profileIconBtn.addEventListener('click', showProfileModal);
             profileCloseBtn.addEventListener('click', closeProfileModal);
             logoutBtn.addEventListener('click', handleLogout);
@@ -1734,16 +1467,13 @@
             confirmYesBtn.addEventListener('click', async () => {
                 if (recordToDeleteId && recordToDeleteType) {
                     confirmationModal.classList.add('hidden');
-                    await deleteRecord(recordToDeleteId, recordToDeleteType);
+                    await deleteRecordApi(recordToDeleteId, recordToDeleteType);
                     recordToDeleteId = null;
                     recordToDeleteType = null;
                 }
             });
 
-            // Data Export Listener
-            exportDataBtn.addEventListener('click', handleExportData);
-
-            lucide.createIcons(); // Initialize icons on load
+            lucide.createIcons(); 
         };
     </script>
 
