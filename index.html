@@ -94,10 +94,10 @@
         /* FIX: Ensure the Urdu/English text block in summary cards is centered */
         .summary-label-wrapper {
             text-align: center; 
+            width: 100%; /* Ensures centering works correctly */
         }
         
         /* FIX 2: Restrict header width on mobile to avoid overlap */
-        /* FIX 4: Header section is now the monthly selector, align center */
         @media (max-width: 640px) {
             .header-content {
                 max-width: calc(100% - 120px); 
@@ -106,6 +106,12 @@
                 align-items: center;
                 text-align: center;
             }
+        }
+        /* FIX 3: Force attendance and amount English/Urdu labels to center */
+        .summary-label-wrapper .block {
+            text-align: center;
+            width: 100%;
+            direction: rtl; /* Force the urdu text block to follow rtl rules but center align */
         }
     </style>
     <!-- Load Lucide Icons for UI elements -->
@@ -252,8 +258,8 @@
                  <span data-lucide="user" class="w-6 h-6"></span>
             </button>
             <!-- Center Content (Month Selector + Display) -->
-            <div class="mx-auto header-content flex flex-col items-center justify-center py-2">
-                <div class="flex items-center space-x-reverse space-x-2 text-lg font-bold text-gray-800">
+            <div class="mx-auto header-content flex flex-col items-center justify-center py-2" dir="ltr">
+                <div class="flex items-center space-x-2 text-lg font-bold text-gray-800" dir="ltr">
                     <span class="text-sm sm:text-base">Data for: </span>
                     <b id="current-month-display">...</b>
                 </div>
@@ -1141,10 +1147,24 @@
             milkCancelEditBtn.classList.add('hidden');
         }
         
-        function handleAbsentClick() {
+        async function handleAbsentClick() {
+            // FIX: Direct save entry when absent button is clicked
+            const date = document.getElementById('milk-entry-date').value;
+
+            if (!date) {
+                showModal('Please select a date first.', 'Date Required');
+                return;
+            }
+
+            // Set mandatory fields for submission
+            document.getElementById('milk-entry-id').value = ''; // Ensure new entry
             document.getElementById('milk-entry-quantity').value = '0.00';
             milkEntryForm.dataset.isAbsent = 'true'; 
-            showModal('Quantity set to 0 (Absent). Please click **Submit Milk Entry** to confirm the date and save.', 'Absence Confirmed (غیر حاضری کی تصدیق)');
+
+            // Simulate form submission for absence
+            await handleMilkEntrySubmit(new Event('submit'));
+            
+            showModal(`Absent entry saved successfully for ${date}.`, 'Absence Saved (غیر حاضری محفوظ)');
         }
 
         window.editPaymentRecord = (id) => {
@@ -1243,7 +1263,10 @@
         // --- FORM SUBMISSION HANDLERS (Local Storage) ---
 
         async function handleMilkEntrySubmit(e) {
-            e.preventDefault();
+            // Check if e is defined before calling preventDefault()
+            if (e && e.preventDefault) {
+                e.preventDefault();
+            }
             
             if (!isAuthReady) {
                 showModal('Please wait for app initialization. (براہ کرم ایپ کے شروع ہونے کا انتظار کریں۔)', 'Error');
