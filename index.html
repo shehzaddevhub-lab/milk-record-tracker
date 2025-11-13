@@ -105,11 +105,20 @@
         .ltr-column {
              text-align: right !important; /* LTR content aligned right */
         }
-        /* Fix for mobile layout padding/margin issues */
+        /* FIX 1: Ensure main container fits screen without horizontal scroll, and give space for icons */
         .max-w-4xl {
             width: 100%;
-            padding: 0;
-            margin: 0;
+            max-width: 95%; /* Reduced slightly for safety margin */
+            margin: 0 auto;
+        }
+        /* FIX 2: Restrict header width on mobile to avoid overlap */
+        @media (max-width: 640px) {
+            .header-heading {
+                max-width: calc(100% - 120px); /* Leaves space for icons on both sides */
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+            }
         }
     </style>
     <!-- Load Lucide Icons for UI elements -->
@@ -119,7 +128,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/70 z-50 flex items-center justify-center hidden">
-        <div class="flex items-center space-x-2 text-gray-700 p-4 bg-white rounded-lg shadow-2xl">
+        <div class="flex items-center space-x-reverse space-x-2 text-gray-700 p-4 bg-white rounded-lg shadow-2xl">
             <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -250,15 +259,15 @@
     
     <div class="max-w-4xl w-full mx-auto sm:px-4"> 
         
-        <header class="flex justify-between items-center mb-6 border-b pb-2">
+        <header class="flex justify-between items-center mb-6 border-b pb-2 relative">
             <!-- Right-Aligned Profile Icon (Opens Access Modal) -->
-            <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md absolute right-4 top-4 sm:right-6 sm:top-6">
+            <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md absolute right-4 top-4 sm:right-6 sm:top-6 z-10">
                  <span data-lucide="user" class="w-6 h-6"></span>
             </button>
-            <!-- Centered Heading -->
-            <h1 class="text-3xl font-bold text-gray-800 mx-auto">🥛 Milk Record Tracker</h1>
+            <!-- Centered Heading (with max-width on mobile to prevent overlap) -->
+            <h1 class="text-3xl font-bold text-gray-800 mx-auto header-heading">🥛 Milk Record Tracker</h1>
             <!-- Left-Aligned Settings Icon (Opens Settings Modal) -->
-            <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md absolute left-4 top-4 sm:left-6 sm:top-6">
+            <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md absolute left-4 top-4 sm:left-6 sm:top-6 z-10">
                  <span data-lucide="settings" class="w-6 h-6"></span>
             </button>
         </header>
@@ -348,12 +357,12 @@
                                 <input type="date" id="milk-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
 
-                            <!-- Quantity Input -->
+                            <!-- Quantity Input (FIX 3: Flex-col space-y-2 changed to flex-grow/w-full for better vertical stack on mobile) -->
                             <div class="flex flex-col space-y-2">
                                 <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - Litres (Quantity)</label>
                                 <div class="flex space-x-reverse space-x-2">
-                                    <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                                    <button type="button" id="absent-btn" class="bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">
+                                    <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                                    <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">
                                         Absent (غیر حاضر)
                                     </button>
                                 </div>
@@ -473,10 +482,10 @@
             </div>
 
             <!-- PWA Installation Section (Manual Install) -->
-            <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 hidden urdu-text">
+            <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
                 <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2">ایپ انسٹال کریں (Install App)</h3>
                 <p class="text-gray-600 text-sm mb-3">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
-                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-2" style="display: none;">
+                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2" style="display: none;">
                     <span data-lucide="download" class="w-5 h-5"></span>
                     <span>Install Milk Tracker</span>
                 </button>
@@ -493,7 +502,8 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            document.getElementById('pwa-install-container').classList.remove('hidden');
+            // FIX: Show the install container when prompt is available
+            document.getElementById('pwa-install-container').classList.remove('hidden'); 
             installButton.style.display = 'flex';
         });
 
