@@ -11,23 +11,14 @@
     <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29ucyI6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS0lHVnVkQzVtYkc5aGJnNWtJSFZ6WjNkaWRtVjBPMnhtbFoybHVabThpWkdsaFlXSnZJR0ZuWld4MGIzUW9NalluSUhCeVpYTnBjenBjZlE9PSIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGU6ICJpbWFnZS9zdmciIH0sICJuYW1lIjogIk1pbGsgUmVjb3JkIFRyYWNrZXIiLCAic2hvcnRfbmFtZSI6Ik1pbGsgVHJhY2tlciIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
 
     <style>
-        /* Setting a clean, modern font for Urdu/RTL context */
         body {
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: #f8f9fa;
         }
         
-        /* Custom scrollbar for better look */
-        .overflow-y-auto::-webkit-scrollbar {
-            width: 8px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-thumb {
-            background-color: #a0aec0; /* Tailwind gray-500 */
-            border-radius: 10px;
-        }
-        .overflow-y-auto::-webkit-scrollbar-track {
-            background: #e2e8f0; /* Tailwind gray-200 */
-        }
+        .overflow-y-auto::-webkit-scrollbar { width: 8px; }
+        .overflow-y-auto::-webkit-scrollbar-thumb { background-color: #a0aec0; border-radius: 10px; }
+        .overflow-y-auto::-webkit-scrollbar-track { background: #e2e8f0; }
 
         /* LTR for all functional inputs (numbers, dates, codes) */
         input[type="number"], input[type="date"], input[type="tel"] {
@@ -40,12 +31,6 @@
             direction: rtl !important;
         }
 
-        /* General Alignment fixes for LTR elements in RTL context */
-        .text-right { text-align: right; }
-        .text-left { text-align: left; }
-        .text-center { text-align: center; }
-        
-        /* Style for action buttons with hover effects */
         .action-btn {
             padding: 8px 12px;
             transition: all 0.2s;
@@ -56,23 +41,18 @@
             transform: translateY(-1px);
         }
 
-        /* Responsive table cell padding for mobile */
         @media (max-width: 640px) {
-            .table-cell-padding {
-                padding: 0.5rem 0.25rem;
-            }
+            .table-cell-padding { padding: 0.5rem 0.25rem; }
         }
 
-        /* Active tab styling */
         .tab-button.active {
             background-color: #ffffff;
-            border-bottom: 2px solid #3b82f6; /* Blue-500 */
-            color: #1f2937; /* Dark text */
+            border-bottom: 2px solid #3b82f6;
+            color: #1f2937;
             font-weight: 700;
         }
-        .rotate-180 {
-            transform: rotate(180deg);
-        }
+        .rotate-180 { transform: rotate(180deg); }
+        
         /* Custom selector styling for RTL alignment */
         #month-selector {
             appearance: none;
@@ -80,7 +60,7 @@
             background-repeat: no-repeat;
             background-position: left 0.75rem center; /* Adjusted for RTL */
             padding-right: 0.75rem;
-            padding-left: 2.5rem; /* Ensure space for the icon on the left */
+            padding-left: 2.5rem; 
             background-size: 1.5rem;
         }
         
@@ -111,6 +91,11 @@
             max-width: 95%; /* Reduced slightly for safety margin */
             margin: 0 auto;
         }
+        /* FIX: Ensure the Urdu/English text block in summary cards is centered */
+        .summary-label-wrapper {
+            text-align: center; /* Ensures both lines of text are centered */
+        }
+        
         /* FIX 2: Restrict header width on mobile to avoid overlap */
         @media (max-width: 640px) {
             .header-heading {
@@ -162,7 +147,7 @@
     <div id="access-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
             <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-reverse space-x-2 urdu-text justify-end">
-                Data Access & Profile (ڈیٹا کوڈ مینجمنٹ)
+                Data Access & Profile (ڈیٹا کوڈ)
                 <span data-lucide="user" class="w-6 h-6 text-blue-600"></span>
             </h3>
             
@@ -173,16 +158,16 @@
                     <span id="access-secret-key" class="text-base font-mono text-blue-800 break-all ltr" dir="ltr">...</span>
                 </p>
                 <p class="text-sm text-gray-600">
-                    (یہ کوڈ دوسرے آلات پر ڈیٹا لوڈ کرنے کے لیے استعمال کریں)
+                    (یہ کوڈ ڈیٹا لوڈ کرنے کے لیے استعمال کریں)
                 </p>
             </div>
 
             <!-- Access Code Management -->
             <div class="space-y-3 mt-6 pt-4 border-t border-gray-200 urdu-text">
-                <h3 class="text-lg font-semibold text-gray-700">ڈیٹا کوڈ تبدیل کریں (Change Data Code)</h3>
+                <h3 class="text-lg font-semibold text-gray-700">ڈیٹا کوڈ تبدیل کریں</h3>
                 
                 <p class="text-sm text-gray-600">
-                    نیا کوڈ درج کریں یا موجودہ کوڈ لوڈ کریں (کم از کم 6/زیادہ سے زیادہ 11 حروف).
+                    نیا یا موجودہ کوڈ درج کریں (6-11 حروف).
                 </p>
 
                 <div class="flex justify-between space-x-reverse space-x-2">
@@ -192,7 +177,7 @@
                 </div>
                 
                 <form id="change-key-form">
-                    <input type="text" id="new-key-input" placeholder="Enter custom 6-11 digit/char code or paste shared code" required minlength="6" maxlength="11" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
+                    <input type="text" id="new-key-input" placeholder="Enter new or shared code" required minlength="6" maxlength="11" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
                     <button type="submit" id="change-key-btn" class="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 action-btn">
                         Switch/Load Data Code
                     </button>
@@ -210,7 +195,7 @@
     <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
             <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-reverse space-x-2 urdu-text justify-end">
-                App Settings (ایپ کی ترتیبات)
+                App Settings (ترتیبات)
                 <span data-lucide="settings" class="w-6 h-6 text-indigo-600"></span>
             </h3>
             
@@ -218,9 +203,9 @@
                 
                 <!-- Price Setting -->
                 <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ کی قیمت (Milk Price)</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ کی قیمت</h3>
                     <label for="price-per-unit-settings" class="block text-sm font-medium text-gray-700 mb-1">
-                        Price Per Litre (فی لیٹر قیمت - Rupees):
+                        Price Per Litre (فی لیٹر - Rupees):
                     </label>
                     <div class="flex space-x-reverse space-x-4">
                         <input type="number" id="price-per-unit-settings" value="120" min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
@@ -233,7 +218,7 @@
 
                 <!-- Milk Man Contact Setting -->
                 <div class="border-t pt-4">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ والے کی تفصیلات (Milk Man Details)</h3>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ والے کی تفصیلات</h3>
                     <form id="milkman-details-form-settings" class="space-y-3">
                         <div>
                             <label for="milkman-name-settings" class="block text-sm font-medium text-gray-700 mb-1">Name (نام)</label>
@@ -265,7 +250,7 @@
                  <span data-lucide="user" class="w-6 h-6"></span>
             </button>
             <!-- Centered Heading (with max-width on mobile to prevent overlap) -->
-            <h1 class="text-3xl font-bold text-gray-800 mx-auto header-heading">🥛 Milk Record Tracker</h1>
+            <h1 class="text-3xl font-bold text-gray-800 mx-auto header-heading text-center">🥛 Milk Record Tracker</h1>
             <!-- Left-Aligned Settings Icon (Opens Settings Modal) -->
             <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md absolute left-4 top-4 sm:left-6 sm:top-6 z-10">
                  <span data-lucide="settings" class="w-6 h-6"></span>
@@ -292,7 +277,7 @@
                 <!-- Milk -->
                 <div class="bg-indigo-100 p-4 rounded-xl shadow-lg border-2 border-indigo-200 flex flex-col items-center text-center">
                     <span data-lucide="droplet" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></span>
-                    <div class="text-indigo-800 font-bold text-base sm:text-lg">
+                    <div class="text-indigo-800 font-bold text-base sm:text-lg summary-label-wrapper">
                         Milk 
                         <span class="block text-sm font-normal urdu-text">(دودھ)</span>
                     </div>
@@ -302,7 +287,7 @@
                 <!-- Attendance -->
                 <div class="bg-lime-100 p-4 rounded-xl shadow-lg border-2 border-lime-200 flex flex-col items-center text-center">
                     <span data-lucide="calendar" class="w-8 h-8 text-lime-600 mx-auto mb-2"></span>
-                    <div class="text-lime-800 font-bold text-base sm:text-lg">
+                    <div class="text-lime-800 font-bold text-base sm:text-lg summary-label-wrapper">
                         Attendance 
                         <span class="block text-sm font-normal urdu-text">(حاضری)</span>
                     </div>
@@ -312,7 +297,7 @@
                 <!-- Absence -->
                 <div class="bg-rose-100 p-4 rounded-xl shadow-lg border-2 border-rose-200 flex flex-col items-center text-center">
                     <span data-lucide="x-circle" class="w-8 h-8 text-rose-500 mx-auto mb-2"></span>
-                    <div class="text-rose-800 font-bold text-base sm:text-lg">
+                    <div class="text-rose-800 font-bold text-base sm:text-lg summary-label-wrapper">
                         Absence 
                         <span class="block text-sm font-normal urdu-text">(غیر حاضری)</span>
                     </div>
@@ -324,7 +309,7 @@
                     <!-- Using banknote icon for generic currency -->
                     <span data-lucide="banknote" class="w-8 h-8 text-red-600 mx-auto mb-2"></span>
                     <!-- Label will be set dynamically in JS (Amount / Credit Advance) -->
-                    <div class="text-red-800 font-bold text-base sm:text-lg" id="balance-label-wrapper">
+                    <div class="text-red-800 font-bold text-base sm:text-lg summary-label-wrapper" id="balance-label-wrapper">
                         Amount 
                         <span class="block text-sm font-normal urdu-text">(رقم)</span>
                     </div>
@@ -357,13 +342,13 @@
                                 <input type="date" id="milk-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
 
-                            <!-- Quantity Input (FIX 3: Flex-col space-y-2 changed to flex-grow/w-full for better vertical stack on mobile) -->
+                            <!-- Quantity Input (FIX: Absent button line break applied) -->
                             <div class="flex flex-col space-y-2">
                                 <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - Litres (Quantity)</label>
                                 <div class="flex space-x-reverse space-x-2">
                                     <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                                     <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">
-                                        Absent (غیر حاضر)
+                                        Absent <br> (غیر حاضری)
                                     </button>
                                 </div>
                             </div>
@@ -485,7 +470,7 @@
             <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
                 <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2">ایپ انسٹال کریں (Install App)</h3>
                 <p class="text-gray-600 text-sm mb-3">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
-                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2" style="display: none;">
+                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2" style="display: flex;">
                     <span data-lucide="download" class="w-5 h-5"></span>
                     <span>Install Milk Tracker</span>
                 </button>
@@ -506,6 +491,14 @@
             document.getElementById('pwa-install-container').classList.remove('hidden'); 
             installButton.style.display = 'flex';
         });
+        
+        // FIX: Ensure button is visible initially (removed style="display: none;" from HTML, now defaulted to flex above)
+        // If the install button is present, check if it should hide after installation
+        if (window.matchMedia('(display-mode: standalone)').matches) {
+             const pwaContainer = document.getElementById('pwa-install-container');
+             if (pwaContainer) pwaContainer.classList.add('hidden');
+        }
+
 
         if (installButton) {
             installButton.addEventListener('click', () => {
@@ -516,6 +509,10 @@
                         console.log('User response to the install prompt:', choiceResult.outcome);
                         if (choiceResult.outcome === 'accepted') {
                             showModal('App installed successfully! Use the icon on your home screen.', 'Installation Success');
+                            document.getElementById('pwa-install-container').classList.add('hidden');
+                        } else {
+                            // If dismissed, optionally re-show button
+                            installButton.style.display = 'flex';
                         }
                         deferredPrompt = null;
                     });
@@ -527,7 +524,7 @@
     
 
     <!-- --- LOCAL STORAGE DATA LOGIC (Restored and Fixed) --- -->
-    <script> // Removed type="module" for entry fix
+    <script> 
         
         // --- LOCAL STORAGE KEYS ---
         const LS_KEY_MILK = 'milk_records_';
@@ -536,27 +533,22 @@
         const GUEST_KEY = 'GUEST_MODE'; 
 
         // --- GLOBAL STATE ---
-        // Load the stored key, or default to GUEST_MODE
         let groupKey = localStorage.getItem('milk_tracker_key') || GUEST_KEY; 
         let isAuthReady = false;
         
-        // Data State (loaded from local storage based on groupKey)
         let milkRecords = []; 
         let paymentRecords = [];
-        let pricePerUnit = 120; // Default price
+        let pricePerUnit = 120;
         let milkmanName = '';
         let milkmanContact = '';
 
-        let currentFilterMonth = getCurrentMonthYearString(); // Default to current month YYYY-MM
+        let currentFilterMonth = getCurrentMonthYearString();
         
         // --- ELEMENTS (Local references) ---
         let loadingOverlay, totalMilkEl, netBalanceEl, balanceCard, totalDaysEl, totalAbsentEl;
         let milkRecordsTableBody, milkHistoryTableBody, paymentRecordsTableBody;
-        // Access Modal Elements
         let accessModal, accessCloseBtn, accessSecretKey, generateKeyBtn, changeKeyForm, newKeyInput, changeKeyMessageEl;
-        // Settings Modal Elements
         let settingsModal, settingsCloseBtn, pricePerUnitInputSettings, savePriceBtnSettings, milkmanNameInputSettings, milkmanContactInputSettings, milkmanDetailsFormSettings;
-
         let monthSelector, currentMonthDisplay;
         let milkEntryForm, milkFormTitleEl, milkCancelEditBtn, absentBtn;
         let paymentEntryForm, paymentFormTitleEl, paymentCancelEditBtn;
@@ -619,24 +611,15 @@
 
             // --- ATTACH EVENT LISTENERS (Centralized Management) ---
 
-            // Header Icons => Open Correct Modals
             if (settingsIconBtn) settingsIconBtn.addEventListener('click', showSettingsModal);
             if (profileIconBtn) profileIconBtn.addEventListener('click', showAccessModal);
-
-            // Modal Close Buttons
             if (accessCloseBtn) accessCloseBtn.addEventListener('click', closeAccessModal);
             if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', closeSettingsModal);
             modalCloseBtn.addEventListener('click', () => { customModal.classList.add('hidden'); });
-
-            // Settings Logic
             if (savePriceBtnSettings) savePriceBtnSettings.addEventListener('click', handlePriceSave);
             if (milkmanDetailsFormSettings) milkmanDetailsFormSettings.addEventListener('submit', handleMilkmanSave);
-
-            // Access Logic
             if (generateKeyBtn) generateKeyBtn.addEventListener('click', generateRandomKey);
             if (changeKeyForm) changeKeyForm.addEventListener('submit', handleKeyChange); 
-
-            // Confirmation Logic
             confirmCancelBtn.addEventListener('click', () => { confirmationModal.classList.add('hidden'); });
             confirmYesBtn.addEventListener('click', async () => {
                 if (recordToDeleteId && recordToDeleteType) {
@@ -647,7 +630,6 @@
                 }
             });
 
-            // Form Logic
             milkCancelEditBtn.addEventListener('click', resetMilkForm);
             paymentCancelEditBtn.addEventListener('click', resetPaymentForm);
             absentBtn.addEventListener('click', handleAbsentClick); 
@@ -731,10 +713,7 @@
         
         function showAccessModal() {
             if (!isAuthReady) return;
-            
-            // Load current key status
             accessSecretKey.textContent = groupKey === GUEST_KEY ? 'None (کوئی کوڈ نہیں)' : groupKey;
-            
             accessModal.classList.remove('hidden');
         }
 
@@ -745,7 +724,6 @@
         function showSettingsModal() {
             if (!isAuthReady) return;
 
-            // Load current settings into settings modal inputs
             pricePerUnitInputSettings.value = pricePerUnit.toFixed(2);
             milkmanNameInputSettings.value = milkmanName;
             milkmanContactInputSettings.value = milkmanContact;
@@ -761,24 +739,17 @@
 
         function fullDataSync() {
             
-            // 1. Load Data
             milkRecords = loadData(groupKey, LS_KEY_MILK);
             paymentRecords = loadData(groupKey, LS_KEY_PAYMENT);
             const settings = loadSettings(groupKey);
             
-            // 2. Update Global State from Settings
             pricePerUnit = parseFloat(settings.pricePerUnit) || 120;
             milkmanName = settings.milkmanName || '';
             milkmanContact = settings.milkmanContact || '';
 
-            // 3. Update Modal UI fields (for both modals if they were open)
-            // Note: We only update the global state here, inputs are loaded when modal opens
-
-            // 4. Sort data 
             milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
             paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
 
-            // 5. Render UI
             isAuthReady = true; 
             populateMonthSelector(); 
             renderMilkRecords();
@@ -791,14 +762,13 @@
         // --- KEY/CODE CHANGE HANDLER ---
         
         function generateRandomKey() {
-            // Generates a random 11-digit alphanumeric code
             let result = '';
             const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
             const charactersLength = characters.length;
             for (let i = 0; i < 11; i++) {
                 result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
-            newKeyInput.value = result.toUpperCase(); // Set value to input field
+            newKeyInput.value = result.toUpperCase();
             changeKeyMessageEl.textContent = 'Random code generated. Click "Switch/Load" to activate.';
             changeKeyMessageEl.classList.remove('hidden', 'text-red-600');
             changeKeyMessageEl.classList.add('text-green-600');
@@ -807,17 +777,17 @@
 
         function handleKeyChange(e) {
             e.preventDefault();
-            const newKey = newKeyInput.value.trim().toUpperCase(); // Changed to uppercase for consistency
+            const newKey = newKeyInput.value.trim().toUpperCase();
 
             if (newKey.length < 6) {
-                changeKeyMessageEl.textContent = 'Code must be at least 6 characters long. (کوڈ کم از کم 6 حروف پر مشتمل ہونا چاہیے)';
+                changeKeyMessageEl.textContent = 'Code must be at least 6 characters long.';
                 changeKeyMessageEl.classList.remove('hidden', 'text-green-600');
                 changeKeyMessageEl.classList.add('text-red-600');
                 return;
             }
             
             if (newKey === groupKey) {
-                changeKeyMessageEl.textContent = 'This is the current active code! (یہ کوڈ پہلے سے فعال ہے!)';
+                changeKeyMessageEl.textContent = 'This is the current active code!';
                 changeKeyMessageEl.classList.remove('hidden', 'text-red-600');
                 changeKeyMessageEl.classList.add('text-green-600');
                 return;
@@ -848,7 +818,7 @@
             const priceMessageEl = document.getElementById('price-message-settings');
             
             if (isNaN(newPrice) || newPrice < 0) {
-                priceMessageEl.textContent = 'Please enter a valid price. (براہ کرم درست قیمت درج کریں۔)';
+                priceMessageEl.textContent = 'Please enter a valid price.';
                 priceMessageEl.classList.remove('text-green-600', 'hidden');
                 priceMessageEl.classList.add('text-red-600');
                 return;
@@ -861,8 +831,7 @@
                 
                 if (saveSettings(groupKey, settings)) {
                     pricePerUnit = newPrice; 
-
-                    priceMessageEl.textContent = 'Price saved successfully! (قیمت کامیابی سے محفوظ کر لی گئی!)';
+                    priceMessageEl.textContent = 'Price saved successfully!';
                     priceMessageEl.classList.remove('text-red-600', 'hidden');
                     priceMessageEl.classList.add('text-green-600');
                     fullDataSync(); 
@@ -896,7 +865,7 @@
                     milkmanName = newName; 
                     milkmanContact = newContact;
                     
-                    milkmanMessageEl.textContent = 'Milkman details saved successfully! (دودھ والے کی تفصیلات محفوظ کر لی گئی!)';
+                    milkmanMessageEl.textContent = 'Milkman details saved successfully!';
                     milkmanMessageEl.classList.remove('text-red-600', 'hidden');
                     milkmanMessageEl.classList.add('text-green-600');
                 } else {
