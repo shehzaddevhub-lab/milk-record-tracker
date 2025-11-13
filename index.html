@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="ur" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milk Record Tracker (Google Sheets)</title>
+    <title>Milk Record Tracker (Local Storage)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 1. PWA Manifest & Theme -->
     <meta name="theme-color" content="#1e40af"> 
     <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29ucyI6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS0lHVnVkQzVtYkc5aGJnNWtJSFZ6WjNkaWRtVjBPMnhtbFoybHVabThpWkdsaFlXSnZJR0ZuWld4MGIzUW9NalluSUhCeVpYTnBjenBjZlE9PSIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnIiB9XSwgIm5hbWUiOiAiTWlsayBSZWNvcmQgVHJhY2tlciIsICJzaG9ydF9uYW1lIjogIk1pbGsgVHJhY2tlciIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
 
     <style>
-        /* Setting a clean, modern font for Urdu/RTL text */
+        /* Setting a clean, modern font for LTR text */
         body {
             font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: #f8f9fa;
@@ -28,26 +28,26 @@
             background: #e2e8f0; /* Tailwind gray-200 */
         }
 
-        /* Force LTR display for number and date inputs for consistency (FIX for Urdu environment) */
+        /* Ensure number/date inputs are LTR (Default behavior, kept for clarity) */
         input[type="number"], input[type="date"] {
-            direction: ltr; /* Force LTR for number entry */
-            text-align: left; /* Aligns input value/placeholder left */
+            direction: ltr;
+            text-align: left;
         }
-        /* Ensure regular text inputs/selects stay RTL for Urdu */
-        input[type="text"], select {
-            text-align: right;
-            direction: rtl; 
+        /* Ensure text inputs stay LTR default, but allow right alignment for Urdu text flow */
+        input[type="text"] {
+            text-align: left; /* Default LTR input text */
+            direction: ltr; 
+        }
+        /* Setting text-align right for non-number inputs where Urdu text is expected */
+        .urdu-input {
+            text-align: right !important;
+            direction: rtl !important;
         }
 
-        /* Basic RTL adjustments for text alignment */
+        /* Basic LTR adjustments */
         .text-right { text-align: right; }
         .text-left { text-align: left; }
-        
-        /* Ensure inputs and buttons use appropriate text alignment */
-        input[type="number"], input[type="date"], input[type="text"], select {
-            /* Keep numbers LTR for easy entry, but allow text to be RTL */
-            text-align: right;
-        }
+        .text-center { text-align: center; }
         
         /* Style for action buttons with hover effects */
         .action-btn {
@@ -77,27 +77,46 @@
         .rotate-180 {
             transform: rotate(180deg);
         }
-        /* Custom selector styling for better look */
+        /* Custom selector styling LTR */
         #month-selector {
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
             background-repeat: no-repeat;
-            background-position: left 0.75rem center; /* Adjusted for RTL: left instead of right */
-            padding-right: 2.5rem; /* Ensure space for the icon on the right (RTL) */
+            background-position: right 0.75rem center; /* Adjusted for LTR */
+            padding-right: 2.5rem; /* Ensure space for the icon on the right */
             padding-left: 0.75rem;
             background-size: 1.5rem;
-            direction: ltr; /* Force LTR for the dropdown value */
-            text-align: right;
         }
         /* Ensure the currency display is always LTR to show Rs. correctly */
         .currency-display {
             direction: ltr !important;
-            text-align: right !important;
+            text-align: right !important; /* Right aligned numbers */
         }
-        /* Style for date display to fix RTL issue */
+        /* Style for date display to fix LTR issue */
         .date-display-wrapper {
-             direction: ltr; /* Force LTR context for the number and English text */
-             text-align: center; /* Center the entire block within its container */
+             direction: ltr;
+             text-align: center;
+        }
+        .fixed-action-btn {
+            position: absolute;
+            top: 1rem;
+        }
+        /* Style for the Generate button */
+        .generate-btn {
+             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+             transition: all 0.2s;
+        }
+        .generate-btn:hover {
+            opacity: 0.9;
+        }
+        /* Ensure Urdu/RTL text display alignment */
+        .urdu-text {
+            text-align: right;
+            direction: rtl;
+        }
+        /* Style for LTR table columns (Date, Qty, Amount) */
+        .ltr-column {
+             text-align: left !important;
         }
     </style>
     <!-- Load Lucide Icons for UI elements -->
@@ -107,7 +126,7 @@
 
     <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-white/70 z-50 flex items-center justify-center hidden">
-        <div class="flex items-center space-x-reverse space-x-2 text-gray-700 p-4 bg-white rounded-lg shadow-2xl">
+        <div class="flex items-center space-x-2 text-gray-700 p-4 bg-white rounded-lg shadow-2xl">
             <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -129,126 +148,143 @@
     <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
             <h3 class="text-xl font-bold text-red-600 mb-4">Confirm (تصدیق کریں)</h3>
-            <p id="confirm-message" class="text-gray-600 mb-6">Are you sure you want to delete this record? (کیا آپ واقعی اس ریکارڈ کو حذف کرنا چاہتے ہیں؟)</p>
-            <div class="flex justify-end space-x-reverse space-x-3">
+            <p id="confirm-message" class="text-gray-600 mb-6 urdu-text">Are you sure you want to delete this record? (کیا آپ واقعی اس ریکارڈ کو حذف کرنا چاہتے ہیں؟)</p>
+            <div class="flex justify-end space-x-3">
                 <button id="confirm-cancel-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn flex-grow">Cancel</button>
                 <button id="confirm-yes-btn" class="bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 action-btn flex-grow">Yes, Delete</button>
             </div>
         </div>
     </div>
 
-    <!-- Profile Modal (NEW) -->
-    <div id="profile-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+    <!-- --- 1. PROFILE ACCESS MODAL (Right Icon) --- -->
+    <div id="access-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
         <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
-            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">User Profile (صارف کی تفصیلات)</h3>
-            <div class="space-y-3 mb-6 text-sm">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-2">
+                <span data-lucide="user" class="w-6 h-6 text-blue-600"></span>
+                Data Access & Profile (ڈیٹا کوڈ مینجمنٹ)
+            </h3>
+            
+            <!-- Current Status -->
+            <div id="current-status-section" class="space-y-3 mb-6 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200">
                 <p class="text-gray-700">
-                    <span class="font-semibold block">Login Type (لاگ اِن قسم):</span> 
-                    <span id="profile-login-type" class="text-sm font-mono text-blue-600 break-all">...</span>
+                    <span class="font-semibold block">Active Data Code:</span> 
+                    <span id="access-secret-key" class="text-base font-mono text-blue-800 break-all ltr" dir="ltr">...</span>
                 </p>
-                <p class="text-gray-700">
-                    <span class="font-semibold block">Access Code (رسائی کوڈ):</span> 
-                    <span id="profile-secret-key" class="text-xs font-mono text-gray-800 break-all">...</span>
-                </p>
-                <p id="shared-note" class="text-sm text-green-600 font-medium hidden">
-                    All users with this code share the same record. (اس کوڈ کے تمام صارفین ایک ہی ریکارڈ شیئر کرتے ہیں۔)
+                <p class="text-sm text-gray-600 urdu-text">
+                    (یہ کوڈ دوسرے آلات پر ڈیٹا لوڈ کرنے کے لیے استعمال کریں)
                 </p>
             </div>
-            <button id="logout-btn" class="bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 action-btn w-full">Logout (لاگ آؤٹ)</button>
-            <button id="profile-close-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn w-full mt-2">Close</button>
+
+            <!-- Access Code Management -->
+            <div class="space-y-3 mt-6 pt-4 border-t border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-700 urdu-text">ڈیٹا کوڈ تبدیل کریں (Change Data Code)</h3>
+                
+                <p class="text-sm text-gray-600 urdu-text">
+                    نیا کوڈ درج کریں یا موجودہ کوڈ لوڈ کریں (کم از کم 6/زیادہ سے زیادہ 11 حروف).
+                </p>
+
+                <div class="flex justify-between space-x-2">
+                     <button id="generate-key-btn" type="button" class="flex-grow bg-emerald-500 text-white p-3 rounded-lg font-semibold hover:bg-emerald-600 action-btn generate-btn text-sm">
+                        <span data-lucide="hash" class="w-4 h-4 inline-block mr-1"></span> Generate 11-Digit Code
+                    </button>
+                </div>
+                
+                <form id="change-key-form">
+                    <input type="text" id="new-key-input" placeholder="Enter custom 6-11 digit/char code or paste shared code" required minlength="6" maxlength="11" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
+                    <button type="submit" id="change-key-btn" class="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 action-btn">
+                        Switch/Load Data Code
+                    </button>
+                    <p id="change-key-message" class="text-sm mt-2 hidden text-red-600 text-center"></p>
+                </form>
+            </div>
+
+
+            <button id="access-close-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn w-full mt-4">Close</button>
         </div>
     </div>
+
+
+    <!-- --- 2. SETTINGS MODAL (Left Icon) --- -->
+    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-2">
+                <span data-lucide="settings" class="w-6 h-6 text-indigo-600"></span>
+                App Settings (ایپ کی ترتیبات)
+            </h3>
+            
+            <div class="space-y-4 pt-4">
+                
+                <!-- Price Setting -->
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2 urdu-text">دودھ کی قیمت (Milk Price)</h3>
+                    <label for="price-per-unit-settings" class="block text-sm font-medium text-gray-700 mb-1">
+                        Price Per Litre (فی لیٹر قیمت - Rupees):
+                    </label>
+                    <div class="flex space-x-4">
+                        <input type="number" id="price-per-unit-settings" value="120" min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
+                        <button id="save-price-btn-settings" type="button" class="bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 action-btn w-28">
+                            Save Price
+                        </button>
+                    </div>
+                    <p id="price-message-settings" class="text-sm mt-2 hidden text-green-600"></p>
+                </div>
+
+                <!-- Milk Man Contact Setting -->
+                <div class="border-t pt-4">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2 urdu-text">دودھ والے کی تفصیلات (Milk Man Details)</h3>
+                    <form id="milkman-details-form-settings" class="space-y-3">
+                        <div>
+                            <label for="milkman-name-settings" class="block text-sm font-medium text-gray-700 mb-1">Name (نام)</label>
+                            <input type="text" id="milkman-name-settings" placeholder="Milkman Name" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 urdu-input">
+                        </div>
+                        <div>
+                            <label for="milkman-contact-settings" class="block text-sm font-medium text-gray-700 mb-1">Contact No. (رابطہ نمبر)</label>
+                            <input type="tel" id="milkman-contact-settings" placeholder="+92 3XX XXXXXXX" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
+                        </div>
+                        <button type="submit" id="save-milkman-btn-settings" class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 action-btn">
+                            Save Details
+                        </button>
+                        <p id="milkman-message-settings" class="text-sm mt-2 hidden text-green-600 text-center urdu-text"></p>
+                    </form>
+                </div>
+            </div>
+
+            <button id="settings-close-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn w-full mt-4">Close</button>
+        </div>
+    </div>
+
 
     
     <div class="max-w-4xl w-full">
         
         <header class="flex justify-between items-center mb-6 border-b pb-2">
+            <!-- Left-Aligned Settings Icon (Opens Settings Modal) -->
+            <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md absolute left-4 top-4 sm:left-6 sm:top-6">
+                 <span data-lucide="settings" class="w-6 h-6"></span>
+            </button>
             <!-- Centered Heading -->
-            <h1 class="text-3xl font-bold text-gray-800 mx-auto">🥛 Milk Record Tracker (Google Sheets)</h1>
+            <h1 class="text-3xl font-bold text-gray-800 mx-auto">🥛 Milk Record Tracker</h1>
+            <!-- Right-Aligned Profile Icon (Opens Access Modal) -->
             <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md absolute right-4 top-4 sm:right-6 sm:top-6">
-                <span data-lucide="user" class="w-6 h-6"></span>
+                 <span data-lucide="user" class="w-6 h-6"></span>
             </button>
         </header>
 
-        <!-- --- LOGIN SCREEN (Shown initially) --- -->
-        <div id="login-screen" class="p-6 bg-white rounded-xl shadow-xl max-w-md mx-auto mb-8 hidden">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">Account Access (اکاؤنٹ تک رسائی)</h2>
-            
-            <!-- Login/Signup Tabs -->
-            <div class="flex border-b border-gray-200 mb-4">
-                <button id="tab-signup" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl" onclick="switchLoginTab('signup')">
-                    <span data-lucide="user-plus" class="w-5 h-5 inline-block ml-1"></span> Signup (رجسٹریشن)
-                </button>
-                <button id="tab-login" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl" onclick="switchLoginTab('login')">
-                    <span data-lucide="log-in" class="w-5 h-5 inline-block ml-1"></span> Login (لاگ اِن)
-                </button>
-            </div>
-
-            <!-- Signup Content -->
-            <div id="signup-tab-content">
-                <p class="text-gray-600 mb-4 text-center text-sm">
-                    Create a unique Access Code (min 6 chars). This code links to your data in the Google Sheet. (ایک منفرد رسائی کوڈ (کم از کم 6 حروف) بنائیں۔ یہ کوڈ آپ کے ڈیٹا کو گوگل شیٹ سے جوڑتا ہے۔)
-                </p>
-                <form id="signup-form" class="space-y-4">
-                    <div>
-                        <label for="signup-key" class="block text-sm font-medium text-gray-700 mb-1">
-                            New Access Code (نیا رسائی کوڈ)
-                        </label>
-                        <input type="text" id="signup-key" placeholder="e.g. MyFamilyDairy" required minlength="6" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500" dir="ltr">
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn text-center">
-                        Signup (اکاؤنٹ بنائیں)
-                    </button>
-                </form>
-            </div>
-
-             <!-- Login Content (Hidden Initially) -->
-            <div id="login-tab-content" class="hidden">
-                <p class="text-gray-600 mb-4 text-center text-sm">
-                    Enter your existing Access Code. (اپنا موجودہ رسائی کوڈ درج کریں۔)
-                </p>
-                <form id="login-form">
-                    <div class="space-y-4">
-                        <div>
-                            <label for="login-key" class="block text-sm font-medium text-gray-700 mb-1">
-                                Access Code (رسائی کوڈ)
-                            </label>
-                            <input type="text" id="login-key" placeholder="e.g. MyFamilyDairy" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                        </div>
-                        <button type="submit" class="w-full bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 action-btn text-center">
-                            Login (لاگ اِن کریں)
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            <p id="login-error-message" class="text-red-500 text-sm mt-3 text-center hidden">
-                Login failed. Please try again.
-            </p>
-
-            <div class="mt-4 border-t pt-4">
-                <button id="guest-access-btn" class="w-full bg-gray-500 text-white p-3 rounded-lg font-semibold hover:bg-gray-600 action-btn text-center">
-                    Access as Guest (بغیر کوڈ کے رسائی)
-                </button>
-            </div>
-        </div>
-
-
-        <!-- --- MAIN APP CONTENT (Hidden initially) --- -->
-        <div id="main-app-content" class="hidden">
-             <!-- Monthly Status Display and Selector (IMPROVED LOOK) -->
-             <div class="flex flex-col sm:flex-row-reverse justify-between items-center gap-3 mb-6 p-4 bg-white rounded-xl shadow-md border-b-4 border-blue-500/10">
-                <!-- Month Selector (aligned left in LTR context, visually right in RTL container) -->
+        <!-- --- MAIN APP CONTENT (Default View) --- -->
+        <div id="main-app-content">
+             <!-- Monthly Status Display and Selector -->
+             <div class="flex justify-between items-center gap-3 mb-6 p-4 bg-white rounded-xl shadow-md border-b-4 border-blue-500/10 flex-wrap">
+                <!-- Month Selector -->
                 <select id="month-selector" class="p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 hover:bg-gray-100 cursor-pointer shadow-inner focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition" onchange="handleMonthChange(this.value)">
                     <!-- Options will be injected by JavaScript -->
                 </select>
-                <!-- Data Display (aligned right in LTR context, visually left in RTL container) -->
+                <!-- Data Display -->
                 <p class="text-center text-lg font-bold text-gray-800 whitespace-nowrap date-display-wrapper">
                     Data for: <b id="current-month-display">...</b>
                 </p>
             </div>
 
-            <!-- Summary Cards (Updated for 4 metrics: Milk, Days, Balance, Absence) -->
+            <!-- Summary Cards -->
             <div id="summary-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                 
                 <!-- Milk -->
@@ -256,7 +292,7 @@
                     <span data-lucide="droplet" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></span>
                     <div class="text-indigo-800 font-bold text-base sm:text-lg">
                         Milk 
-                        <span class="block text-sm font-normal">(دودھ)</span>
+                        <span class="block text-sm font-normal urdu-text">(دودھ)</span>
                     </div>
                     <div id="total-milk" class="text-xl sm:text-2xl font-extrabold text-indigo-900 mt-1">0.00 Litres</div>
                 </div>
@@ -266,7 +302,7 @@
                     <span data-lucide="calendar" class="w-8 h-8 text-lime-600 mx-auto mb-2"></span>
                     <div class="text-lime-800 font-bold text-base sm:text-lg">
                         Attendance 
-                        <span class="block text-sm font-normal">(حاضری)</span>
+                        <span class="block text-sm font-normal urdu-text">(حاضری)</span>
                     </div>
                     <div id="total-days" class="text-xl sm:text-2xl font-extrabold text-lime-900 mt-1">0 Days</div>
                 </div>
@@ -276,7 +312,7 @@
                     <span data-lucide="x-circle" class="w-8 h-8 text-rose-500 mx-auto mb-2"></span>
                     <div class="text-rose-800 font-bold text-base sm:text-lg">
                         Absence 
-                        <span class="block text-sm font-normal">(غیر حاضری)</span>
+                        <span class="block text-sm font-normal urdu-text">(غیر حاضری)</span>
                     </div>
                     <div id="total-absent" class="text-xl sm:text-2xl font-extrabold text-rose-900 mt-1">0 Days</div>
                 </div>
@@ -288,41 +324,41 @@
                     <!-- Label will be set dynamically in JS (Amount / Credit Advance) -->
                     <div class="text-red-800 font-bold text-base sm:text-lg" id="balance-label-wrapper">
                         Amount 
-                        <span class="block text-sm font-normal">(رقم)</span>
+                        <span class="block text-sm font-normal urdu-text">(رقم)</span>
                     </div>
                     <div id="net-balance" class="text-xl sm:text-2xl font-extrabold text-red-800 mt-1 currency-display">Rs. 0</div>
                 </div>
             </div>
             
-            <!-- Tabbed Entry Forms (New Compact Design) -->
+            <!-- Tabbed Entry Forms -->
             <div class="bg-white rounded-xl shadow-xl mb-8">
                 <!-- Tab Buttons -->
                 <div class="flex border-b border-gray-200">
-                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl" onclick="switchAppTab('milk')">
-                        <span data-lucide="droplet" class="w-5 h-5 inline-block ml-1"></span> Milk Entry
+                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tl-xl" onclick="switchAppTab('milk')">
+                        <span data-lucide="droplet" class="w-5 h-5 inline-block mr-1"></span> Milk Entry
                     </button>
-                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl" onclick="switchAppTab('payment')">
-                        <span data-lucide="wallet" class="w-5 h-5 inline-block ml-1"></span> Payment Entry
+                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tr-xl" onclick="switchAppTab('payment')">
+                        <span data-lucide="wallet" class="w-5 h-5 inline-block mr-1"></span> Payment Entry
                     </button>
                 </div>
 
                 <!-- Tab Content -->
                 <div id="milk-tab-content" class="tab-content p-6">
-                    <h2 id="milk-form-title" class="text-xl font-bold text-gray-700 mb-4">Milk Entry (دودھ کا اندراج)</h2>
+                    <h2 id="milk-form-title" class="text-xl font-bold text-gray-700 mb-4 urdu-text">دودھ کا اندراج (Milk Entry)</h2>
                     <form id="milk-entry-form" class="space-y-4">
                         <input type="hidden" id="milk-entry-id">
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Date Input -->
                             <div>
-                                <label for="milk-entry-date" class="block text-sm font-medium text-gray-700 mb-1">Date (تاریخ)</label>
+                                <label for="milk-entry-date" class="block text-sm font-medium text-gray-700 mb-1 urdu-text">تاریخ (Date)</label>
                                 <input type="date" id="milk-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
 
                             <!-- Quantity Input -->
                             <div class="flex flex-col space-y-2">
-                                <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">Quantity (مقدار - Litres)</label>
-                                <div class="flex space-x-reverse space-x-2">
+                                <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1 urdu-text">مقدار - Litres (Quantity)</label>
+                                <div class="flex space-x-2">
                                     <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                                     <button type="button" id="absent-btn" class="bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">
                                         Absent (غیر حاضر)
@@ -331,7 +367,7 @@
                             </div>
                         </div>
                         
-                        <button type="submit" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn">
+                        <button type="submit" id="submit-milk-entry" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn">
                             Submit Milk Entry
                         </button>
                         <button type="button" id="milk-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">
@@ -341,25 +377,25 @@
                 </div>
 
                 <div id="payment-tab-content" class="tab-content p-6 hidden">
-                    <h2 id="payment-form-title" class="text-xl font-bold text-gray-700 mb-4">Payment Entry (ادائیگی کا اندراج)</h2>
+                    <h2 id="payment-form-title" class="text-xl font-bold text-gray-700 mb-4 urdu-text">ادائیگی کا اندراج (Payment Entry)</h2>
                     <form id="payment-entry-form" class="space-y-4">
                         <input type="hidden" id="payment-entry-id">
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <!-- Date Input -->
                             <div>
-                                <label for="payment-entry-date" class="block text-sm font-medium text-gray-700 mb-1">Date (تاریخ)</label>
+                                <label for="payment-entry-date" class="block text-sm font-medium text-gray-700 mb-1 urdu-text">تاریخ (Date)</label>
                                 <input type="date" id="payment-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
 
                             <!-- Amount Input -->
                             <div>
-                                <label for="payment-entry-amount" class="block text-sm font-medium text-gray-700 mb-1">Amount (رقم - Rupees)</label>
+                                <label for="payment-entry-amount" class="block text-sm font-medium text-gray-700 mb-1 urdu-text">رقم - Rupees (Amount)</label>
                                 <input type="number" id="payment-entry-amount" required min="1" step="1" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
                         </div>
                         
-                        <button type="submit" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn">
+                        <button type="submit" id="submit-payment-entry" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn">
                             Submit Payment Entry
                         </button>
                         <button type="button" id="payment-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">
@@ -369,62 +405,10 @@
                 </div>
             </div>
 
-            <!-- Settings Section (Price Adjustment) - KEPT COLLAPSIBLE -->
-            <div class="bg-white p-5 rounded-xl shadow-xl mb-8">
-                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('settings-content').classList.toggle('hidden'); document.querySelector('#settings-icon').classList.toggle('rotate-180')">
-                    <h2 class="text-xl font-bold text-gray-700">Settings (ترتیبات)</h2>
-                    <span id="settings-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
-                </div>
-                <div id="settings-content" class="hidden pt-2 border-t mt-2 space-y-4">
-                    <!-- Price Setting -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Milk Price (دودھ کی قیمت)</h3>
-                        <label for="price-per-unit" class="block text-sm font-medium text-gray-700 mb-1">
-                            Price Per Litre (فی لیٹر قیمت - Rupees):
-                        </label>
-                        <div class="flex space-x-reverse space-x-4">
-                            <input type="number" id="price-per-unit" value="120" min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                            <button id="save-price-btn" class="bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 action-btn w-28">
-                                Save Price
-                            </button>
-                        </div>
-                        <p id="price-message" class="text-sm mt-2 hidden text-green-600"></p>
-                    </div>
-
-                    <!-- Milk Man Contact Setting (NEW) -->
-                    <div>
-                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Milk Man Details (دودھ والے کی تفصیلات)</h3>
-                        <form id="milkman-details-form" class="space-y-3">
-                            <div>
-                                <label for="milkman-name" class="block text-sm font-medium text-gray-700 mb-1">Name (نام)</label>
-                                <input type="text" id="milkman-name" placeholder="Milkman Name" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
-                            </div>
-                            <div>
-                                <label for="milkman-contact" class="block text-sm font-medium text-gray-700 mb-1">Contact No. (رابطہ نمبر)</label>
-                                <input type="tel" id="milkman-contact" placeholder="+92 3XX XXXXXXX" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                            </div>
-                            <button type="submit" id="save-milkman-btn" class="w-full bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 action-btn">
-                                Save Details
-                            </button>
-                            <p id="milkman-message" class="text-sm mt-2 hidden text-green-600 text-center"></p>
-                        </form>
-                    </div>
-                    <!-- PWA Installation Button (Manual Trigger) -->
-                    <div id="pwa-install-container" class="border-t pt-4">
-                        <h3 class="text-lg font-semibold text-gray-700 mb-2">Install App (ایپ انسٹال کریں)</h3>
-                        <p class="text-gray-600 text-sm mb-3">Install this tracker to your device for fast offline access. (فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔)</p>
-                        <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-2 space-x-reverse">
-                            <span data-lucide="download" class="w-5 h-5"></span>
-                            <span>Install Milk Tracker</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             <!-- Daily Records Table (FILTERED MONTH) -->
             <div class="bg-white p-6 rounded-xl shadow-xl mb-8">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-records-content').classList.toggle('hidden'); document.querySelector('#milk-records-icon').classList.toggle('rotate-180')">
-                    <h2 class="text-xl font-bold text-gray-700">Daily Records (منتخب مہینے کا ریکارڈ)</h2>
+                    <h2 class="text-xl font-bold text-gray-700 urdu-text">منتخب مہینے کا ریکارڈ (Daily Records)</h2>
                     <span id="milk-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
                 <div id="milk-records-content" class="pt-2 border-t mt-2">
@@ -432,9 +416,9 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-100 sticky top-0">
                                 <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Quantity (Litres)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Amount (Rupees)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Litres)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
                                     <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
                                 </tr>
                             </thead>
@@ -449,7 +433,7 @@
             <!-- Milk History Table (ALL OTHER MONTHS) -->
             <div class="bg-white p-6 rounded-xl shadow-xl mb-8">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-history-content').classList.toggle('hidden'); document.querySelector('#milk-history-icon').classList.toggle('rotate-180')">
-                    <h2 class="text-xl font-bold text-gray-700">Milk History (دوسرے مہینوں کا ریکارڈ)</h2>
+                    <h2 class="text-xl font-bold text-gray-700 urdu-text">دوسرے مہینوں کا ریکارڈ (Milk History)</h2>
                     <span id="milk-history-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
                 <div id="milk-history-content" class="hidden pt-2 border-t mt-2">
@@ -457,9 +441,9 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-100 sticky top-0">
                                 <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Quantity (Litres)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Amount (Rupees)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Litres)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
                                     <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
                                 </tr>
                             </thead>
@@ -472,9 +456,9 @@
             </div>
 
             <!-- Payment History Table (OVERALL HISTORY) -->
-            <div class="bg-white p-6 rounded-xl shadow-xl">
+            <div class="bg-white p-6 rounded-xl shadow-xl mb-8">
                 <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('payment-records-content').classList.toggle('hidden'); document.querySelector('#payment-records-icon').classList.toggle('rotate-180')">
-                    <h2 class="text-xl font-bold text-gray-700">Payment History (ادائیگی کی تاریخ)</h2>
+                    <h2 class="text-xl font-bold text-gray-700 urdu-text">ادائیگی کی تاریخ (Payment History)</h2>
                     <span id="payment-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
                 <div id="payment-records-content" class="pt-2 border-t mt-2">
@@ -482,8 +466,8 @@
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-100 sticky top-0">
                                 <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Amount Paid (ادا کردہ رقم)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 ltr-column">Date (تاریخ)</th>
+                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 currency-display">Amount Paid (ادا کردہ رقم)</th>
                                     <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Actions</th>
                                 </tr>
                             </thead>
@@ -494,165 +478,236 @@
                     </div>
                 </div>
             </div>
+
+            <!-- PWA Installation Section (Manual Install) -->
+            <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 hidden">
+                <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2 urdu-text">ایپ انسٹال کریں (Install App)</h3>
+                <p class="text-gray-600 text-sm mb-3 urdu-text">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
+                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-2" style="display: none;">
+                    <span data-lucide="download" class="w-5 h-5"></span>
+                    <span>Install Milk Tracker</span>
+                </button>
+            </div>
         </div> <!-- End of main-app-content -->
     </div>
 
-    <!-- 2. Service Worker Registration and PWA Logic -->
+    <!-- 2. PWA Logic (simplified) -->
     <script>
-        // Store deferred prompt for manual installation
+        // --- PWA LOGIC (Kept minimal for single-file structure) ---
         let deferredPrompt;
-        const installButton = document.getElementById('install-button');
+        let installButton = document.getElementById('install-button');
 
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            if (installButton) {
-                installButton.style.display = 'flex';
-                document.getElementById('pwa-install-container').classList.remove('hidden');
-            }
+            document.getElementById('pwa-install-container').classList.remove('hidden');
+            installButton.style.display = 'flex';
         });
 
         if (installButton) {
-            installButton.addEventListener('click', (e) => {
+            installButton.addEventListener('click', () => {
                 if (deferredPrompt) {
                     installButton.style.display = 'none';
                     deferredPrompt.prompt();
-                    
                     deferredPrompt.userChoice.then((choiceResult) => {
                         console.log('User response to the install prompt:', choiceResult.outcome);
                         if (choiceResult.outcome === 'accepted') {
                             showModal('App installed successfully! Use the icon on your home screen.', 'Installation Success');
-                        } else {
-                            console.log('User dismissed the A2HS prompt');
                         }
                         deferredPrompt = null;
                     });
                 }
             });
         }
-        
-        // Service Worker Registration for Offline Capabilities
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('data:application/javascript;base64,J2xldCBjYWNoZU5hbWUgPSAnbWlsay10cmFja2VyLXUtY2FjaGUtMS4wJzsgCmNsZWFyQ2FjaGUoKTsgCgpzZWxmLmFkZEV2ZW50TGlzdGVuZXIoJ2luc3RhbGwnLCAoZSkgPT4gewogIGUud2FpdEZvcihjb2RlQ2FjaGVBbmRTY2lwV2FpdCgpKTsKfSk7IAoKc2VsZi5hZGRFdmVudExpc3RlbmVyKCdmaXRjaCcsIChlKSA9PiB7CiAgLy8gR2V0IHRoZSByZXNwb25zZSBmcm9tIHRoZSBjYWNoZSBvciBmcm9tIHRoZSBuZXR3b3JrLgogIGUucmVzcG9uZE92ZXR0ZXJGaXhFcihcclxuICAgY2FjaGVzLmtldSgpCiAgLnRoZW4oY2FjaGVTdGF0aWNpZGRlcnMgPT4gewogICAgcmV0dXJuIGNhY2hlU3RhdGljaWRkZXJzLm1hdGNoKGUucmVxdWVzdCkuXHJcbiAgfSkgLi5zcmUoZGVmYXVsdEZpeGVyKVxyXG4gICk7Cn0pOwoKZnVuY3Rpb24gY2xlYXJDYWNoZSgpIHsKICBjYWNoZXMua2V5cygpLnRoZW4oY2FjaGVzID0+IHsKICAgICAgcmV0dXJuIFByb21pc2UuYWxsKGNhY2hlcy5tYXBzKGNhY2hlID0+IHsKICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2FjaGUgIT09IGNhY2hlTmFtZSA/IGNhY2hlcy5kZWxldGUoY2FjaGUpIDogcHJvbWlzZS5yZXNvbHZlKCk7CiAgICAgICAgICAgICAgfSkpOwogICAgICAgICAgfSk7Cn0KICAgCmZ1bmN0aW9uIGNvZGVDYWNoZUFkZEFuZFNjaXBWYWl0KCkgewogIHJldHVybiBjYWNoZXMuYWRkKGNhY2hlTmFtZSwgWwogICAgJy4vJywgLy8gQ2FjaGUgaW5kZXguY3NzIGFuZCBpbmRleC5odG1sCiAgICAnLi9pbmRleC5odG1sJywKICAgICdodHRwczovL2Nkbi50YWlsd2luZGNzcy5jb20vJywgLy8gQ2FjaGUgdGFpbHdpbmQgY2RuCiAgICAnaHR0cHM6Ly91bnBrZy5jb20vbHVjaWRlQGxhdGVzdCcsIC8vIENhY2hlIGx1Y2lkZSBpY29ucwogICAgJy8nCiAgXSk7Cn0KCmZ1bmN0aW9uIGRlZmF1bHRGaXhlcigpIHsKICBldmVudC5yZXNwb25kZShmZXRjaChldmVudC5yZXF1ZXN0KSk7CiAgcmV0dXJuOwp9Cg==');
-            });
-        }
+        // Service Worker Registration removed entirely as it requires a separate file.
     </script>
     
 
-    <!-- --- GOOGLE SHEETS / APPS SCRIPT INTEGRATION LOGIC --- -->
+    <!-- --- LOCAL STORAGE DATA LOGIC (Restored and Fixed) --- -->
     <script type="module">
         
-        // IMPORTANT: Replace this with your deployed Google Apps Script Web App URL
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyYhd1QKZx-AylUQqXOFeu6qRCs8XJx1Rr2lw-vN-ax15iGGNqU7j1zTMsM025CuyBX7w/exec'; // *** MUST BE REPLACED ***
+        // --- LOCAL STORAGE KEYS ---
+        const LS_KEY_MILK = 'milk_records_';
+        const LS_KEY_PAYMENT = 'payment_records_';
+        const LS_KEY_SETTINGS = 'settings_';
         const GUEST_KEY = 'GUEST_MODE'; 
-        const POLLING_INTERVAL = 5000; // Check for updates every 5 seconds (to simulate real-time)
 
         // --- GLOBAL STATE ---
-        let groupKey = null; // The Access Code used for logging in (or GUEST_MODE)
+        // Load the stored key, or default to GUEST_MODE
+        let groupKey = localStorage.getItem('milk_tracker_key') || GUEST_KEY; 
         let isAuthReady = false;
         
-        // Data State (will be replaced by fetched data)
+        // Data State (loaded from local storage based on groupKey)
         let milkRecords = []; 
         let paymentRecords = [];
-        let pricePerUnit = 120;
+        let pricePerUnit = 120; // Default price
         let milkmanName = '';
         let milkmanContact = '';
 
         let currentFilterMonth = getCurrentMonthYearString(); // Default to current month YYYY-MM
-        let dataPollingTimer = null; // For simulating real-time updates
+        
+        // --- ELEMENTS (Local references) ---
+        let loadingOverlay, totalMilkEl, netBalanceEl, balanceCard, totalDaysEl, totalAbsentEl;
+        let milkRecordsTableBody, milkHistoryTableBody, paymentRecordsTableBody;
+        // Access Modal Elements
+        let accessModal, accessCloseBtn, accessSecretKey, generateKeyBtn, changeKeyForm, newKeyInput, changeKeyMessageEl;
+        // Settings Modal Elements
+        let settingsModal, settingsCloseBtn, pricePerUnitInputSettings, savePriceBtnSettings, milkmanNameInputSettings, milkmanContactInputSettings, milkmanDetailsFormSettings;
 
-        // --- ELEMENTS (Identical to original) ---
-        const loadingOverlay = document.getElementById('loading-overlay');
-        const totalMilkEl = document.getElementById('total-milk');
-        const netBalanceEl = document.getElementById('net-balance');
-        const balanceCard = document.getElementById('balance-card');
-        const totalDaysEl = document.getElementById('total-days');
-        const totalAbsentEl = document.getElementById('total-absent'); 
-        const milkRecordsTableBody = document.getElementById('milk-records-table-body');
-        const milkHistoryTableBody = document.getElementById('milk-history-table-body');
-        const paymentRecordsTableBody = document.getElementById('payment-records-table-body');
-        const pricePerUnitInput = document.getElementById('price-per-unit');
-        const savePriceBtn = document.getElementById('save-price-btn');
-        const priceMessageEl = document.getElementById('price-message');
-        const monthSelector = document.getElementById('month-selector');
-        
-        const milkEntryForm = document.getElementById('milk-entry-form');
-        const milkFormTitleEl = document.getElementById('milk-form-title');
-        const milkCancelEditBtn = document.getElementById('milk-cancel-edit-btn');
-        const absentBtn = document.getElementById('absent-btn'); 
-        
-        const paymentEntryForm = document.getElementById('payment-entry-form');
-        const paymentFormTitleEl = document.getElementById('payment-form-title');
-        const paymentCancelEditBtn = document.getElementById('payment-cancel-edit-btn');
-        
-        // Login UI elements
-        const loginScreen = document.getElementById('login-screen'); 
-        const mainAppContent = document.getElementById('main-app-content'); 
-        
-        const signupForm = document.getElementById('signup-form');
-        const signupKeyInput = document.getElementById('signup-key');
-        
-        const loginForm = document.getElementById('login-form'); 
-        const loginKeyInput = document.getElementById('login-key');
-        
-        const loginErrorMsg = document.getElementById('login-error-message');
-        const guestAccessBtn = document.getElementById('guest-access-btn');
-        const currentMonthDisplay = document.getElementById('current-month-display');
-        
-        // Profile Modal elements
-        const profileIconBtn = document.getElementById('profile-icon-btn');
-        const profileModal = document.getElementById('profile-modal');
-        const profileCloseBtn = document.getElementById('profile-close-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const profileLoginType = document.getElementById('profile-login-type');
-        const profileSecretKey = document.getElementById('profile-secret-key');
-        const sharedNote = document.getElementById('shared-note'); // NOTE: Removed profile-session-id as there is no Firebase UID
+        let monthSelector, currentMonthDisplay;
+        let milkEntryForm, milkFormTitleEl, milkCancelEditBtn, absentBtn;
+        let paymentEntryForm, paymentFormTitleEl, paymentCancelEditBtn;
+        let customModal, modalMessageEl, modalTitleEl, modalCloseBtn;
+        let confirmationModal, confirmCancelBtn, confirmYesBtn;
+        let settingsIconBtn, profileIconBtn; 
 
-        // Milkman Settings Elements
-        const milkmanNameInput = document.getElementById('milkman-name');
-        const milkmanContactInput = document.getElementById('milkman-contact');
-        const milkmanDetailsForm = document.getElementById('milkman-details-form');
-        const milkmanMessageEl = document.getElementById('milkman-message');
+        function initializeElementReferences() {
+            // --- CORE UI ELEMENTS ---
+            loadingOverlay = document.getElementById('loading-overlay');
+            totalMilkEl = document.getElementById('total-milk');
+            netBalanceEl = document.getElementById('net-balance');
+            balanceCard = document.getElementById('balance-card');
+            totalDaysEl = document.getElementById('total-days');
+            totalAbsentEl = document.getElementById('total-absent'); 
+            milkRecordsTableBody = document.getElementById('milk-records-table-body');
+            milkHistoryTableBody = document.getElementById('milk-history-table-body');
+            paymentRecordsTableBody = document.getElementById('payment-records-table-body');
+            monthSelector = document.getElementById('month-selector');
+            currentMonthDisplay = document.getElementById('current-month-display');
+            
+            // Header Icons & Forms
+            settingsIconBtn = document.getElementById('settings-icon-btn');
+            profileIconBtn = document.getElementById('profile-icon-btn');
+            milkEntryForm = document.getElementById('milk-entry-form');
+            milkFormTitleEl = document.getElementById('milk-form-title');
+            milkCancelEditBtn = document.getElementById('milk-cancel-edit-btn');
+            absentBtn = document.getElementById('absent-btn'); 
+            paymentEntryForm = document.getElementById('payment-entry-form');
+            paymentFormTitleEl = document.getElementById('payment-form-title');
+            paymentCancelEditBtn = document.getElementById('payment-cancel-edit-btn');
 
-        // Modal elements 
-        const customModal = document.getElementById('custom-modal');
-        const modalMessageEl = document.getElementById('modal-message');
-        const modalTitleEl = document.getElementById('modal-title');
-        const modalCloseBtn = document.getElementById('modal-close-btn'); 
+            // --- ACCESS MODAL ELEMENTS ---
+            accessModal = document.getElementById('access-modal');
+            accessCloseBtn = document.getElementById('access-close-btn');
+            accessSecretKey = document.getElementById('access-secret-key');
+            generateKeyBtn = document.getElementById('generate-key-btn');
+            changeKeyForm = document.getElementById('change-key-form');
+            newKeyInput = document.getElementById('new-key-input');
+            changeKeyMessageEl = document.getElementById('change-key-message');
+
+
+            // --- SETTINGS MODAL ELEMENTS ---
+            settingsModal = document.getElementById('settings-modal');
+            settingsCloseBtn = document.getElementById('settings-close-btn');
+            pricePerUnitInputSettings = document.getElementById('price-per-unit-settings');
+            savePriceBtnSettings = document.getElementById('save-price-btn-settings');
+            milkmanNameInputSettings = document.getElementById('milkman-name-settings');
+            milkmanContactInputSettings = document.getElementById('milkman-contact-settings');
+            milkmanDetailsFormSettings = document.getElementById('milkman-details-form-settings');
+
+            // --- OTHER MODAL ELEMENTS ---
+            customModal = document.getElementById('custom-modal');
+            modalMessageEl = document.getElementById('modal-message');
+            modalTitleEl = document.getElementById('modal-title');
+            modalCloseBtn = document.getElementById('modal-close-btn'); 
+            confirmationModal = document.getElementById('confirmation-modal');
+            confirmCancelBtn = document.getElementById('confirm-cancel-btn'); 
+            confirmYesBtn = document.getElementById('confirm-yes-btn'); 
+
+            // --- ATTACH EVENT LISTENERS (Centralized Management) ---
+
+            // Header Icons => Open Correct Modals
+            if (settingsIconBtn) settingsIconBtn.addEventListener('click', showSettingsModal);
+            if (profileIconBtn) profileIconBtn.addEventListener('click', showAccessModal);
+
+            // Modal Close Buttons
+            if (accessCloseBtn) accessCloseBtn.addEventListener('click', closeAccessModal);
+            if (settingsCloseBtn) settingsCloseBtn.addEventListener('click', closeSettingsModal);
+            modalCloseBtn.addEventListener('click', () => { customModal.classList.add('hidden'); });
+
+            // Settings Logic
+            if (savePriceBtnSettings) savePriceBtnSettings.addEventListener('click', handlePriceSave);
+            if (milkmanDetailsFormSettings) milkmanDetailsFormSettings.addEventListener('submit', handleMilkmanSave);
+
+            // Access Logic
+            if (generateKeyBtn) generateKeyBtn.addEventListener('click', generateRandomKey);
+            if (changeKeyForm) changeKeyForm.addEventListener('submit', handleKeyChange); 
+
+            // Confirmation Logic
+            confirmCancelBtn.addEventListener('click', () => { confirmationModal.classList.add('hidden'); });
+            confirmYesBtn.addEventListener('click', async () => {
+                if (recordToDeleteId && recordToDeleteType) {
+                    confirmationModal.classList.add('hidden');
+                    await deleteRecord(recordToDeleteId, recordToDeleteType);
+                    recordToDeleteId = null;
+                    recordToDeleteType = null;
+                }
+            });
+
+            // Form Logic
+            milkCancelEditBtn.addEventListener('click', resetMilkForm);
+            paymentCancelEditBtn.addEventListener('click', resetPaymentForm);
+            absentBtn.addEventListener('click', handleAbsentClick); 
+            milkEntryForm.addEventListener('submit', handleMilkEntrySubmit);
+            paymentEntryForm.addEventListener('submit', handlePaymentEntrySubmit);
+        }
+
+        // --- DATA ACCESS HELPERS (Local Storage Implementation) ---
+
+        function generateId() {
+            return Date.now().toString() + Math.random().toString(36).substring(2, 9);
+        }
+
+        function loadData(key, storageKey) {
+            const rawData = localStorage.getItem(storageKey + key);
+            if (rawData) {
+                try {
+                    return JSON.parse(rawData);
+                } catch (e) {
+                    console.error("Error parsing data from local storage:", e);
+                    return [];
+                }
+            }
+            return [];
+        }
+
+        function saveData(key, storageKey, data) {
+            try {
+                localStorage.setItem(storageKey + key, JSON.stringify(data));
+                return true;
+            } catch (e) {
+                console.error("Error saving data to local storage:", e);
+                return false;
+            }
+        }
         
-        const confirmationModal = document.getElementById('confirmation-modal');
-        const confirmCancelBtn = document.getElementById('confirm-cancel-btn'); 
-        const confirmYesBtn = document.getElementById('confirm-yes-btn'); 
+        function loadSettings(key) {
+            const defaults = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
+            const storedSettings = loadData(key, LS_KEY_SETTINGS);
+            
+            if (Array.isArray(storedSettings) && storedSettings.length === 0) {
+                 return defaults;
+            }
+            return { ...defaults, ...storedSettings };
+        }
 
-        // --- UI UTILITIES (Identical) ---
+        function saveSettings(key, settings) {
+            return saveData(key, LS_KEY_SETTINGS, settings);
+        }
+
+        // --- UI UTILITIES ---
 
         function showLoading() { loadingOverlay.classList.remove('hidden'); }
         function hideLoading() { loadingOverlay.classList.add('hidden'); }
 
         function showModal(message, title = 'Notification (اطلاع)') {
             modalTitleEl.textContent = title;
-            modalMessageEl.textContent = message;
+            modalMessageEl.innerHTML = message; 
             customModal.classList.remove('hidden');
         }
 
-        // --- LOGIN TAB SWITCHING (Identical) ---
-        window.switchLoginTab = (tabName) => {
-            document.querySelectorAll('#login-screen .tab-button').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('signup-tab-content').classList.add('hidden');
-            document.getElementById('login-tab-content').classList.add('hidden');
-            loginErrorMsg.classList.add('hidden'); // Clear previous errors
+        // --- APP TAB SWITCHING ---
 
-            if (tabName === 'signup') {
-                document.getElementById('tab-signup').classList.add('active');
-                document.getElementById('signup-tab-content').classList.remove('hidden');
-            } else if (tabName === 'login') {
-                document.getElementById('tab-login').classList.add('active');
-                document.getElementById('login-tab-content').classList.remove('hidden');
-            }
-        }
-        
-        // --- APP TAB SWITCHING (Identical) ---
         window.switchAppTab = (tabName) => {
             document.querySelectorAll('#main-app-content .tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
@@ -664,292 +719,131 @@
                 document.getElementById('tab-payment').classList.add('active');
                 document.getElementById('payment-tab-content').classList.remove('hidden');
             }
-            // Ensure no edit mode is active when switching tabs
             resetMilkForm();
             resetPaymentForm();
             lucide.createIcons();
         }
         
-        // --- PROFILE MODAL HANDLERS (Adjusted for no Firebase UID) ---
-        function showProfileModal() {
+        // --- MODAL HANDLERS (Separated Logic) ---
+        
+        function showAccessModal() {
             if (!isAuthReady) return;
             
-            // Removed profileSessionId logic as there is no Firebase UID
+            // Load current key status
+            accessSecretKey.textContent = groupKey === GUEST_KEY ? 'None (کوئی کوڈ نہیں)' : groupKey;
             
-            if (groupKey === GUEST_KEY) {
-                profileLoginType.textContent = 'Guest Mode (مہمان موڈ)';
-                profileSecretKey.textContent = 'None (کوئی رسائی کوڈ نہیں)';
-                sharedNote.classList.add('hidden');
-            } else {
-                profileLoginType.textContent = 'Shared Record (مشترکہ ریکارڈ)';
-                profileSecretKey.textContent = groupKey; 
-                sharedNote.classList.remove('hidden');
-            }
-            profileModal.classList.remove('hidden');
+            accessModal.classList.remove('hidden');
         }
 
-        function closeProfileModal() {
-            profileModal.classList.add('hidden');
+        function closeAccessModal() {
+            accessModal.classList.add('hidden');
         }
         
-        function handleLogout() {
-            // Clear local state and reset UI (no need for Firebase signOut)
-            localStorage.removeItem('milk_tracker_type');
-            localStorage.removeItem('milk_tracker_key');
-            resetAppUI();
+        function showSettingsModal() {
+            if (!isAuthReady) return;
+
+            // Load current settings into settings modal inputs
+            pricePerUnitInputSettings.value = pricePerUnit.toFixed(2);
+            milkmanNameInputSettings.value = milkmanName;
+            milkmanContactInputSettings.value = milkmanContact;
+            
+            settingsModal.classList.remove('hidden');
         }
 
-        function resetAppUI() {
-            isAuthReady = false;
-            groupKey = null;
-            clearInterval(dataPollingTimer); // Stop data polling!
-            milkRecords = []; 
-            paymentRecords = [];
-            pricePerUnit = 120;
-            currentFilterMonth = getCurrentMonthYearString();
+        function closeSettingsModal() {
+            settingsModal.classList.add('hidden');
+        }
+        
+        // --- DATA LOAD/SYNC ---
+
+        function fullDataSync() {
             
-            // Clear UI
-            renderMilkTable([], milkRecordsTableBody, true); 
-            renderMilkTable([], milkHistoryTableBody, false);
+            // 1. Load Data
+            milkRecords = loadData(groupKey, LS_KEY_MILK);
+            paymentRecords = loadData(groupKey, LS_KEY_PAYMENT);
+            const settings = loadSettings(groupKey);
+            
+            // 2. Update Global State from Settings
+            pricePerUnit = parseFloat(settings.pricePerUnit) || 120;
+            milkmanName = settings.milkmanName || '';
+            milkmanContact = settings.milkmanContact || '';
+
+            // 3. Update Modal UI fields (for both modals if they were open)
+            // Note: We only update the global state here, inputs are loaded when modal opens
+
+            // 4. Sort data 
+            milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
+            paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
+
+            // 5. Render UI
+            isAuthReady = true; 
+            populateMonthSelector(); 
+            renderMilkRecords();
             renderPaymentRecords();
-
-            loginScreen.classList.remove('hidden');
-            mainAppContent.classList.add('hidden');
-            closeProfileModal();
-            resetMilkForm();
-            resetPaymentForm();
+            updateSummary();
+            lucide.createIcons();
         }
 
-        // --- APPS SCRIPT API HELPER ---
 
-        async function callApi(action, data = {}, method = 'POST') {
-            if (APPS_SCRIPT_URL === 'YOUR_DEPLOYED_WEB_APP_URL_HERE') {
-                showModal('Please replace "YOUR_DEPLOYED_WEB_APP_URL_HERE" in the JavaScript code with your actual Apps Script Web App URL.', 'API Error: Setup Required');
-                return { success: false, message: 'API URL not set.' };
-            }
-            
-            const payload = { action, key: groupKey, ...data };
-            let response;
-            
-            try {
-                response = await fetch(APPS_SCRIPT_URL, {
-                    method: method,
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    mode: 'cors'
-                });
-
-                if (!response.ok) {
-                     throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success === false) {
-                     // The script executed, but the operation failed (e.g., bad data, file access denied)
-                     throw new Error(result.message || 'Unknown operation error from server.');
-                }
-                
-                return result;
-
-            } catch (error) {
-                console.error("API Call Failed:", error);
-                showModal(`Server Error (${action}): ${error.message || 'Network issue/Script not deployed correctly.'}`, 'Connection Error');
-                return { success: false, message: error.message };
-            }
-        }
+        // --- KEY/CODE CHANGE HANDLER ---
         
-        // --- AUTHENTICATION FLOW (Simulated with LocalStorage/API Check) ---
-        
-        async function checkKeyExists(key) {
-            if (key === GUEST_KEY) return { exists: true };
-            
-            const result = await callApi('CHECK_KEY', { newKey: key }, 'POST');
-            return result; // result.exists will be true or false
-        }
-
-        async function handleAccess(key, type) {
-            showLoading();
-            loginErrorMsg.classList.add('hidden');
-            let success = false;
-            let targetGroupKey = key ? key.trim().toLowerCase() : GUEST_KEY;
-
-            try {
-                if (type === 'guest') {
-                    success = true; // Guest mode access is always successful
-                } else if (type === 'signup') {
-                    if (targetGroupKey.length < 6) {
-                        loginErrorMsg.textContent = 'Access Code must be at least 6 characters long. (رسائی کوڈ کم از کم 6 حروف کا ہونا چاہیے)';
-                        hideLoading();
-                        return;
-                    }
-                    const checkResult = await checkKeyExists(targetGroupKey);
-                    if (checkResult.exists) {
-                        loginErrorMsg.textContent = 'Signup failed. This code is already taken. Please Login. (رجسٹریشن ناکام۔ یہ کوڈ پہلے سے موجود ہے۔ براہ کرم لاگ اِن کریں۔)';
-                    } else {
-                        // Success! The key does not exist, proceed to register/login
-                        success = true; 
-                    }
-                } else if (type === 'login') {
-                    const checkResult = await checkKeyExists(targetGroupKey);
-                    if (checkResult.exists) {
-                        success = true;
-                    } else {
-                        loginErrorMsg.textContent = 'Login failed. Code not found. Please Signup first. (لاگ اِن ناکام۔ کوڈ نہیں ملا۔ براہ کرم پہلے رجسٹریشن کریں۔)';
-                    }
-                }
-
-                if (success) {
-                    groupKey = targetGroupKey;
-                    
-                    // Save state locally
-                    localStorage.setItem('milk_tracker_type', groupKey === GUEST_KEY ? 'guest' : 'shared');
-                    if (groupKey !== GUEST_KEY) {
-                        localStorage.setItem('milk_tracker_key', groupKey);
-                    } else {
-                        localStorage.removeItem('milk_tracker_key');
-                    }
-                    
-                    // Proceed to app UI
-                    loginScreen.classList.add('hidden');
-                    mainAppContent.classList.remove('hidden');
-                    isAuthReady = true; 
-                    startDataPolling(); // Start fetching data periodically
-                    
-                } else {
-                    loginErrorMsg.classList.remove('hidden');
-                }
-                
-            } catch (error) {
-                console.error("Access failed:", error);
-                loginErrorMsg.textContent = `Access error: ${error.message}`;
-                loginErrorMsg.classList.remove('hidden');
-                resetAppUI(); 
-            } finally {
-                hideLoading();
+        function generateRandomKey() {
+            // Generates a random 11-digit alphanumeric code
+            let result = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            const charactersLength = characters.length;
+            for (let i = 0; i < 11; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
             }
+            newKeyInput.value = result.toUpperCase(); // Set value to input field
+            changeKeyMessageEl.textContent = 'Random code generated. Click "Switch/Load" to activate.';
+            changeKeyMessageEl.classList.remove('hidden', 'text-red-600');
+            changeKeyMessageEl.classList.add('text-green-600');
+            setTimeout(() => changeKeyMessageEl.classList.add('hidden'), 3000);
         }
 
-
-        function checkLocalAuth() {
-            const storedType = localStorage.getItem('milk_tracker_type');
-            const storedKey = localStorage.getItem('milk_tracker_key');
-            
-            if (storedType === 'guest') {
-                groupKey = GUEST_KEY;
-                return true;
-            } else if (storedType === 'shared' && storedKey) {
-                groupKey = storedKey;
-                return true;
-            }
-            return false;
-        }
-
-        function initializeApp() {
-            showLoading();
-            
-            const today = new Date();
-            const todayISO = today.toISOString().split('T')[0];
-            document.getElementById('milk-entry-date').value = todayISO;
-            document.getElementById('payment-entry-date').value = todayISO;
-
-            if (checkLocalAuth()) {
-                // Resume session
-                loginScreen.classList.add('hidden');
-                mainAppContent.classList.remove('hidden');
-                isAuthReady = true; 
-                startDataPolling();
-            } else {
-                // Show login screen
-                resetAppUI();
-                loginScreen.classList.remove('hidden');
-                hideLoading();
-            }
-            
-            populateMonthSelector();
-        }
-        
-        function startDataPolling() {
-            if (dataPollingTimer) clearInterval(dataPollingTimer);
-            
-            // Immediate fetch upon login
-            fetchData(); 
-            
-            // Set up interval for repeated fetching
-            dataPollingTimer = setInterval(fetchData, POLLING_INTERVAL);
-        }
-
-        async function fetchData() {
-            if (!isAuthReady || !groupKey) return; 
-
-            try {
-                const result = await callApi('GET_ALL_DATA', { key: groupKey }, 'POST');
-                
-                if (result.success) {
-                    // Update all state variables based on API response
-                    milkRecords = result.milkRecords || [];
-                    paymentRecords = result.paymentRecords || [];
-                    pricePerUnit = parseFloat(result.settings.pricePerUnit) || 120;
-                    milkmanName = result.settings.milkmanName || '';
-                    milkmanContact = result.settings.milkmanContact || '';
-
-                    // Update UI elements
-                    pricePerUnitInput.value = pricePerUnit.toFixed(2);
-                    milkmanNameInput.value = milkmanName;
-                    milkmanContactInput.value = milkmanContact;
-                    
-                    // Sort data by date/timestamp (descending) 
-                    milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-                    paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-
-                    renderMilkRecords();
-                    renderPaymentRecords();
-                    updateSummary();
-                }
-
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        }
-        
-        // --- LOGIN/SIGNUP Form Handlers (Identical calls, modified implementations) ---
-
-        signupForm.addEventListener('submit', (e) => {
+        function handleKeyChange(e) {
             e.preventDefault();
-            const key = signupKeyInput.value;
-            if (key.trim()) {
-                handleAccess(key, 'signup');
-            } else {
-                 loginErrorMsg.textContent = 'Please enter an Access Code. (برائے مہربانی ایک رسائی کوڈ درج کریں۔)';
-                 loginErrorMsg.classList.remove('hidden');
-            }
-        });
-        
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const key = loginKeyInput.value;
-            if (key.trim()) {
-                handleAccess(key, 'login'); 
-            } else {
-                 loginErrorMsg.textContent = 'Please enter your Access Code. (برائے مہربانی اپنا رسائی کوڈ درج کریں۔)';
-                 loginErrorMsg.classList.remove('hidden');
-            }
-        });
+            const newKey = newKeyInput.value.trim().toUpperCase(); // Changed to uppercase for consistency
 
-        guestAccessBtn.addEventListener('click', () => {
-             handleAccess(null, 'guest'); 
-        });
-
-        
-        // --- SETTINGS HANDLING (Price and Milkman - Uses API) ---
-
-        savePriceBtn.addEventListener('click', async () => {
-            if (!isAuthReady) {
-                showModal('Please login to save settings. (ترتیبات محفوظ کرنے کے لیے لاگ اِن کریں۔)');
+            if (newKey.length < 6) {
+                changeKeyMessageEl.textContent = 'Code must be at least 6 characters long. (کوڈ کم از کم 6 حروف پر مشتمل ہونا چاہیے)';
+                changeKeyMessageEl.classList.remove('hidden', 'text-green-600');
+                changeKeyMessageEl.classList.add('text-red-600');
                 return;
             }
             
-            const newPrice = parseFloat(pricePerUnitInput.value);
+            if (newKey === groupKey) {
+                changeKeyMessageEl.textContent = 'This is the current active code! (یہ کوڈ پہلے سے فعال ہے!)';
+                changeKeyMessageEl.classList.remove('hidden', 'text-red-600');
+                changeKeyMessageEl.classList.add('text-green-600');
+                return;
+            }
+
+            groupKey = newKey;
+            localStorage.setItem('milk_tracker_key', groupKey);
+            
+            fullDataSync();
+            
+            changeKeyMessageEl.textContent = `Switched data context to: ${newKey}`;
+            changeKeyMessageEl.classList.remove('hidden', 'text-red-600');
+            changeKeyMessageEl.classList.add('text-green-600');
+            newKeyInput.value = ''; 
+
+            setTimeout(() => {
+                closeAccessModal();
+                changeKeyMessageEl.classList.add('hidden');
+            }, 1500);
+        }
+
+        // --- SETTINGS HANDLING (Local Storage) ---
+
+        function handlePriceSave() {
+            if (!isAuthReady || !groupKey) return;
+            
+            const newPrice = parseFloat(pricePerUnitInputSettings.value);
+            const priceMessageEl = document.getElementById('price-message-settings');
+            
             if (isNaN(newPrice) || newPrice < 0) {
                 priceMessageEl.textContent = 'Please enter a valid price. (براہ کرم درست قیمت درج کریں۔)';
                 priceMessageEl.classList.remove('text-green-600', 'hidden');
@@ -959,15 +853,18 @@
             
             showLoading();
             try {
-                const result = await callApi('UPDATE_SETTINGS', { pricePerUnit: newPrice }, 'POST');
+                const settings = loadSettings(groupKey);
+                settings.pricePerUnit = newPrice;
+                
+                if (saveSettings(groupKey, settings)) {
+                    pricePerUnit = newPrice; 
 
-                if (result.success) {
                     priceMessageEl.textContent = 'Price saved successfully! (قیمت کامیابی سے محفوظ کر لی گئی!)';
                     priceMessageEl.classList.remove('text-red-600', 'hidden');
                     priceMessageEl.classList.add('text-green-600');
-                    fetchData(); // Refresh all data including summary
+                    fullDataSync(); 
                 } else {
-                    throw new Error(result.message);
+                    throw new Error("Local Storage Save Failed.");
                 }
             } catch (error) {
                 console.error("Error saving price:", error);
@@ -976,30 +873,31 @@
                 hideLoading();
                 setTimeout(() => priceMessageEl.classList.add('hidden'), 3000);
             }
-        });
+        }
 
-        milkmanDetailsForm.addEventListener('submit', async (e) => {
+        function handleMilkmanSave(e) {
             e.preventDefault();
+            if (!isAuthReady || !groupKey) return;
             
-            if (!isAuthReady) {
-                showModal('Please login to save settings. (ترتیبات محفوظ کرنے کے لیے لاگ اِن کریں۔)');
-                return;
-            }
-            
-            const milkmanName = milkmanNameInput.value.trim();
-            const milkmanContact = milkmanContactInput.value.trim();
+            const newName = milkmanNameInputSettings.value.trim();
+            const newContact = milkmanContactInputSettings.value.trim();
+            const milkmanMessageEl = document.getElementById('milkman-message-settings');
             
             showLoading();
             try {
-                const result = await callApi('UPDATE_SETTINGS', { milkmanName, milkmanContact }, 'POST');
-
-                if (result.success) {
+                const settings = loadSettings(groupKey);
+                settings.milkmanName = newName;
+                settings.milkmanContact = newContact;
+                
+                if (saveSettings(groupKey, settings)) {
+                    milkmanName = newName; 
+                    milkmanContact = newContact;
+                    
                     milkmanMessageEl.textContent = 'Milkman details saved successfully! (دودھ والے کی تفصیلات محفوظ کر لی گئی!)';
                     milkmanMessageEl.classList.remove('text-red-600', 'hidden');
                     milkmanMessageEl.classList.add('text-green-600');
-                    fetchData(); // Refresh to ensure state is updated
                 } else {
-                    throw new Error(result.message);
+                    throw new Error("Local Storage Save Failed.");
                 }
             } catch (error) {
                 console.error("Error saving milkman details:", error);
@@ -1008,10 +906,9 @@
                 hideLoading();
                 setTimeout(() => milkmanMessageEl.classList.add('hidden'), 3000);
             }
-        });
-
-
-        // --- MONTH SELECTOR AND FILTERING LOGIC (Identical) ---
+        }
+        
+        // --- MONTH SELECTOR AND RENDERING LOGIC (Utility functions) ---
         
         function populateMonthSelector() {
             const today = new Date();
@@ -1020,7 +917,7 @@
             for (let i = 0; i < 12; i++) {
                 const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
                 const year = date.getFullYear();
-                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0'); 
                 const monthYearKey = `${year}-${month}`;
                 
                 const displayDate = getMonthName(monthYearKey + '-01'); 
@@ -1045,25 +942,30 @@
         
         function getMonthName(dateStr) {
             const date = new Date(dateStr); 
-            if (isNaN(date)) return 'N/A';
+            if (isNaN(date.getTime())) {
+                const parts = dateStr.split('-');
+                const safeDate = new Date(parts[0], parts[1] - 1, parts[2] || 1);
+                if (isNaN(safeDate.getTime())) return dateStr.substring(0, 7);
+                return safeDate.toLocaleString('ur-PK', { month: 'long', year: 'numeric' });
+            }
             
             try {
                 const options = { month: 'long', year: 'numeric' };
                 return date.toLocaleString('ur-PK', options);
             } catch (e) {
                 console.error("Urdu date formatting failed:", e);
-                return date.getFullYear();
+                return dateStr.substring(0, 7);
             }
         }
 
         function getCurrentMonthYearString() {
             const today = new Date();
             const year = today.getFullYear();
-            const month = String(today.getMonth() + 1).padStart(2, '0'); 
+            const month = String(today.getMonth() + 1).padStart(2, '0'); // MM format
             return `${year}-${month}`;
         }
         
-        // --- SUMMARY & RENDERING (Identical, relies on global state being updated by fetchData) ---
+        // --- SUMMARY & RENDERING ---
 
         function updateSummary() {
             const filterMonthYear = currentFilterMonth;
@@ -1083,10 +985,10 @@
             const overallPaymentsMade = paymentRecords.reduce((sum, record) => sum + (parseFloat(record.amount) || 0), 0);
             
             // 5. Calculate Net Balance (Overall Milk Price - Overall Payments)
-            const overallMilkPrice = milkRecords.reduce((sum, record) => sum + (parseFloat(record.quantity) || 0), 0) * pricePerUnit;
+            const overallMilkPrice = Math.round(milkRecords.reduce((sum, record) => sum + (parseFloat(record.quantity) || 0), 0) * pricePerUnit);
             const netBalanceDue = overallMilkPrice - overallPaymentsMade;
             
-            // 6. Calculate Active Days (Only count days where quantity > 0)
+            // 6. Calculate Active Days (Only count unique days where quantity > 0)
             const activeDays = filteredMilkRecords.filter(r => parseFloat(r.quantity) > 0);
             const totalActiveDays = new Set(activeDays.map(r => r.date)).size; 
             
@@ -1106,21 +1008,18 @@
             const formattedAmount = Math.round(Math.abs(netBalanceDue)).toLocaleString('ur-PK');
             netBalanceEl.textContent = `Rs. ${formattedAmount}`; 
 
-            // Update Balance Card color (Green for Credit, Red for Due)
             const banknoteIcon = balanceCard.querySelector('span[data-lucide="banknote"]');
             const balanceLabelWrapper = document.getElementById('balance-label-wrapper');
 
             if (netBalanceDue > 0) {
-                // Money is DUE (Red-600/900) - Distinct from Rose-500/900
                 balanceCard.className = 'bg-red-100 p-4 rounded-xl shadow-lg border-2 border-red-300 flex flex-col items-center text-center';
                 banknoteIcon.className = 'w-8 h-8 text-red-600 mx-auto mb-2';
-                balanceLabelWrapper.innerHTML = `Amount <span class="block text-sm font-normal">(رقم)</span>`;
+                balanceLabelWrapper.innerHTML = `Amount Due <span class="block text-sm font-normal urdu-text">(واجب الادا رقم)</span>`;
                 netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-red-800 mt-1 currency-display';
             } else {
-                // Money is CREDIT/Advance (Green)
                 balanceCard.className = 'bg-emerald-100 p-4 rounded-xl shadow-lg border-2 border-emerald-200 flex flex-col items-center text-center';
                 banknoteIcon.className = 'w-8 h-8 text-emerald-500 mx-auto mb-2';
-                balanceLabelWrapper.innerHTML = `Credit Advance <span class="block text-sm font-normal">(ایڈوانس رقم)</span>`;
+                balanceLabelWrapper.innerHTML = `Credit Advance <span class="block text-sm font-normal urdu-text">(ایڈوانس رقم)</span>`;
                 netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-emerald-900 mt-1 currency-display';
             }
         }
@@ -1129,17 +1028,13 @@
             const filterMonthYear = currentFilterMonth;
             const currentMonthYear = getCurrentMonthYearString();
 
-            // Records filtered by the selected month (Daily Records Table)
             const filteredRecords = milkRecords.filter(r => r.date && r.date.startsWith(filterMonthYear));
             
-            // Only allow editing/deleting if the selected month is the actual current month
             const isSelectedMonthCurrent = filterMonthYear === currentMonthYear;
             renderMilkTable(filteredRecords, milkRecordsTableBody, isSelectedMonthCurrent); 
 
-            // Records NOT included in the selected month (Milk History Table)
-            // Show only records that belong to months BEFORE the currently selected month
             const historyRecords = milkRecords.filter(r => r.date && r.date.localeCompare(filterMonthYear) < 0);
-            renderMilkTable(historyRecords, milkHistoryTableBody, false); // History records are always view-only
+            renderMilkTable(historyRecords, milkHistoryTableBody, false); 
 
             lucide.createIcons();
         }
@@ -1148,31 +1043,25 @@
             tableBodyEl.innerHTML = '';
             if (recordsToRender.length === 0) {
                 const colspan = 4;
-                let message;
-                if (isEditable) {
-                    message = currentFilterMonth === getCurrentMonthYearString() 
-                        ? 'Start adding records for this month.' 
-                        : 'No records found for the selected month.';
-                } else {
-                    message = 'No older records found.';
-                }
-
+                let message = isEditable ? 'Start adding records for this month.' : 'No older records found.';
                 tableBodyEl.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">${message} (کوئی ریکارڈ نہیں ملا)</td></tr>`;
                 return;
             }
+
+            recordsToRender.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
 
             recordsToRender.forEach(record => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 
                 const quantity = parseFloat(record.quantity) || 0;
-                const payment = (quantity * pricePerUnit);
-                const dateParts = record.date.split('-'); // YYYY-MM-DD
-                const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY
+                const payment = Math.round(quantity * pricePerUnit); 
+                const dateParts = record.date.split('-'); 
+                const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; 
                 
                 let quantityDisplay;
                 let rowClasses = '';
-                if (record.isAbsent === true || record.isAbsent === 'TRUE') { // Check for string 'TRUE' from Apps Script
+                if (record.isAbsent) {
                     quantityDisplay = `<span class="font-bold text-red-600">ABSENT (غیر حاضر)</span>`;
                     rowClasses = 'bg-red-50/50';
                 } else {
@@ -1190,11 +1079,11 @@
                     </button>
                 ` : '<span class="text-gray-400">View Only</span>';
 
-                const displayAmount = `Rs. ${Math.round(payment).toLocaleString('ur-PK')}`;
+                const displayAmount = `Rs. ${payment.toLocaleString('ur-PK')}`;
 
                 row.innerHTML = `
-                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses}">${displayDate}</td>
-                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 ${rowClasses}">${quantityDisplay}</td>
+                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} ltr-column">${displayDate}</td>
+                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 ${rowClasses} ltr-column">${quantityDisplay}</td>
                     <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} currency-display">${displayAmount}</td>
                     <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-center text-sm font-medium ${rowClasses}">
                         ${actionButtons}
@@ -1213,17 +1102,20 @@
                 return;
             }
 
+            recordsToRender.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
+
+
             recordsToRender.forEach(record => {
                 const row = document.createElement('tr');
                 row.className = 'hover:bg-gray-50';
                 
                 const amount = parseFloat(record.amount) || 0;
-                const dateParts = record.date.split('-'); // YYYY-MM-DD
-                const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; // DD/MM/YYYY
+                const dateParts = record.date.split('-'); 
+                const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; 
                 const displayAmount = `Rs. ${Math.round(amount).toLocaleString('ur-PK')}`;
 
                 row.innerHTML = `
-                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800">${displayDate}</td>
+                    <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ltr-column">${displayDate}</td>
                     <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 currency-display">${displayAmount}</td>
                     <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-center text-sm font-medium">
                         <button onclick="window.editPaymentRecord('${record.id}')" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
@@ -1241,12 +1133,17 @@
             lucide.createIcons();
         }
 
-        // --- EXPOSED WINDOW FUNCTIONS (for table buttons - Identical calls, modified implementations) ---
+        // --- EXPOSED WINDOW FUNCTIONS (for table buttons) ---
 
         window.editMilkRecord = (id) => {
-            const record = milkRecords.find(r => r.id == id); // Use == for comparison as ID might be string/number
+            const record = milkRecords.find(r => r.id === id);
             if (record) {
-                switchAppTab('milk');
+                if (!record.date.startsWith(currentFilterMonth)) {
+                    showModal('This record belongs to a previous month and cannot be edited. (یہ ریکارڈ پچھلے مہینے کا ہے، اس میں ترمیم نہیں کی جا سکتی۔)', 'Edit Restricted');
+                    return;
+                }
+                
+                window.switchAppTab('milk');
 
                 document.getElementById('milk-entry-id').value = record.id;
                 document.getElementById('milk-entry-date').value = record.date;
@@ -1261,12 +1158,11 @@
             }
         };
 
-        milkCancelEditBtn.addEventListener('click', resetMilkForm);
 
         function resetMilkForm() {
             document.getElementById('milk-entry-id').value = '';
             milkEntryForm.reset();
-            document.getElementById('milk-entry-date').valueAsDate = new Date(); // Reset date to today
+            document.getElementById('milk-entry-date').valueAsDate = new Date(); 
             document.getElementById('milk-entry-quantity').value = '';
             milkFormTitleEl.textContent = 'Milk Entry (دودھ کا اندراج)';
             milkEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Milk Entry';
@@ -1274,17 +1170,16 @@
             milkCancelEditBtn.classList.add('hidden');
         }
         
-        absentBtn.addEventListener('click', () => {
+        function handleAbsentClick() {
             document.getElementById('milk-entry-quantity').value = '0.00';
             milkEntryForm.dataset.isAbsent = 'true'; 
-            const submitBtn = milkEntryForm.querySelector('button[type="submit"]');
-            submitBtn.click();
-        });
+            showModal('Quantity set to 0 (Absent). Please click **Submit Milk Entry** to confirm the date and save.', 'Absence Confirmed (غیر حاضری کی تصدیق)');
+        }
 
         window.editPaymentRecord = (id) => {
-            const record = paymentRecords.find(r => r.id == id);
+            const record = paymentRecords.find(r => r.id === id);
             if (record) {
-                switchAppTab('payment');
+                window.switchAppTab('payment');
 
                 document.getElementById('payment-entry-id').value = record.id;
                 document.getElementById('payment-entry-date').value = record.date;
@@ -1299,8 +1194,6 @@
             }
         };
         
-        paymentCancelEditBtn.addEventListener('click', resetPaymentForm);
-
         function resetPaymentForm() {
             document.getElementById('payment-entry-id').value = '';
             paymentEntryForm.reset();
@@ -1319,6 +1212,17 @@
         window.prepareDeleteRecord = (id, type) => {
             recordToDeleteId = id;
             recordToDeleteType = type;
+
+            if (type === 'milk') {
+                const record = milkRecords.find(r => r.id === id);
+                if (record && !record.date.startsWith(currentFilterMonth)) {
+                    showModal('This record belongs to a previous month and cannot be deleted from history. (یہ ریکارڈ پچھلے مہینے کا ہے، تاریخ سے حذف نہیں ہو سکتا۔)', 'Deletion Restricted');
+                    recordToDeleteId = null;
+                    recordToDeleteType = null;
+                    return;
+                }
+            }
+            
             const message = type === 'milk' 
                 ? 'Are you sure you want to delete this <b>Milk Record</b>? (کیا آپ واقعی اس دودھ کے ریکارڈ کو حذف کرنا چاہتے ہیں؟)'
                 : 'Are you sure you want to delete this <b>Payment Record</b>? (کیا آپ واقعی اس ادائیگی کے ریکارڈ کو حذف کرنا چاہتے ہیں؟)';
@@ -1326,23 +1230,37 @@
             confirmationModal.classList.remove('hidden');
         };
 
-        confirmCancelBtn.addEventListener('click', () => {
-            confirmationModal.classList.add('hidden');
-            recordToDeleteId = null;
-            recordToDeleteType = null;
-        });
-        
-        async function deleteRecordApi(id, type) {
+        async function deleteRecord(id, type) {
             showLoading();
             try {
-                const result = await callApi('DELETE_RECORD', { id, type }, 'POST');
-                
-                if (result.success) {
-                    showModal(`${type === 'milk' ? 'Milk Record' : 'Payment Record'} deleted successfully. (ریکارڈ کامیابی سے حذف کر دیا گیا ہے۔)`);
-                    fetchData(); // Refresh data after delete
+                let records;
+                let storageKey;
+                let recordIndex;
+
+                if (type === 'milk') {
+                    records = milkRecords;
+                    storageKey = LS_KEY_MILK;
+                } else if (type === 'payment') {
+                    records = paymentRecords;
+                    storageKey = LS_KEY_PAYMENT;
                 } else {
-                    throw new Error(result.message);
+                    throw new Error("Invalid record type for deletion.");
                 }
+
+                recordIndex = records.findIndex(r => r.id === id);
+
+                if (recordIndex !== -1) {
+                    records.splice(recordIndex, 1); 
+                    if (saveData(groupKey, storageKey, records)) {
+                        showModal(`${type === 'milk' ? 'Milk Record' : 'Payment Record'} deleted successfully. (ریکارڈ کامیابی سے حذف کر دیا گیا ہے۔)`);
+                        fullDataSync(); 
+                    } else {
+                        throw new Error("Local Storage save failed after deletion.");
+                    }
+                } else {
+                    throw new Error("Record ID not found locally.");
+                }
+                
             } catch (error) {
                 console.error(`Error deleting ${type} record:`, error);
                 showModal(`Failed to delete ${type} record. (ریکارڈ حذف کرنے میں ناکامی۔) Error: ${error.message}`, 'Error');
@@ -1351,13 +1269,13 @@
             }
         }
         
-        // --- FORM SUBMISSION HANDLERS (Uses API) ---
+        // --- FORM SUBMISSION HANDLERS (Local Storage) ---
 
-        milkEntryForm.addEventListener('submit', async (e) => {
+        async function handleMilkEntrySubmit(e) {
             e.preventDefault();
             
-            if (!isAuthReady || !groupKey) {
-                showModal('Please login first to submit entries. (اندراج کے لیے پہلے لاگ اِن کریں۔)', 'Login Required');
+            if (!isAuthReady) {
+                showModal('Please wait for app initialization. (براہ کرم ایپ کے شروع ہونے کا انتظار کریں۔)', 'Error');
                 return;
             }
 
@@ -1368,49 +1286,62 @@
 
             delete milkEntryForm.dataset.isAbsent; 
 
-            if (isAbsentFlag) {
-                quantity = 0.00;
+            if (isAbsentFlag && quantity === 0) {
+                 quantity = 0.00; 
             }
 
             if (isNaN(quantity) || quantity < 0) {
-                showModal('Quantity must be a valid positive number or zero (for absence). (مقدار درست عدد یا صفر ہونی چاہیے)', 'Data Error');
+                showModal('Quantity must be a valid positive number or zero. (مقدار درست عدد یا صفر ہونی چاہیے)', 'Data Error');
                 return;
             }
 
             showLoading();
             const recordData = {
-                id: id, // Will be empty string for new records
+                id: id || generateId(),
                 date: date,
-                quantity: quantity, 
-                isAbsent: isAbsentFlag, 
+                quantity: quantity.toFixed(2), 
+                isAbsent: isAbsentFlag && quantity === 0, 
                 timestamp: Date.now(),
             };
             
-            const action = id ? 'UPDATE_MILK' : 'ADD_MILK';
-
             try {
-                const result = await callApi(action, recordData, 'POST');
-                
-                if (result.success) {
-                    showModal(`Milk Entry ${id ? 'updated' : 'added'} successfully. (اندراج کامیابی سے ${id ? 'تبدیل' : 'شامل'} کر دیا گیا ہے۔)`);
-                    resetMilkForm(); 
-                    fetchData(); // Refresh data immediately
+                if (id) {
+                    const index = milkRecords.findIndex(r => r.id === id);
+                    if (index !== -1) {
+                        milkRecords[index] = recordData;
+                    } else {
+                        throw new Error("Record ID not found for update.");
+                    }
+                    if (saveData(groupKey, LS_KEY_MILK, milkRecords)) {
+                        showModal('Milk Entry updated successfully. (اندراج کامیابی سے تبدیل کر دیا گیا ہے۔)');
+                    } else {
+                        throw new Error("Local Storage Save Failed.");
+                    }
                 } else {
-                    throw new Error(result.message);
+                    milkRecords.unshift(recordData); 
+                    if (saveData(groupKey, LS_KEY_MILK, milkRecords)) {
+                        showModal('New Milk Entry added successfully. (نیا اندراج کامیابی سے شامل کر دیا گیا ہے۔)');
+                    } else {
+                        throw new Error("Local Storage Save Failed.");
+                    }
                 }
+                
+                resetMilkForm(); 
+                fullDataSync(); 
+
             } catch (error) {
                 console.error("Error saving milk record:", error);
                 showModal(`Failed to save Milk Record. Error: ${error.message}`, 'Error');
             } finally {
                 hideLoading();
             }
-        });
+        }
 
-        paymentEntryForm.addEventListener('submit', async (e) => {
+        async function handlePaymentEntrySubmit(e) {
             e.preventDefault();
             
-            if (!isAuthReady || !groupKey) {
-                showModal('Please login first to submit entries. (اندراج کے لیے پہلے لاگ اِن کریں۔)', 'Login Required');
+            if (!isAuthReady) {
+                showModal('Please wait for app initialization. (براہ کرم ایپ کے شروع ہونے کا انتظار کریں۔)', 'Error');
                 return;
             }
 
@@ -1425,53 +1356,55 @@
 
             showLoading();
             const recordData = {
-                id: id,
+                id: id || generateId(),
                 date: date,
                 amount: amount, 
                 timestamp: Date.now(),
             };
-            
-            const action = id ? 'UPDATE_PAYMENT' : 'ADD_PAYMENT';
-
 
             try {
-                const result = await callApi(action, recordData, 'POST');
-                
-                if (result.success) {
-                    showModal(`Payment ${id ? 'updated' : 'added'} successfully. (ادائیگی کامیابی سے ${id ? 'تبدیل' : 'شامل'} کر دی گئی ہے۔)`);
-                    resetPaymentForm();
-                    fetchData(); // Refresh data immediately
+                if (id) {
+                    const index = paymentRecords.findIndex(r => r.id === id);
+                    if (index !== -1) {
+                        paymentRecords[index] = recordData;
+                    } else {
+                        throw new Error("Record ID not found for update.");
+                    }
+                    if (saveData(groupKey, LS_KEY_PAYMENT, paymentRecords)) {
+                        showModal('Payment updated successfully. (ادائیگی کامیابی سے تبدیل کر دی گئی ہے۔)');
+                    } else {
+                        throw new Error("Local Storage Save Failed.");
+                    }
                 } else {
-                    throw new Error(result.message);
+                    paymentRecords.unshift(recordData);
+                    if (saveData(groupKey, LS_KEY_PAYMENT, paymentRecords)) {
+                        showModal('New Payment Entry added successfully. (نیا ادائیگی اندراج کامیابی سے شامل کر دیا گیا ہے۔)');
+                    } else {
+                        throw new Error("Local Storage Save Failed.");
+                    }
                 }
+                
+                resetPaymentForm();
+                fullDataSync(); 
+
             } catch (error) {
                 console.error("Error saving payment record:", error);
                 showModal(`Failed to save Payment Record. Error: ${error.message}`, 'Error');
             } finally {
                 hideLoading();
             }
-        });
+        }
 
 
         // --- Initial Load ---
         window.onload = () => {
-            initializeApp();
+            initializeElementReferences(); 
             
-            profileIconBtn.addEventListener('click', showProfileModal);
-            profileCloseBtn.addEventListener('click', closeProfileModal);
-            logoutBtn.addEventListener('click', handleLogout);
-            modalCloseBtn.addEventListener('click', () => { customModal.classList.add('hidden'); });
-            
-            // Confirmation Modal Listeners
-            confirmCancelBtn.addEventListener('click', () => { confirmationModal.classList.add('hidden'); });
-            confirmYesBtn.addEventListener('click', async () => {
-                if (recordToDeleteId && recordToDeleteType) {
-                    confirmationModal.classList.add('hidden');
-                    await deleteRecordApi(recordToDeleteId, recordToDeleteType);
-                    recordToDeleteId = null;
-                    recordToDeleteType = null;
-                }
-            });
+            document.getElementById('milk-entry-date').valueAsDate = new Date();
+            document.getElementById('payment-entry-date').valueAsDate = new Date();
+
+            // Initial data load
+            fullDataSync();
 
             lucide.createIcons(); 
         };
