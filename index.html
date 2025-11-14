@@ -63,6 +63,13 @@
             padding-left: 2.5rem; 
             background-size: 1.5rem;
             direction: rtl; /* Ensure RTL flow inside dropdown */
+            /* UPDATED LOOK: */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            border: 2px solid #3b82f6; /* Added subtle blue border */
+            border-radius: 0.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            background-color: #f0f9ff; /* Light blue background */
         }
         
         /* Currency display MUST be LTR but aligned right within its container */
@@ -106,50 +113,42 @@
                 text-overflow: ellipsis;
             }
         }
-        /* NEW FIX: Center the Month Selector and Date Display */
-        .centered-controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            gap: 0.5rem;
-            flex-grow: 1; /* Allows it to take up the space between icons */
-        }
-
+        
         /* --- Custom CSS for centered text in Summary Cards --- */
-        /* Targets the text wrapper containing Urdu/English labels */
         .summary-label-wrapper > span {
             text-align: center !important; 
         }
-        /* Targets the main numeric values */
         #total-milk, #total-days, #total-absent, #net-balance {
             text-align: center !important;
             direction: ltr !important; /* Keep numbers LTR but centered in container */
         }
         
-        /* FIX: Header alignment for Showing Data/Dropdown */
-        /* Reverted to original flex behavior but ensured items are grouped and centered */
-        .header-content-container {
+        /* FIX: Header alignment for Month Selector */
+        .header-controls-container {
             display: flex;
-            flex-direction: row; /* Horizontal alignment */
             align-items: center;
-            justify-content: center; /* Center the group between icons */
-            gap: 0.5rem;
-            flex-grow: 1; /* Allows it to take the full width */
+            justify-content: space-between;
+            width: 100%;
+            position: relative; /* Base for absolute icons */
+            padding: 0 4rem; /* Space for icons */
         }
-        /* Mobile adjustment for header content */
-        @media (max-width: 640px) {
-            .header-content-container {
-                 flex-direction: column; /* Stack vertically on small screens */
-                 gap: 0.2rem;
-                 align-items: center; /* Center horizontally on small screens */
-            }
-            #month-selector {
-                width: 100%; /* Full width for better tapping on mobile */
-            }
+        .toggle-menu {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: calc(100% - 8rem); /* Occupy central space */
+            display: flex;
+            justify-content: center;
+            transition: opacity 0.3s ease-in-out;
         }
-        
+        /* Hide element and icons when closed, show when open */
+        .toggle-menu.hidden {
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
+            transform: translateY(-50%) scale(0.9);
+        }
+
     </style>
     <!-- Load Lucide Icons for UI elements -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -291,37 +290,38 @@
         <!-- HEADER: Contains icons and the central dropdown -->
         <header class="flex justify-between items-center mb-6 border-b pb-2 relative">
             
-            <!-- Left-Aligned Profile Icon (Opens Access Modal) -->
-            <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md z-10">
-                 <span data-lucide="user" class="w-6 h-6"></span>
-            </button>
+            <!-- --- MAIN TOGGLE BUTTON (New Primary Focus) --- -->
+            <div class="flex justify-center w-full">
+                <button id="main-toggle-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md z-20 absolute top-4 transform -translate-x-1/2 left-1/2" onclick="window.app.vibrate()">
+                    <span data-lucide="chevrons-up-down" class="w-6 h-6"></span>
+                </button>
+            </div>
             
-            <!-- --- Centered Month Selector and Label (Inline) --- -->
-            <!-- Adjusted layout to be horizontal and centered -->
-            <div class="centered-controls flex-row items-center justify-center">
+            <!-- --- TOGGLED MENU CONTAINER (Hidden by Default) --- -->
+            <div id="toggled-menu" class="toggle-menu hidden flex-row items-center justify-between w-full h-10">
                 
-                <!-- FIX: Grouping Label and Select tightly and centering them -->
-                <div class="header-content-container flex flex-row items-center justify-center gap-2">
-                    <!-- Data Display (Showing Data) -->
-                    <p class="text-center text-lg font-bold text-gray-800 whitespace-nowrap urdu-text" style="direction: ltr;">
-                        Showing Data
-                    </p>
-
+                <!-- Left-Aligned Settings Icon (Opens Settings Modal) -->
+                <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md z-10 absolute left-0 top-1/2 transform -translate-y-1/2" onclick="window.app.vibrate()">
+                     <span data-lucide="settings" class="w-6 h-6"></span>
+                </button>
+                
+                <!-- Centered Month Selector -->
+                <div class="header-content-container flex flex-row items-center justify-center gap-2 flex-grow">
                     <!-- Month Selector -->
-                    <div style="direction: ltr; text-align: left;">
-                        <select id="month-selector" class="p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 hover:bg-gray-100 cursor-pointer shadow-inner focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition" onchange="window.app.handleMonthChange(this.value)">
+                    <div style="direction: ltr; text-align: center;">
+                        <select id="month-selector" class="p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 hover:bg-gray-100 cursor-pointer shadow-inner focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition w-40" onchange="window.app.handleMonthChange(this.value); window.app.vibrate()">
                             <!-- Options will be injected by JavaScript -->
                         </select>
                     </div>
                 </div>
-                <!-- This is just for dynamic display, kept hidden -->
+
+                <!-- Right-Aligned Profile Icon (Opens Access Modal) -->
+                <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md z-10 absolute right-0 top-1/2 transform -translate-y-1/2" onclick="window.app.vibrate()">
+                     <span data-lucide="user" class="w-6 h-6"></span>
+                </button>
+                
                 <b id="current-month-display" class="hidden">...</b>
             </div>
-
-            <!-- Right-Aligned Settings Icon (Opens Settings Modal) -->
-            <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md z-10">
-                 <span data-lucide="settings" class="w-6 h-6"></span>
-            </button>
         </header>
 
         <!-- --- MAIN APP CONTENT (Default View) --- -->
@@ -339,7 +339,7 @@
                         Milk 
                         <span class="block text-sm font-normal urdu-text text-center">(دودھ)</span>
                     </div>
-                    <div id="total-milk" class="text-xl sm:text-2xl font-extrabold text-indigo-900 mt-1 text-center">0.00 (Ltr)</div>
+                    <div id="total-milk" class="text-xl sm:text-2xl font-extrabold text-indigo-900 mt-1 text-center">0.00 Ltr</div>
                 </div>
                 
                 <!-- Attendance -->
@@ -379,10 +379,10 @@
             <div class="bg-white rounded-xl shadow-xl mb-8">
                 <!-- Tab Buttons (RTL/Urdu text is dominant here) -->
                 <div class="flex border-b border-gray-200">
-                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl" onclick="window.app.switchAppTab('milk')">
+                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl" onclick="window.app.switchAppTab('milk'); window.app.vibrate()">
                         <span data-lucide="droplet" class="w-5 h-5 inline-block ml-1"></span> Milk Entry
                     </button>
-                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl" onclick="window.app.switchAppTab('payment')">
+                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl" onclick="window.app.switchAppTab('payment'); window.app.vibrate()">
                         <span data-lucide="wallet" class="w-5 h-5 inline-block ml-1"></span> Payment Entry
                     </button>
                 </div>
@@ -402,20 +402,20 @@
 
                             <!-- Quantity Input (FIX: Absent button line break applied) -->
                             <div class="flex flex-col space-y-2">
-                                <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - (Ltr) (Quantity)</label>
+                                <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - Ltr (Quantity)</label>
                                 <div class="flex space-x-reverse space-x-2">
                                     <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                                    <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">
+                                    <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap" onclick="window.app.vibrate()">
                                         Absent <br> (غیر حاضری)
                                     </button>
                                 </div>
                             </div>
                         </div>
                         
-                        <button type="submit" id="submit-milk-entry" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn">
+                        <button type="submit" id="submit-milk-entry" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn" onclick="window.app.vibrate()">
                             Submit Milk Entry
                         </button>
-                        <button type="button" id="milk-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">
+                        <button type="button" id="milk-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden" onclick="window.app.vibrate()">
                             Cancel Edit
                         </button>
                     </form>
@@ -440,10 +440,10 @@
                             </div>
                         </div>
                         
-                        <button type="submit" id="submit-payment-entry" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn">
+                        <button type="submit" id="submit-payment-entry" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn" onclick="window.app.vibrate()">
                             Submit Payment Entry
                         </button>
-                        <button type="button" id="payment-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">
+                        <button type="button" id="payment-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden" onclick="window.app.vibrate()">
                             Cancel Edit
                         </button>
                     </form>
@@ -452,7 +452,7 @@
 
             <!-- Daily Records Table (FILTERED MONTH) -->
             <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-records-content').classList.toggle('hidden'); document.querySelector('#milk-records-icon').classList.toggle('rotate-180')">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-records-content').classList.toggle('hidden'); document.querySelector('#milk-records-icon').classList.toggle('rotate-180'); window.app.vibrate()">
                     <h2 class="text-xl font-bold text-gray-700">منتخب مہینے کا ریکارڈ (Daily Records)</h2>
                     <span id="milk-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
@@ -462,7 +462,7 @@
                             <thead class="bg-gray-100 sticky top-0">
                                 <tr>
                                     <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity ((Ltr))</th>
+                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Ltr)</th>
                                     <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
                                     <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
                                 </tr>
@@ -477,7 +477,7 @@
 
             <!-- Milk History Table (ALL OTHER MONTHS) -->
             <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-history-content').classList.toggle('hidden'); document.querySelector('#milk-history-icon').classList.toggle('rotate-180')">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('milk-history-content').classList.toggle('hidden'); document.querySelector('#milk-history-icon').classList.toggle('rotate-180'); window.app.vibrate()">
                     <h2 class="text-xl font-bold text-gray-700">دوسرے مہینوں کا ریکارڈ (Milk History)</h2>
                     <span id="milk-history-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
@@ -487,7 +487,7 @@
                             <thead class="bg-gray-100 sticky top-0">
                                 <tr>
                                     <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity ((Ltr))</th>
+                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Ltr)</th>
                                     <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
                                     <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
                                 </tr>
@@ -502,7 +502,7 @@
 
             <!-- Payment History Table (OVERALL HISTORY) -->
             <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('payment-records-content').classList.toggle('hidden'); document.querySelector('#payment-records-icon').classList.toggle('rotate-180')">
+                <div class="flex justify-between items-center mb-4 cursor-pointer" onclick="document.getElementById('payment-records-content').classList.toggle('hidden'); document.querySelector('#payment-records-icon').classList.toggle('rotate-180'); window.app.vibrate()">
                     <h2 class="text-xl font-bold text-gray-700">ادائیگی کی تاریخ (Payment History)</h2>
                     <span id="payment-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
                 </div>
@@ -525,11 +525,10 @@
             </div>
 
             <!-- PWA Installation Section (Manual Install) -->
-            <!-- FIX: Removed 'hidden' class to ensure visibility -->
             <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
                 <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2">ایپ انسٹال کریں (Install App)</h3>
                 <p class="text-gray-600 text-sm mb-3">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
-                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2">
+                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2" onclick="window.app.vibrate()">
                     <span data-lucide="download" class="w-5 h-5"></span>
                     <span>Install Milk Tracker</span>
                 </button>
@@ -607,9 +606,17 @@
                 this.currentFilterMonth = this.getCurrentMonthYearString();
                 this.isAuthReady = false; // Indicates initial load is complete
                 this.recordToDelete = { id: null, type: null }; // State for deletion confirmation
+                this.isMenuOpen = false; // New state for toggle menu
 
                 // --- UI REFERENCES (Initialized later) ---
                 this.els = {};
+            }
+
+            // --- Haptic Feedback Function ---
+            vibrate() {
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(50); // Short vibration pulse
+                }
             }
 
             // تمام DOM elements کے ریفرنسز حاصل کرتا ہے اور انہیں this.els میں رکھتا ہے۔
@@ -645,6 +652,8 @@
                 // MODALS & HEADERS
                 els.settingsIconBtn = document.getElementById('settings-icon-btn');
                 els.profileIconBtn = document.getElementById('profile-icon-btn');
+                els.mainToggleBtn = document.getElementById('main-toggle-btn');
+                els.toggledMenu = document.getElementById('toggled-menu');
                 
                 // ACCESS MODAL
                 els.accessModal = document.getElementById('access-modal');
@@ -678,12 +687,16 @@
 
             // تمام ایونٹ ہینڈلرز (Event Handlers) کو ایک ساتھ جوڑتا ہے۔
             attachEventListeners() {
+                // Main Header Toggle
+                this.els.mainToggleBtn.addEventListener('click', () => this.toggleMenu());
+
                 // Modal Controls
-                this.els.settingsIconBtn.addEventListener('click', () => this.showSettingsModal());
-                this.els.profileIconBtn.addEventListener('click', () => this.showAccessModal());
-                document.getElementById('access-close-btn').addEventListener('click', () => this.closeAccessModal());
-                document.getElementById('settings-close-btn').addEventListener('click', () => this.closeSettingsModal());
-                this.els.modalCloseBtn.addEventListener('click', () => this.els.customModal.classList.add('hidden'));
+                this.els.settingsIconBtn.addEventListener('click', () => { this.toggleMenu(false); this.showSettingsModal(); });
+                this.els.profileIconBtn.addEventListener('click', () => { this.toggleMenu(false); this.showAccessModal(); });
+                
+                this.els.accessModal.querySelector('#access-close-btn').addEventListener('click', () => { this.closeAccessModal(); this.vibrate(); });
+                this.els.settingsModal.querySelector('#settings-close-btn').addEventListener('click', () => { this.closeSettingsModal(); this.vibrate(); });
+                this.els.modalCloseBtn.addEventListener('click', () => { this.els.customModal.classList.add('hidden'); this.vibrate(); });
 
                 // Form Submissions
                 this.els.milkEntryForm.addEventListener('submit', (e) => this.handleMilkEntrySubmit(e));
@@ -694,17 +707,34 @@
                 // Settings & Key Management
                 document.getElementById('save-price-btn-settings').addEventListener('click', () => this.handlePriceSave());
                 this.els.milkmanDetailsFormSettings.addEventListener('submit', (e) => this.handleMilkmanSave(e));
-                document.getElementById('generate-key-btn').addEventListener('click', () => this.generateRandomKey());
+                document.getElementById('generate-key-btn').addEventListener('click', () => { this.generateRandomKey(); this.vibrate(); });
                 this.els.changeKeyForm.addEventListener('submit', (e) => this.handleKeyChange(e));
 
                 // Helper Buttons
-                // UPDATED: Absent button logic now calls handleAbsentClickAndSubmit
                 this.els.absentBtn.addEventListener('click', () => this.handleAbsentClickAndSubmit());
-                this.els.confirmCancelBtn.addEventListener('click', () => this.els.confirmationModal.classList.add('hidden'));
+                this.els.confirmCancelBtn.addEventListener('click', () => { this.els.confirmationModal.classList.add('hidden'); this.vibrate(); });
                 this.els.confirmYesBtn.addEventListener('click', () => this.handleConfirmDelete());
 
                 // PWA Logic (simplified)
                 this.els.installButton.addEventListener('click', () => this.handlePWAInstall());
+            }
+
+            // --- UI/UX Toggle Logic ---
+            toggleMenu(force) {
+                this.vibrate();
+                if (typeof force === 'boolean') {
+                    this.isMenuOpen = force;
+                } else {
+                    this.isMenuOpen = !this.isMenuOpen;
+                }
+
+                if (this.isMenuOpen) {
+                    this.els.toggledMenu.classList.remove('hidden');
+                    this.els.mainToggleBtn.classList.add('rotate-180');
+                } else {
+                    this.els.toggledMenu.classList.add('hidden');
+                    this.els.mainToggleBtn.classList.remove('rotate-180');
+                }
             }
             
             // --- CORE APP LOGIC ---
@@ -832,8 +862,8 @@
                 const totalAbsenceDays = filteredMilkRecords.filter(r => r.isAbsent === true).length;
 
                 // 6. Update UI Metrics
-                // FIX: Changed Litres to (Ltr)
-                this.els.totalMilkEl.textContent = `${overallMilkTotal.toFixed(2)} (Ltr)`;
+                // FIX: Changed Litres to Ltr (Removed brackets)
+                this.els.totalMilkEl.textContent = `${overallMilkTotal.toFixed(2)} Ltr`;
                 if (this.els.totalDaysEl) this.els.totalDaysEl.textContent = `${totalActiveDays} Days`;
                 if (this.els.totalAbsentEl) this.els.totalAbsentEl.textContent = `${totalAbsenceDays} Days`; 
                 
@@ -904,11 +934,11 @@
                     }
 
                     const actionButtons = isEditable ? `
-                        <button onclick="window.app.editMilkRecord('${record.id}')" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
+                        <button onclick="window.app.editMilkRecord('${record.id}'); window.app.vibrate()" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
                             <span data-lucide="square-pen" class="w-4 h-4 inline-block"></span>
                             <span class="hidden sm:inline-block">Edit</span>
                         </button>
-                        <button onclick="window.app.prepareDeleteRecord('${record.id}', 'milk')" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
+                        <button onclick="window.app.prepareDeleteRecord('${record.id}', 'milk'); window.app.vibrate()" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
                             <span data-lucide="trash-2" class="w-4 h-4 inline-block"></span>
                             <span class="hidden sm:inline-block">Delete</span>
                         </button>
@@ -953,11 +983,11 @@
                         <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ltr-column">${displayDate}</td>
                         <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 currency-display">${displayAmount}</td>
                         <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-center text-sm font-medium">
-                            <button onclick="window.app.editPaymentRecord('${record.id}')" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
+                            <button onclick="window.app.editPaymentRecord('${record.id}'); window.app.vibrate()" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
                                 <span data-lucide="square-pen" class="w-4 h-4 inline-block"></span>
                                 <span class="hidden sm:inline-block">Edit</span>
                             </button>
-                            <button onclick="window.app.prepareDeleteRecord('${record.id}', 'payment')" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
+                            <button onclick="window.app.prepareDeleteRecord('${record.id}', 'payment'); window.app.vibrate()" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
                                 <span data-lucide="trash-2" class="w-4 h-4 inline-block"></span>
                                 <span class="hidden sm:inline-block">Delete</span>
                             </button>
@@ -1012,6 +1042,7 @@
 
             handleKeyChange(e) {
                 e.preventDefault();
+                this.vibrate();
                 const newKey = this.els.newKeyInput.value.trim().toUpperCase();
 
                 if (newKey.length < 6) {
@@ -1048,6 +1079,7 @@
             handlePriceSave() {
                 if (!this.isAuthReady || !this.groupKey) return;
                 
+                this.vibrate();
                 const newPrice = parseFloat(this.els.pricePerUnitInputSettings.value);
                 const priceMessageEl = document.getElementById('price-message-settings');
                 
@@ -1085,6 +1117,7 @@
                 e.preventDefault();
                 if (!this.isAuthReady || !this.groupKey) return;
                 
+                this.vibrate();
                 const newName = this.els.milkmanNameInputSettings.value.trim();
                 const newContact = this.els.milkmanContactInputSettings.value.trim();
                 const milkmanMessageEl = document.getElementById('milkman-message-settings');
@@ -1122,6 +1155,7 @@
 
             // Absent button function
             handleAbsentClickAndSubmit() {
+                this.vibrate();
                 // Manually set form values for 0.00 entry
                 document.getElementById('milk-entry-quantity').value = '0.00';
                 
@@ -1142,6 +1176,8 @@
             handleMilkEntrySubmit(e, isAutoSubmit = false) {
                 e.preventDefault();
                 
+                if (!isAutoSubmit) { this.vibrate(); }
+
                 if (!this.isAuthReady) {
                     this.showModal('Please wait for app initialization. (براہ کرم ایپ کے شروع ہونے کا انتظار کریں۔)', 'Error');
                     return;
@@ -1214,6 +1250,8 @@
             handlePaymentEntrySubmit(e) {
                 e.preventDefault();
                 
+                this.vibrate();
+
                 if (!this.isAuthReady) {
                     this.showModal('Please wait for app initialization. (براہ کرم ایپ کے شروع ہونے کا انتظار کریں۔)', 'Error');
                     return;
@@ -1505,6 +1543,7 @@
         window.editMilkRecord = (id) => window.app.editMilkRecord(id);
         window.editPaymentRecord = (id) => window.app.editPaymentRecord(id);
         window.prepareDeleteRecord = (id, type) => window.app.prepareDeleteRecord(id, type);
+        window.vibrate = () => window.app.vibrate(); // Expose vibrate globally
     </script>
 
 </body>
