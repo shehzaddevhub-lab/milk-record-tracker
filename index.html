@@ -9,7 +9,7 @@
     <meta name="google" content="notranslate">
     <!-- 1. PWA Manifest & Theme -->
     <meta name="theme-color" content="#1e40af"> 
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29ucyI6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS0lHVnVkQzVtYkc5aGJnNWtJSFZ6WjNkaWRtVjBPMnhtbFoybHVabThpWkdsaFlXSnZJR0ZuWld4MGIzUW9NalluSUhCeVpYTnBjenBjZlE9PSIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGU6ICJpbWFnZS9zdmciIH0sICJuYW1lIjogIk1pbGsgUmVjb3JkIFRyYWNrZXIiLCAic2hvcnRfbmFtZSI6Ik1pbGsgVHJhY2tlciIsICJzdGFydF91cmwiOiAiLi8iLCAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
+    <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29uc2I6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS ध्वस्तIHVyc29sdG8ifSwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9zdmciIH0sICJuYW1lIjogIk1pbGsgVHJhY2tlciIsICJzaG9ydF9uYW1lIjoiTWlsayBUcmFja2VyIiwgInN0YXJ0X3VybCI6ICIuLyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
 
     <style>
         body {
@@ -156,7 +156,7 @@
                     </button>
                 </div>
                 <form id="change-key-form">
-                    <input type="text" id="new-key-input" placeholder="Enter new or shared code" required minlength="6" maxlength="11" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
+                    <input type="text" id="new-key-input" placeholder="Enter new or shared code" required minlength="6" maxlength="11" class="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
                     <button type="submit" id="change-key-btn" class="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 action-btn">Switch/Load Data Code</button>
                     <p id="change-key-message" class="text-sm mt-2 hidden text-red-600 text-center urdu-text"></p>
                 </form>
@@ -176,7 +176,7 @@
                     <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ کی قیمت</h3>
                     <label for="price-per-unit-settings" class="block text-sm font-medium text-gray-700 mb-1">Price Per Litre (فی لیٹر - Rupees):</label>
                     <div class="flex space-x-reverse space-x-4">
-                        <input type="number" id="price-per-unit-settings" value="120" min="0" step="0.01" class="flex-grow p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
+                        <input type="number" id="price-per-unit-settings" value="120" min="0" step="0.01" class="flex-grow p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
                         <button id="save-price-btn-settings" type="button" class="bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 action-btn w-28">Save Price</button>
                     </div>
                     <p id="price-message-settings" class="text-sm mt-2 hidden text-green-600 urdu-text"></p>
@@ -186,11 +186,11 @@
                     <form id="milkman-details-form-settings" class="space-y-3">
                         <div>
                             <label for="milkman-name-settings" class="block text-sm font-medium text-gray-700 mb-1">Name (نام)</label>
-                            <input type="text" id="milkman-name-settings" placeholder="Milkman Name" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 urdu-input">
+                            <input type="text" id="milkman-name-settings" placeholder="Milkman Name" class="w-full p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 urdu-input">
                         </div>
                         <div>
                             <label for="milkman-contact-settings" class="block text-sm font-medium text-gray-700 mb-1">Contact No. (رابطہ نمبر)</label>
-                            <input type="tel" id="milkman-contact-settings" placeholder="+92 3XX XXXXXXX" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
+                            <input type="tel" id="milkman-contact-settings" placeholder="+92 3XX XXXXXXX" class="w-full p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
                         </div>
                         <button type="submit" id="save-milkman-btn-settings" class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 action-btn">Save Details</button>
                         <p id="milkman-message-settings" class="text-sm mt-2 hidden text-green-600 text-center urdu-text"></p>
@@ -251,8 +251,12 @@
             
             <div class="bg-white rounded-xl shadow-xl mb-8">
                 <div class="flex border-b border-gray-200">
-                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl"><span data-lucide="droplet" class="w-5 h-5 inline-block ml-1"></span> Milk Entry</button>
-                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl"><span data-lucide="wallet" class="w-5 h-5 inline-block ml-1"></span> Payment Entry</button>
+                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl">
+                        <span data-lucide="droplet" class="w-5 h-5 inline-block ml-1"></span> Milk Entry
+                    </button>
+                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl">
+                        <span data-lucide="wallet" class="w-5 h-5 inline-block ml-1"></span> Payment Entry
+                    </button>
                 </div>
                 <div id="milk-tab-content" class="tab-content p-6 urdu-text">
                     <h2 id="milk-form-title" class="text-xl font-bold text-gray-700 mb-4">دودھ کا اندراج (Milk Entry)</h2>
@@ -261,12 +265,12 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label for="milk-entry-date" class="block text-sm font-medium text-gray-700 mb-1">تاریخ (Date)</label>
-                                <input type="date" id="milk-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                                <input type="date" id="milk-entry-date" required class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
                             <div class="flex flex-col space-y-2">
                                 <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - Ltr (Quantity)</label>
                                 <div class="flex space-x-reverse space-x-2">
-                                    <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                                    <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                                     <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">Absent <br> (غیر حاضری)</button>
                                 </div>
                             </div>
@@ -282,11 +286,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label for="payment-entry-date" class="block text-sm font-medium text-gray-700 mb-1">تاریخ (Date)</label>
-                                <input type="date" id="payment-entry-date" required class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                                <input type="date" id="payment-entry-date" required class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
                             <div>
                                 <label for="payment-entry-amount" class="block text-sm font-medium text-gray-700 mb-1">رقم - Rupees (Amount)</label>
-                                <input type="number" id="payment-entry-amount" required min="1" step="1" class="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                                <input type="number" id="payment-entry-amount" required min="1" step="1" class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
                             </div>
                         </div>
                         <button type="submit" id="submit-payment-entry" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn">Submit Payment Entry</button>
@@ -364,7 +368,7 @@
                 <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2">ایپ انسٹال کریں (Install App)</h3>
                 <p class="text-gray-600 text-sm mb-3">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
                 <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2">
-                    <span data-lucide="download" class="w-5 h-5"></span>
+                    <span data-lucide="download"></span>
                     <span>Install Milk Tracker</span>
                 </button>
             </div>
@@ -379,10 +383,12 @@
                 this.LS_KEY_SETTINGS = 'settings_';
                 this.GUEST_KEY = 'GUEST_MODE';
             }
+
             loadData(key, storageKey) {
                 const rawData = localStorage.getItem(storageKey + key);
                 return rawData ? JSON.parse(rawData) : [];
             }
+            
             saveData(key, storageKey, data) {
                 try {
                     localStorage.setItem(storageKey + key, JSON.stringify(data));
@@ -392,11 +398,13 @@
                     return false;
                 }
             }
+            
             loadSettings(key) {
                 const defaults = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
                 const storedSettings = this.loadData(key, this.LS_KEY_SETTINGS);
                 return (Array.isArray(storedSettings) && storedSettings.length === 0) ? defaults : { ...defaults, ...storedSettings };
             }
+            
             saveSettings(key, settings) {
                 return this.saveData(key, this.LS_KEY_SETTINGS, settings);
             }
@@ -497,7 +505,7 @@
                 document.getElementById('tab-milk').addEventListener('click', () => { this.switchAppTab('milk'); this.vibrate(); });
                 document.getElementById('tab-payment').addEventListener('click', () => { this.switchAppTab('payment'); this.vibrate(); });
                 
-                // Event Delegation for Dynamic Tables
+                // Event Delegation for Dynamic Tables (ONE LISTENER FOR ALL BUTTONS)
                 const handleTableAction = (e, type) => {
                     const btn = e.target.closest('button');
                     if (!btn) return;
@@ -656,6 +664,7 @@
                     } else {
                         quantityDisplay = `<span dir="ltr">${quantity.toFixed(2)}</span>`;
                     }
+
                     const actionButtons = isEditable ? `
                         <button data-record-id="${record.id}" data-action="edit-milk" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
                             <span data-lucide="square-pen" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Edit</span>
@@ -664,7 +673,9 @@
                             <span data-lucide="trash-2" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Delete</span>
                         </button>
                     ` : '<span class="text-gray-400">View Only</span>';
+
                     const displayAmount = `Rs. ${payment.toLocaleString('ur-PK')}`;
+
                     row.innerHTML = `<td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} ltr-column">${displayDate}</td>
                         <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 ${rowClasses} ltr-column">${quantityDisplay}</td>
                         <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} currency-display">${displayAmount}</td>
@@ -672,7 +683,16 @@
                     fragment.appendChild(row);
                 });
                 tableBodyEl.appendChild(fragment);
+                
+                // Re-attach listeners for dynamically created buttons (Using delegation is better, but this is a direct fix for your current code)
+                tableBodyEl.querySelectorAll('[data-action="edit-milk"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => { this.editMilkRecord(e.currentTarget.dataset.recordId); this.vibrate(); });
+                });
+                tableBodyEl.querySelectorAll('[data-action="delete-milk"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => { this.prepareDeleteRecord(e.currentTarget.dataset.recordId, 'milk'); this.vibrate(); });
+                });
             }
+
             renderPaymentRecords() {
                 this.els.paymentRecordsTableBody.innerHTML = '';
                 if (this.paymentRecords.length === 0) {
@@ -701,6 +721,14 @@
                 });
                 this.els.paymentRecordsTableBody.appendChild(fragment);
                 lucide.createIcons();
+                
+                // Re-attach listeners for dynamically created buttons
+                this.els.paymentRecordsTableBody.querySelectorAll('[data-action="edit-payment"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => { this.editPaymentRecord(e.currentTarget.dataset.recordId); this.vibrate(); });
+                });
+                this.els.paymentRecordsTableBody.querySelectorAll('[data-action="delete-payment"]').forEach(btn => {
+                    btn.addEventListener('click', (e) => { this.prepareDeleteRecord(e.currentTarget.dataset.recordId, 'payment'); this.vibrate(); });
+                });
             }
             
             showAccessModal() { this.vibrate(); document.getElementById('access-secret-key').textContent = this.groupKey; document.getElementById('access-modal').classList.remove('hidden'); }
@@ -727,19 +755,21 @@
             handlePriceSave() { 
                 this.vibrate(); 
                 const price = parseFloat(this.els.pricePerUnitInputSettings.value);
-                if (isNaN(price) || price < 0) return;
+                if (isNaN(price) || price < 0) { this.showModal('Please enter a valid price.', 'Data Error'); return; }
                 const s = this.persistence.loadSettings(this.groupKey); s.pricePerUnit = price;
-                this.persistence.saveSettings(this.groupKey, s); this.fullDataSync();
-                const msg = document.getElementById('price-message-settings'); msg.textContent = 'Saved!'; msg.classList.remove('hidden');
-                setTimeout(() => msg.classList.add('hidden'), 2000);
+                if(this.persistence.saveSettings(this.groupKey, s)){
+                    this.fullDataSync();
+                    this.showModal(`Price updated to Rs. ${price.toFixed(2)}.`, 'Settings Saved');
+                }
             }
             handleMilkmanSave(e) { 
                 e.preventDefault(); this.vibrate(); 
                 const s = this.persistence.loadSettings(this.groupKey);
                 s.milkmanName = this.els.milkmanNameInputSettings.value; s.milkmanContact = this.els.milkmanContactInputSettings.value;
-                this.persistence.saveSettings(this.groupKey, s);
-                const msg = document.getElementById('milkman-message-settings'); msg.textContent = 'Saved!'; msg.classList.remove('hidden');
-                setTimeout(() => msg.classList.add('hidden'), 2000);
+                if(this.persistence.saveSettings(this.groupKey, s)){
+                    this.fullDataSync();
+                    this.showModal('Milkman details saved successfully!', 'Settings Saved');
+                }
             }
 
             generateId() { return Date.now().toString() + Math.random().toString(36).substring(2, 9); }
@@ -758,9 +788,12 @@
                 if (isNaN(quantity)) { this.showModal('Invalid Quantity', 'Error'); return; }
                 this.showLoading();
                 const record = { id: id || this.generateId(), date, quantity: quantity.toFixed(2), isAbsent: isAbsentFlag, timestamp: Date.now() };
-                if (id) { const idx = this.milkRecords.findIndex(r => r.id === id); if (idx !== -1) this.milkRecords[idx] = record; } else { this.milkRecords.unshift(record); }
-                this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords);
-                this.resetMilkForm(); this.fullDataSync(); this.hideLoading();
+                try {
+                    if (id) { const idx = this.milkRecords.findIndex(r => r.id === id); if (idx !== -1) this.milkRecords[idx] = record; } else { this.milkRecords.unshift(record); }
+                    if (!this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords)) { throw new Error("Local Storage Save Failed."); }
+                    this.resetMilkForm(); this.fullDataSync(); 
+                    this.showModal(id ? 'Record updated successfully.' : 'New Milk Entry added!');
+                } catch (error) { this.showModal(`Failed to save Milk Record. Error: ${error.message}`, 'Error'); } finally { this.hideLoading(); }
             }
             handlePaymentEntrySubmit(e) {
                 e.preventDefault(); this.vibrate();
@@ -768,69 +801,94 @@
                 const id = document.getElementById('payment-entry-id').value;
                 const date = document.getElementById('payment-entry-date').value;
                 const amount = parseFloat(document.getElementById('payment-entry-amount').value);
-                if (isNaN(amount)) { this.showModal('Invalid Amount', 'Error'); return; }
+                if (isNaN(amount) || amount <= 0) { this.showModal('Invalid Amount', 'Error'); return; }
                 this.showLoading();
                 const record = { id: id || this.generateId(), date, amount, timestamp: Date.now() };
-                if (id) { const idx = this.paymentRecords.findIndex(r => r.id === id); if (idx !== -1) this.paymentRecords[idx] = record; } else { this.paymentRecords.unshift(record); }
-                this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords);
-                this.resetPaymentForm(); this.fullDataSync(); this.hideLoading();
+                try {
+                    if (id) { const idx = this.paymentRecords.findIndex(r => r.id === id); if (idx !== -1) this.paymentRecords[idx] = record; } else { this.paymentRecords.unshift(record); }
+                    if (!this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords)) { throw new Error("Local Storage Save Failed."); }
+                    this.resetPaymentForm(); this.fullDataSync(); 
+                    this.showModal(id ? 'Payment updated successfully.' : 'New Payment Entry added!');
+                } catch (error) { this.showModal(`Failed to save Payment Record. Error: ${error.message}`, 'Error'); } finally { this.hideLoading(); }
             }
             
             editMilkRecord(id) { 
                 this.vibrate(); this.switchAppTab('milk');
-                const r = this.milkRecords.find(x => x.id === id); if (!r) return;
+                const r = this.milkRecords.find(x => x.id === id); 
+                if (!r) { this.showModal('Record not found.', 'Error'); return; }
+                if (!r.date.startsWith(this.currentFilterMonth)) { this.showModal('Record belongs to previous month.', 'Edit Restricted'); return; }
+
                 document.getElementById('milk-entry-id').value = r.id;
                 document.getElementById('milk-entry-date').value = r.date;
                 document.getElementById('milk-entry-quantity').value = r.quantity;
                 this.els.milkFormTitleEl.textContent = 'Edit Milk Entry';
                 this.els.milkEntryForm.querySelector('button[type="submit"]').textContent = 'Save Changes';
+                this.els.milkEntryForm.querySelector('button[type="submit"]').classList.replace('bg-green-600', 'bg-blue-600'); // Change color for edit mode
                 this.els.milkCancelEditBtn.classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
             resetMilkForm() {
-                document.getElementById('milk-entry-id').value = ''; this.els.milkEntryForm.reset();
+                document.getElementById('milk-entry-id').value = ''; 
+                this.els.milkEntryForm.reset();
                 const d = new Date(); document.getElementById('milk-entry-date').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                this.els.milkFormTitleEl.textContent = 'Milk Entry (دودھ کا اندراج)';
+                this.els.milkFormTitleEl.textContent = 'دودھ کا اندراج (Milk Entry)';
                 this.els.milkEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Milk Entry';
+                this.els.milkEntryForm.querySelector('button[type="submit"]').classList.replace('bg-blue-600', 'bg-green-600');
                 this.els.milkCancelEditBtn.classList.add('hidden');
             }
             editPaymentRecord(id) {
                 this.vibrate(); this.switchAppTab('payment');
-                const r = this.paymentRecords.find(x => x.id === id); if (!r) return;
+                const r = this.paymentRecords.find(x => x.id === id); 
+                if (!r) { this.showModal('Record not found.', 'Error'); return; }
+                
                 document.getElementById('payment-entry-id').value = r.id;
                 document.getElementById('payment-entry-date').value = r.date;
                 document.getElementById('payment-entry-amount').value = r.amount;
                 this.els.paymentFormTitleEl.textContent = 'Edit Payment Entry';
                 this.els.paymentEntryForm.querySelector('button[type="submit"]').textContent = 'Save Changes';
+                this.els.paymentEntryForm.querySelector('button[type="submit"]').classList.replace('bg-orange-600', 'bg-blue-600'); // Change color for edit mode
                 this.els.paymentCancelEditBtn.classList.remove('hidden');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
             resetPaymentForm() {
-                document.getElementById('payment-entry-id').value = ''; this.els.paymentEntryForm.reset();
+                document.getElementById('payment-entry-id').value = ''; 
+                this.els.paymentEntryForm.reset();
                 const d = new Date(); document.getElementById('payment-entry-date').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                this.els.paymentFormTitleEl.textContent = 'Payment Entry (ادائیگی کا اندراج)';
+                this.els.paymentFormTitleEl.textContent = 'ادائیگی کا اندراج (Payment Entry)';
                 this.els.paymentEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Payment Entry';
+                this.els.paymentEntryForm.querySelector('button[type="submit"]').classList.replace('bg-blue-600', 'bg-orange-600');
                 this.els.paymentCancelEditBtn.classList.add('hidden');
             }
             switchAppTab(tabName) {
-                this.els.milkCancelEditBtn.click(); this.els.paymentCancelEditBtn.click(); // Reset forms on switch
+                this.els.milkCancelEditBtn.click(); this.els.paymentCancelEditBtn.click();
                 document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
                 document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
                 if (tabName === 'milk') { document.getElementById('tab-milk').classList.add('active'); document.getElementById('milk-tab-content').classList.remove('hidden'); }
                 else { document.getElementById('tab-payment').classList.add('active'); document.getElementById('payment-tab-content').classList.remove('hidden'); }
                 lucide.createIcons();
             }
-            prepareDeleteRecord(id, type) { this.vibrate(); this.recordToDelete = { id, type }; this.els.confirmationModal.classList.remove('hidden'); }
+            prepareDeleteRecord(id, type) { 
+                this.vibrate(); 
+                this.recordToDelete = { id, type }; 
+                this.els.confirmationModal.classList.remove('hidden'); 
+            }
             handleConfirmDelete() { 
                 this.vibrate(); 
+                this.showLoading();
+                let success = false;
                 if (this.recordToDelete.type === 'milk') {
                     const idx = this.milkRecords.findIndex(r => r.id === this.recordToDelete.id);
-                    if (idx !== -1) { this.milkRecords.splice(idx, 1); this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords); }
+                    if (idx !== -1) { this.milkRecords.splice(idx, 1); success = this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords); }
                 } else {
                     const idx = this.paymentRecords.findIndex(r => r.id === this.recordToDelete.id);
-                    if (idx !== -1) { this.paymentRecords.splice(idx, 1); this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords); }
+                    if (idx !== -1) { this.paymentRecords.splice(idx, 1); success = this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords); }
                 }
-                this.els.confirmationModal.classList.add('hidden'); this.fullDataSync();
+                this.els.confirmationModal.classList.add('hidden'); 
+                this.hideLoading();
+                this.fullDataSync();
+                if(success) this.showModal('Record deleted successfully.', 'Success');
+                else this.showModal('Failed to delete record.', 'Error');
+
             }
 
             handlePWAInstall() { this.vibrate(); if (this.deferredPrompt) { this.deferredPrompt.prompt(); } }
