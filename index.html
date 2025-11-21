@@ -1,909 +1,465 @@
 <!DOCTYPE html>
 <html lang="ur" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Milk Record Tracker (Local Storage)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FIX: Disable Google Translate Popup -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Milk Tracker Pro</title>
+    <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
-    <!-- 1. PWA Manifest & Theme -->
-    <meta name="theme-color" content="#1e40af"> 
-    <link rel="manifest" href="data:application/manifest+json;base64,eyJpY29uc2I6IFt7ICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO2Jhc2U2NCxQSE4wY21SbGJuVnNiQzV2ZDI0OUpITnZiMnRsYm01MFBtY3VZMjlrZVFvZy8vbXk1VlU3Y3VYQ3hrU0c1NGJpNWxJajR2Y1hsNElHNWpjbWRtWnl4OWFYUnBiWE5oYm01MGNuUHNaV3hzTGlCc1pTNWpiMjB2Y3k5emRtY29JSFJvZEhBd09pOGdYek12YzIxdGJtUWdjM0puSUhSb2RIQXdPaTh2ZDNkM2QzY3VZMjlrSUhzS ध्वस्तIHVyc29sdG8ifSwgInNpemVzIjogIjUxMng1MTIiLCAidHlwZSI6ICJpbWFnZS9zdmciIH0sICJuYW1lIjogIk1pbGsgVHJhY2tlciIsICJzaG9ydF9uYW1lIjoiTWlsayBUcmFja2VyIiwgInN0YXJ0X3VybCI6ICIuLyIsICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLCAiYmFja2dncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsICJ0aGVtZV9jb2xvciI6ICIjMWU0MGFmIiB9">
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
         body {
-            font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: #f8f9fa;
         }
-        
-        .overflow-y-auto::-webkit-scrollbar { width: 8px; }
-        .overflow-y-auto::-webkit-scrollbar-thumb { background-color: #a0aec0; border-radius: 10px; }
-        .overflow-y-auto::-webkit-scrollbar-track { background: #e2e8f0; }
-
-        /* LTR for all functional inputs (numbers, dates, codes) */
-        input[type="number"], input[type="date"], input[type="tel"] {
-            direction: ltr !important;
-            text-align: left !important;
-        }
-        /* Setting text-align right for non-number inputs (Urdu text flow) */
-        input[type="text"], .urdu-input {
-            text-align: right !important;
-            direction: rtl !important;
-        }
-
-        .action-btn {
-            padding: 8px 12px;
-            transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .action-btn:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transform: translateY(-1px);
-        }
-
-        @media (max-width: 640px) {
-            .table-cell-padding { padding: 0.5rem 0.25rem; }
-        }
-
-        .tab-button.active {
-            background-color: #ffffff;
-            border-bottom: 2px solid #3b82f6;
-            color: #1f2937;
-            font-weight: 700;
-        }
-        .rotate-180 { transform: rotate(180deg); }
-        
-        /* Custom selector styling for RTL alignment */
-        #month-selector {
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 0.75rem center; /* Adjusted for RTL */
-            padding-right: 0.75rem;
-            padding-left: 2.5rem; 
-            background-size: 1.5rem;
-            direction: rtl; /* Ensure RTL flow inside dropdown */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
-            border: 2px solid #3b82f6; 
-            border-radius: 0.5rem;
-            font-weight: 600;
-            color: #1f2937;
-            background-color: #f0f9ff; 
-        }
-        
-        .currency-display { direction: ltr !important; text-align: right !important; }
-        .date-display-wrapper { direction: ltr; text-align: center; }
-        .urdu-text { text-align: right; direction: rtl; }
-        .ltr-column { text-align: right !important; }
-        
-        .max-w-4xl { width: 100%; max-width: 95%; margin: 0 auto; }
-        .summary-label-wrapper { text-align: center; }
-        
-        @media (max-width: 640px) {
-            .header-heading {
-                max-width: calc(100% - 120px); 
-                overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
-            }
-        }
-        
-        .summary-label-wrapper > span { text-align: center !important; }
-        #total-milk, #total-days, #total-absent, #net-balance { text-align: center !important; direction: ltr !important; }
-        
-        .header-controls-container {
-            display: flex; align-items: center; justify-content: space-between;
-            width: 100%; position: relative; padding: 0 4rem;
-        }
-        .toggle-menu {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: calc(100% - 8rem); display: flex; justify-content: center;
-            transition: opacity 0.3s ease-in-out;
-        }
-        .toggle-menu.hidden {
-            opacity: 0; pointer-events: none; visibility: hidden;
-            transform: translateY(-50%) scale(0.9);
-        }
-
+        .font-urdu { font-family: system-ui, -apple-system, sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        input[type="number"], input[type="date"], input[type="tel"] { direction: ltr; }
+        input[type="text"] { direction: rtl; }
+        @media (max-width: 640px) { .table-cell-padding { padding: 0.75rem 0.5rem; } }
     </style>
-    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
-<body class="p-4 sm:p-6 bg-gray-50 min-h-screen flex flex-col items-center">
+<body>
+    <div id="root"></div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-white/70 z-50 flex items-center justify-center hidden">
-        <div class="flex items-center space-x-reverse space-x-2 text-gray-700 p-4 bg-white rounded-lg shadow-2xl">
-            <svg class="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <span>Loading... Please wait. (لوڈ ہو رہا ہے)</span>
-        </div>
-    </div>
-    
-    <!-- Custom Modal -->
-    <div id="custom-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4 text-center">
-            <h3 id="modal-title" class="text-xl font-bold text-gray-800 mb-4">Notification</h3>
-            <p id="modal-message" class="text-gray-600 mb-6 urdu-text"></p>
-            <button id="modal-close-btn" class="bg-blue-600 text-white p-3 rounded-lg font-semibold hover:bg-blue-700 action-btn w-full">OK</button>
-        </div>
-    </div>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
 
-    <!-- Confirmation Modal -->
-    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
-            <h3 class="text-xl font-bold text-red-600 mb-4">Confirm (تصدیق کریں)</h3>
-            <p id="confirm-message" class="text-gray-600 mb-6 urdu-text">Are you sure you want to delete this record?</p>
-            <div class="flex justify-end space-x-reverse space-x-3">
-                <button id="confirm-cancel-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn flex-grow">Cancel</button>
-                <button id="confirm-yes-btn" class="bg-red-600 text-white p-3 rounded-lg font-semibold hover:bg-red-700 action-btn flex-grow">Yes, Delete</button>
-            </div>
-        </div>
-    </div>
+        // --- ICONS ---
+        const Icons = {
+             Droplet: () => <i data-lucide="droplet"></i>,
+             Calendar: () => <i data-lucide="calendar"></i>,
+             XCircle: () => <i data-lucide="x-circle"></i>,
+             Banknote: () => <i data-lucide="banknote"></i>,
+             Trash2: () => <i data-lucide="trash-2"></i>,
+             SquarePen: () => <i data-lucide="square-pen"></i>,
+             ChevronDown: () => <i data-lucide="chevron-down"></i>,
+             ChevronUp: () => <i data-lucide="chevron-up"></i>,
+             List: () => <i data-lucide="list"></i>,
+             Settings: () => <i data-lucide="settings"></i>,
+             UserCircle: () => <i data-lucide="user-circle"></i>,
+             Wallet: () => <i data-lucide="wallet"></i>,
+             X: () => <i data-lucide="x"></i>,
+             Save: () => <i data-lucide="save"></i>,
+             AlertTriangle: () => <i data-lucide="alert-triangle"></i>,
+             Key: () => <i data-lucide="key"></i>,
+             RefreshCw: () => <i data-lucide="refresh-cw"></i>,
+             LogIn: () => <i data-lucide="log-in"></i>,
+             Download: () => <i data-lucide="download"></i>,
+             CheckCircle2: () => <i data-lucide="check-circle-2"></i>
+        };
+        
+        // Helper to render icons since Lucide React isn't direct in CDN
+        const Icon = ({ name, className }) => {
+            useEffect(() => {
+                if(window.lucide) window.lucide.createIcons();
+            });
+            return <span className={className}><i data-lucide={name}></i></span>;
+        };
 
-    <!-- Access Modal -->
-    <div id="access-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
-            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-reverse space-x-2 urdu-text justify-end">
-                Data Access & Profile <span data-lucide="user" class="w-6 h-6 text-blue-600"></span>
-            </h3>
-            <div id="current-status-section" class="space-y-3 mb-6 text-sm bg-blue-50 p-3 rounded-lg border border-blue-200 urdu-text">
-                <p class="text-gray-700"><span class="font-semibold block">Active Data Code:</span> <span id="access-secret-key" class="text-base font-mono text-blue-800 break-all ltr" dir="ltr">...</span></p>
-                <p class="text-sm text-gray-600">(یہ کوڈ ڈیٹا لوڈ کرنے کے لیے استعمال کریں)</p>
-            </div>
-            <div class="space-y-3 mt-6 pt-4 border-t border-gray-200 urdu-text">
-                <h3 class="text-lg font-semibold text-gray-700">ڈیٹا کوڈ تبدیل کریں</h3>
-                <div class="flex justify-between space-x-reverse space-x-2">
-                     <button id="generate-key-btn" type="button" class="flex-grow bg-emerald-500 text-white p-3 rounded-lg font-semibold hover:bg-emerald-600 action-btn generate-btn text-sm">
-                         <span data-lucide="hash" class="w-4 h-4 inline-block mr-1"></span> Generate 11-Digit Code
-                    </button>
-                </div>
-                <form id="change-key-form">
-                    <input type="text" id="new-key-input" placeholder="Enter new or shared code" required minlength="6" maxlength="11" class="w-full p-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500 mb-2" dir="ltr">
-                    <button type="submit" id="change-key-btn" class="w-full bg-orange-500 text-white p-3 rounded-lg font-semibold hover:bg-orange-600 action-btn">Switch/Load Data Code</button>
-                    <p id="change-key-message" class="text-sm mt-2 hidden text-red-600 text-center urdu-text"></p>
-                </form>
-            </div>
-            <button id="access-close-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn w-full mt-4">Close</button>
-        </div>
-    </div>
 
-    <!-- Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
-        <div class="bg-white p-6 rounded-xl shadow-2xl max-w-sm w-full mx-4">
-            <h3 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2 flex items-center space-x-reverse space-x-2 urdu-text justify-end">
-                App Settings <span data-lucide="settings" class="w-6 h-6 text-indigo-600"></span>
-            </h3>
-            <div class="space-y-4 pt-4 urdu-text">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ کی قیمت</h3>
-                    <label for="price-per-unit-settings" class="block text-sm font-medium text-gray-700 mb-1">Price Per Litre (فی لیٹر - Rupees):</label>
-                    <div class="flex space-x-reverse space-x-4">
-                        <input type="number" id="price-per-unit-settings" value="120" min="0" step="0.01" class="flex-grow p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
-                        <button id="save-price-btn-settings" type="button" class="bg-indigo-600 text-white p-2 rounded-lg font-semibold hover:bg-indigo-700 action-btn w-28">Save Price</button>
-                    </div>
-                    <p id="price-message-settings" class="text-sm mt-2 hidden text-green-600 urdu-text"></p>
-                </div>
-                <div class="border-t pt-4">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2">دودھ والے کی تفصیلات</h3>
-                    <form id="milkman-details-form-settings" class="space-y-3">
-                        <div>
-                            <label for="milkman-name-settings" class="block text-sm font-medium text-gray-700 mb-1">Name (نام)</label>
-                            <input type="text" id="milkman-name-settings" placeholder="Milkman Name" class="w-full p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500 urdu-input">
-                        </div>
-                        <div>
-                            <label for="milkman-contact-settings" class="block text-sm font-medium text-gray-700 mb-1">Contact No. (رابطہ نمبر)</label>
-                            <input type="tel" id="milkman-contact-settings" placeholder="+92 3XX XXXXXXX" class="w-full p-2 border rounded-lg focus:ring-indigo-500 focus:border-indigo-500" dir="ltr">
-                        </div>
-                        <button type="submit" id="save-milkman-btn-settings" class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700 action-btn">Save Details</button>
-                        <p id="milkman-message-settings" class="text-sm mt-2 hidden text-green-600 text-center urdu-text"></p>
-                    </form>
-                </div>
-            </div>
-            <button id="settings-close-btn" class="bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn w-full mt-4">Close</button>
-        </div>
-    </div>
+        // --- SERVICES & TYPES ---
+        const KEYS = {
+            MILK: 'milk_records_',
+            PAYMENT: 'payment_records_',
+            SETTINGS: 'settings_',
+            GROUP_KEY: 'milk_tracker_key'
+        };
 
-    <div class="max-w-4xl w-full mx-auto sm:px-4"> 
-        <header class="flex justify-between items-center mb-6 border-b pb-2 relative">
-            <div class="flex justify-center w-full">
-                <button id="main-toggle-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md z-20 absolute top-4 transform -translate-x-1/2 left-1/2">
-                    <span data-lucide="chevrons-up-down" class="w-6 h-6"></span>
-                </button>
-            </div>
-            <div id="toggled-menu" class="toggle-menu hidden flex-row items-center justify-between w-full h-10">
-                <button id="settings-icon-btn" class="text-gray-600 hover:text-indigo-600 p-2 rounded-full transition bg-white shadow-md z-10 absolute left-0 top-1/2 transform -translate-y-1/2">
-                     <span data-lucide="settings" class="w-6 h-6"></span>
-                </button>
-                <div class="header-content-container flex flex-row items-center justify-center gap-2 flex-grow">
-                    <div style="direction: ltr; text-align: center;">
-                        <select id="month-selector" class="p-2 border border-gray-300 rounded-lg text-sm bg-gray-50 hover:bg-gray-100 cursor-pointer shadow-inner focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition w-40">
-                        </select>
+        const DEFAULT_SETTINGS = {
+            pricePerUnit: 120,
+            milkmanName: '',
+            milkmanContact: ''
+        };
+
+        const StorageService = {
+            getGroupKey: () => localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE',
+            setGroupKey: (key) => localStorage.setItem(KEYS.GROUP_KEY, key),
+            getMilkRecords: (key) => {
+                try { return JSON.parse(localStorage.getItem(KEYS.MILK + key) || '[]'); } catch { return []; }
+            },
+            saveMilkRecords: (key, rec) => localStorage.setItem(KEYS.MILK + key, JSON.stringify(rec)),
+            getPaymentRecords: (key) => {
+                try { return JSON.parse(localStorage.getItem(KEYS.PAYMENT + key) || '[]'); } catch { return []; }
+            },
+            savePaymentRecords: (key, rec) => localStorage.setItem(KEYS.PAYMENT + key, JSON.stringify(rec)),
+            getSettings: (key) => {
+                try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEYS.SETTINGS + key) || '{}') }; } catch { return DEFAULT_SETTINGS; }
+            },
+            saveSettings: (key, set) => localStorage.setItem(KEYS.SETTINGS + key, JSON.stringify(set))
+        };
+
+        // --- COMPONENTS ---
+
+        const Toast = ({ message, isVisible, onClose }) => {
+            useEffect(() => {
+                if (isVisible) {
+                    const timer = setTimeout(onClose, 3000);
+                    return () => clearTimeout(timer);
+                }
+            }, [isVisible, onClose]);
+
+            if (!isVisible) return null;
+            return (
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in w-11/12 max-w-sm">
+                    <div className="bg-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-emerald-500">
+                        <Icon name="check-circle-2" className="w-6 h-6 text-emerald-200" />
+                        <span className="font-bold text-sm sm:text-base">{message}</span>
                     </div>
                 </div>
-                <button id="profile-icon-btn" class="text-gray-600 hover:text-blue-600 p-2 rounded-full transition bg-white shadow-md z-10 absolute right-0 top-1/2 transform -translate-y-1/2">
-                     <span data-lucide="user" class="w-6 h-6"></span>
-                </button>
-                <b id="current-month-display" class="hidden">...</b>
-            </div>
-        </header>
+            );
+        };
 
-        <div id="main-app-content">
-            <div id="summary-cards" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-                <div class="bg-indigo-100 p-4 rounded-xl shadow-lg border-2 border-indigo-200 flex flex-col items-center text-center">
-                    <span data-lucide="droplet" class="w-8 h-8 text-indigo-500 mx-auto mb-2"></span>
-                    <div class="text-indigo-800 font-bold text-base sm:text-lg summary-label-wrapper text-center">Milk <span class="block text-sm font-normal urdu-text text-center">(دودھ)</span></div>
-                    <div id="total-milk" class="text-xl sm:text-2xl font-extrabold text-indigo-900 mt-1 text-center">0.00 Ltr</div>
+        const ConfirmModal = ({ isOpen, onClose, onConfirm }) => {
+            if (!isOpen) return null;
+            return (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
+                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Icon name="alert-triangle" className="w-6 h-6 text-red-600" />
+                        </div>
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
+                        <p className="text-sm text-gray-500 mb-6 font-urdu">
+                            Are you sure you want to delete this record? <br/>(کیا آپ واقعی اسے حذف کرنا چاہتے ہیں؟)
+                        </p>
+                        <div className="flex gap-3">
+                            <button onClick={onClose} className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200">Cancel</button>
+                            <button onClick={onConfirm} className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700">Yes, Delete</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="bg-lime-100 p-4 rounded-xl shadow-lg border-2 border-lime-200 flex flex-col items-center text-center">
-                    <span data-lucide="calendar" class="w-8 h-8 text-lime-600 mx-auto mb-2"></span>
-                    <div class="text-lime-800 font-bold text-base sm:text-lg summary-label-wrapper text-center">Attendance <span class="block text-sm font-normal urdu-text text-center">(حاضری)</span></div>
-                    <div id="total-days" class="text-xl sm:text-2xl font-extrabold text-lime-900 mt-1 text-center">0 Days</div>
-                </div>
-                <div class="bg-rose-100 p-4 rounded-xl shadow-lg border-2 border-rose-200 flex flex-col items-center text-center">
-                    <span data-lucide="x-circle" class="w-8 h-8 text-rose-500 mx-auto mb-2"></span>
-                    <div class="text-rose-800 font-bold text-base sm:text-lg summary-label-wrapper text-center">Absence <span class="block text-sm font-normal urdu-text text-center">(غیر حاضری)</span></div>
-                    <div id="total-absent" class="text-xl sm:text-2xl font-extrabold text-rose-900 mt-1 text-center">0 Days</div>
-                </div>
-                <div id="balance-card" class="bg-red-100 p-4 rounded-xl shadow-lg border-2 border-red-300 flex flex-col items-center text-center">
-                    <span data-lucide="banknote" class="w-8 h-8 text-red-600 mx-auto mb-2"></span>
-                    <div class="text-red-800 font-bold text-base sm:text-lg summary-label-wrapper text-center" id="balance-label-wrapper">Amount <span class="block text-sm font-normal urdu-text text-center">(رقم)</span></div>
-                    <div id="net-balance" class="text-xl sm:text-2xl font-extrabold text-red-800 mt-1 currency-display text-center">Rs. 0</div>
-                </div>
-            </div>
+            );
+        };
+
+        const SummaryCards = ({ stats }) => {
+            const isPositive = stats.netBalance > 0;
+            const balColor = isPositive ? 'text-red-800' : 'text-emerald-900';
+            const balBg = isPositive ? 'bg-red-100 border-red-300' : 'bg-emerald-100 border-emerald-200';
+            const balLabel = isPositive ? 'Amount Due' : 'Credit Advance';
             
-            <div class="bg-white rounded-xl shadow-xl mb-8">
-                <div class="flex border-b border-gray-200">
-                    <button id="tab-milk" class="tab-button active flex-1 p-3 text-center text-gray-700 rounded-tr-xl">
-                        <span data-lucide="droplet" class="w-5 h-5 inline-block ml-1"></span> Milk Entry
-                    </button>
-                    <button id="tab-payment" class="tab-button flex-1 p-3 text-center text-gray-700 rounded-tl-xl">
-                        <span data-lucide="wallet" class="w-5 h-5 inline-block ml-1"></span> Payment Entry
-                    </button>
+            return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                    <div className="bg-indigo-50 p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100 flex flex-col items-center text-center">
+                        <Icon name="droplet" className="w-6 h-6 text-indigo-500 mb-2" />
+                        <div className="text-indigo-800 font-bold text-sm sm:text-base">Milk <span className="block text-xs font-normal font-urdu">(دودھ)</span></div>
+                        <div className="text-lg sm:text-2xl font-extrabold text-indigo-900 mt-1">{stats.totalMilk.toFixed(2)} Ltr</div>
+                    </div>
+                    <div className="bg-lime-50 p-3 sm:p-4 rounded-xl shadow-sm border border-lime-100 flex flex-col items-center text-center">
+                        <Icon name="calendar" className="w-6 h-6 text-lime-600 mb-2" />
+                        <div className="text-lime-800 font-bold text-sm sm:text-base">Present <span className="block text-xs font-normal font-urdu">(حاضری)</span></div>
+                        <div className="text-lg sm:text-2xl font-extrabold text-lime-900 mt-1">{stats.totalDays} Days</div>
+                    </div>
+                    <div className="bg-rose-50 p-3 sm:p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col items-center text-center">
+                        <Icon name="x-circle" className="w-6 h-6 text-rose-500 mb-2" />
+                        <div className="text-rose-800 font-bold text-sm sm:text-base">Absent <span className="block text-xs font-normal font-urdu">(غیر حاضری)</span></div>
+                        <div className="text-lg sm:text-2xl font-extrabold text-rose-900 mt-1">{stats.totalAbsent} Days</div>
+                    </div>
+                    <div className={`${balBg} p-3 sm:p-4 rounded-xl shadow-sm border flex flex-col items-center text-center`}>
+                        <Icon name="banknote" className={`w-6 h-6 ${isPositive ? 'text-red-600' : 'text-emerald-600'} mb-2`} />
+                        <div className="text-gray-800 font-bold text-sm sm:text-base">{balLabel} <span className="block text-xs font-normal font-urdu">(رقم)</span></div>
+                        <div className={`text-lg sm:text-2xl font-extrabold ${balColor} mt-1`}>Rs. {Math.round(Math.abs(stats.netBalance)).toLocaleString()}</div>
+                    </div>
                 </div>
-                <div id="milk-tab-content" class="tab-content p-6 urdu-text">
-                    <h2 id="milk-form-title" class="text-xl font-bold text-gray-700 mb-4">دودھ کا اندراج (Milk Entry)</h2>
-                    <form id="milk-entry-form" class="space-y-4">
-                        <input type="hidden" id="milk-entry-id">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="milk-entry-date" class="block text-sm font-medium text-gray-700 mb-1">تاریخ (Date)</label>
-                                <input type="date" id="milk-entry-date" required class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                            </div>
-                            <div class="flex flex-col space-y-2">
-                                <label for="milk-entry-quantity" class="block text-sm font-medium text-gray-700 mb-1">مقدار - Ltr (Quantity)</label>
-                                <div class="flex space-x-reverse space-x-2">
-                                    <input type="number" id="milk-entry-quantity" required min="0" step="0.01" class="w-2/3 p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                                    <button type="button" id="absent-btn" class="w-1/3 bg-red-500 text-white p-2 rounded-lg font-semibold hover:bg-red-600 action-btn text-sm whitespace-nowrap">Absent <br> (غیر حاضری)</button>
+            );
+        };
+
+        const CalendarView = ({ records, currentMonth }) => {
+            const [year, month] = currentMonth.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const firstDay = new Date(year, month - 1, 1).getDay();
+            const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+            const pads = Array.from({ length: firstDay }, (_, i) => i);
+
+            const getRec = (d) => records.find(r => r.date === `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
+            
+            return (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-4">
+                    <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold text-gray-400">
+                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d}>{d}</div>)}
+                    </div>
+                    <div className="grid grid-cols-7 gap-2">
+                        {pads.map(i => <div key={`p-${i}`} />)}
+                        {days.map(d => {
+                            const rec = getRec(d);
+                            let cls = 'bg-gray-50 text-gray-400 border-gray-100';
+                            if(rec) cls = rec.isAbsent ? 'bg-red-100 text-red-700 border-red-200 font-bold' : 'bg-emerald-100 text-emerald-700 border-emerald-200 font-bold';
+                            return (
+                                <div key={d} className={`aspect-square rounded-lg border ${cls} flex flex-col items-center justify-center relative text-xs`}>
+                                    <span>{d}</span>
+                                    {rec && !rec.isAbsent && <span className="text-[10px] mt-0.5">{rec.quantity}</span>}
+                                    {rec && rec.isAbsent && <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></div>}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        const MilkManager = ({ records, onAdd, onUpdate, onDelete, price, filterMonth }) => {
+            const [date, setDate] = useState(() => new Date(new Date().getTime() - (new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0]);
+            const [qty, setQty] = useState('');
+            const [editId, setEditId] = useState(null);
+            const [view, setView] = useState('list');
+            const [showHist, setShowHist] = useState(false);
+
+            const curRecs = useMemo(() => records.filter(r => r.date.startsWith(filterMonth)), [records, filterMonth]);
+            const histRecs = useMemo(() => records.filter(r => !r.date.startsWith(filterMonth)), [records, filterMonth]);
+
+            const handleSubmit = (e, isAbsent = false) => {
+                e.preventDefault();
+                const payload = { date, quantity: isAbsent ? 0 : parseFloat(qty)||0, isAbsent };
+                if(editId) {
+                    const ex = records.find(r => r.id === editId);
+                    if(ex) onUpdate({ ...ex, ...payload });
+                    setEditId(null);
+                } else onAdd(payload);
+                if(!editId) setQty('');
+            };
+
+            const renderTable = (data, title, toggle = false, hidden = false, onTog) => (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 font-urdu">
+                    <div className={`p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center ${toggle?'cursor-pointer':''}`} onClick={toggle?onTog:undefined}>
+                         <h3 className="font-bold text-gray-700 text-lg text-right w-full">{title}</h3>
+                         {toggle && <Icon name={hidden?'chevron-down':'chevron-up'} className="text-gray-400" />}
+                    </div>
+                    {!hidden && <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-gray-600 text-right">
+                            <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Qty</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {data.length===0 ? <tr><td colSpan={4} className="px-4 py-6 text-center text-gray-400">No records</td></tr> : 
+                                data.map(r => (
+                                    <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
+                                        <td className="px-4 py-3 font-medium" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                        <td className="px-4 py-3" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT</span>:r.quantity.toFixed(2)}</td>
+                                        <td className="px-4 py-3 font-mono" dir="ltr">Rs. {Math.round(r.quantity * (r.pricePerUnit||price)).toLocaleString()}</td>
+                                        <td className="px-4 py-3 flex justify-center gap-2">
+                                            <button onClick={()=> { setDate(r.date); setQty(r.quantity); setEditId(r.id); window.scrollTo(0,0); }} className="p-1.5 text-blue-600 bg-blue-50 rounded"><Icon name="square-pen" className="w-4 h-4"/></button>
+                                            <button onClick={()=> onDelete(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>}
+                </div>
+            );
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4 text-right font-urdu">دودھ کا اندراج (Milk Entry)</h2>
+                        <form className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-medium text-right mb-1">تاریخ (Date)</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
+                                <div>
+                                    <label className="block text-sm font-medium text-right mb-1">مقدار (Qty)</label>
+                                    <div className="flex gap-2">
+                                        <input type="number" step="0.01" value={qty} onChange={e=>setQty(e.target.value)} className="flex-1 p-2.5 border rounded-lg text-right" dir="ltr" placeholder="0.00"/>
+                                        <button type="button" onClick={e=>handleSubmit(e,true)} className="px-3 bg-red-100 text-red-700 rounded-lg text-sm">Absent<br/>(غیر حاضر)</button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <button type="submit" id="submit-milk-entry" class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 action-btn">Submit Milk Entry</button>
-                        <button type="button" id="milk-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">Cancel Edit</button>
-                    </form>
-                </div>
-                <div id="payment-tab-content" class="tab-content p-6 hidden urdu-text">
-                    <h2 id="payment-form-title" class="text-xl font-bold text-gray-700 mb-4">ادائیگی کا اندراج (Payment Entry)</h2>
-                    <form id="payment-entry-form" class="space-y-4">
-                        <input type="hidden" id="payment-entry-id">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label for="payment-entry-date" class="block text-sm font-medium text-gray-700 mb-1">تاریخ (Date)</label>
-                                <input type="date" id="payment-entry-date" required class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
+                            <div className="flex gap-3 pt-2">
+                                <button onClick={e=>handleSubmit(e,false)} className={`flex-1 py-3 rounded-lg font-semibold text-white ${editId?'bg-blue-600':'bg-green-600'}`}>{editId?'Update':'Submit'}</button>
+                                {editId && <button type="button" onClick={()=>{setEditId(null); setQty('');}} className="px-4 bg-gray-200 rounded-lg">Cancel</button>}
                             </div>
-                            <div>
-                                <label for="payment-entry-amount" class="block text-sm font-medium text-gray-700 mb-1">رقم - Rupees (Amount)</label>
-                                <input type="number" id="payment-entry-amount" required min="1" step="1" class="w-full p-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500" dir="ltr">
-                            </div>
+                        </form>
+                    </div>
+                    <div className="flex justify-end mb-2 gap-2">
+                         <button onClick={()=>setView('list')} className={`p-2 rounded shadow ${view==='list'?'bg-white text-blue-600':'bg-gray-100 text-gray-500'}`}><Icon name="list" className="w-5 h-5"/></button>
+                         <button onClick={()=>setView('calendar')} className={`p-2 rounded shadow ${view==='calendar'?'bg-white text-blue-600':'bg-gray-100 text-gray-500'}`}><Icon name="calendar" className="w-5 h-5"/></button>
+                    </div>
+                    {view==='list' ? renderTable(curRecs, 'منتخب مہینے کا ریکارڈ') : <CalendarView records={curRecs} currentMonth={filterMonth}/>}
+                    {histRecs.length>0 && renderTable(histRecs, 'دوسرے مہینوں کا ریکارڈ', true, !showHist, ()=>setShowHist(!showHist))}
+                </div>
+            );
+        };
+
+        const PaymentManager = ({ records, onAdd, onUpdate, onDelete }) => {
+            const [date, setDate] = useState(() => new Date(new Date().getTime() - (new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0]);
+            const [amt, setAmt] = useState('');
+            const [editId, setEditId] = useState(null);
+
+            const handleSubmit = (e) => {
+                e.preventDefault();
+                const val = parseFloat(amt);
+                if(isNaN(val) || val<=0) return;
+                if(editId) {
+                    const ex = records.find(r=>r.id===editId);
+                    if(ex) onUpdate({...ex, date, amount: val});
+                    setEditId(null);
+                } else onAdd({ date, amount: val });
+                if(!editId) setAmt('');
+            };
+
+            return (
+                <div className="space-y-6">
+                    <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4 text-right font-urdu">ادائیگی کا اندراج (Payment)</h2>
+                        <form className="space-y-4">
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-medium text-right mb-1">تاریخ (Date)</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
+                                <div><label className="block text-sm font-medium text-right mb-1">رقم (Amount)</label><input type="number" value={amt} onChange={e=>setAmt(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr" placeholder="0"/></div>
+                             </div>
+                             <div className="flex gap-3 pt-2">
+                                <button onClick={handleSubmit} className={`flex-1 py-3 rounded-lg font-semibold text-white ${editId?'bg-blue-600':'bg-orange-600'}`}>{editId?'Update':'Submit'}</button>
+                                {editId && <button type="button" onClick={()=>{setEditId(null); setAmt('');}} className="px-4 bg-gray-200 rounded-lg">Cancel</button>}
+                             </div>
+                        </form>
+                    </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 font-urdu">
+                         <div className="p-4 bg-gray-50 border-b"><h3 className="font-bold text-right">ادائیگی کی تاریخ (History)</h3></div>
+                         <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-gray-600 text-right">
+                                <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
+                                <tbody className="divide-y divide-gray-100">
+                                    {records.map(r=>(
+                                        <tr key={r.id}>
+                                            <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                            <td className="px-4 py-3 font-bold text-emerald-700" dir="ltr">Rs. {r.amount.toLocaleString()}</td>
+                                            <td className="px-4 py-3 flex justify-center gap-2">
+                                                <button onClick={()=>{setDate(r.date); setAmt(r.amount); setEditId(r.id); window.scrollTo(0,0);}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><Icon name="square-pen" className="w-4 h-4"/></button>
+                                                <button onClick={()=>onDelete(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><Icon name="trash-2" className="w-4 h-4"/></button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                         </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [key, setKey] = useState(StorageService.getGroupKey());
+            const [milk, setMilk] = useState([]);
+            const [pay, setPay] = useState([]);
+            const [conf, setConf] = useState(DEFAULT_SETTINGS);
+            const [tab, setTab] = useState('milk');
+            const [menu, setMenu] = useState(false);
+            const [toast, setToast] = useState({msg:'', show:false});
+            const [del, setDel] = useState(null);
+            const [filter, setFilter] = useState(new Date().toISOString().substring(0, 7));
+            
+            // Modals
+            const [showSet, setShowSet] = useState(false);
+            const [showAcc, setShowAcc] = useState(false);
+
+            useEffect(() => {
+                setMilk(StorageService.getMilkRecords(key));
+                setPay(StorageService.getPaymentRecords(key));
+                setConf(StorageService.getSettings(key));
+            }, [key]);
+
+            useEffect(() => { StorageService.saveMilkRecords(key, milk); }, [milk, key]);
+            useEffect(() => { StorageService.savePaymentRecords(key, pay); }, [pay, key]);
+            useEffect(() => { StorageService.saveSettings(key, conf); }, [conf, key]);
+            useEffect(() => { StorageService.setGroupKey(key); }, [key]);
+
+            const showMsg = (m) => setToast({msg:m, show:true});
+
+            const stats = useMemo(() => {
+                const tM = milk.reduce((a,r)=>a+r.quantity,0);
+                const tC = milk.reduce((a,r)=>a+(r.quantity*(r.pricePerUnit||conf.pricePerUnit)),0);
+                const tP = pay.reduce((a,r)=>a+r.amount,0);
+                const mM = milk.filter(r=>r.date.startsWith(filter));
+                return { totalMilk: tM, netBalance: tC-tP, totalDays: new Set(mM.filter(r=>!r.isAbsent).map(r=>r.date)).size, totalAbsent: mM.filter(r=>r.isAbsent).length };
+            }, [milk, pay, conf.pricePerUnit, filter]);
+
+            const months = useMemo(() => {
+                 const arr = []; const d = new Date();
+                 for(let i=0;i<12;i++) {
+                     const x = new Date(d.getFullYear(), d.getMonth()-i, 1);
+                     const l = new Date(x.getTime() - (x.getTimezoneOffset()*60000));
+                     arr.push({ val: l.toISOString().substring(0,7), lbl: l.toLocaleString('default',{month:'long',year:'numeric'}) });
+                 }
+                 return arr;
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-gray-50 flex justify-center pb-20">
+                    <div className="w-full max-w-3xl p-3 sm:p-4 flex flex-col">
+                        <Toast message={toast.msg} isVisible={toast.show} onClose={()=>setToast({msg:'',show:false})} />
+                        <ConfirmModal isOpen={!!del} onClose={()=>setDel(null)} onConfirm={()=>{
+                            if(del.type==='milk') setMilk(p=>p.filter(r=>r.id!==del.id));
+                            else setPay(p=>p.filter(r=>r.id!==del.id));
+                            setDel(null); showMsg('Deleted!');
+                        }}/>
+
+                        {/* Header */}
+                        <div className="flex justify-center mb-2">
+                            <button onClick={()=>setMenu(!menu)} className="text-gray-400 hover:text-indigo-600 p-1"><Icon name={menu?'chevron-up':'chevron-down'} className="w-6 h-6"/></button>
                         </div>
-                        <button type="submit" id="submit-payment-entry" class="w-full bg-orange-600 text-white p-3 rounded-lg font-semibold hover:bg-orange-700 action-btn">Submit Payment Entry</button>
-                        <button type="button" id="payment-cancel-edit-btn" class="w-full bg-gray-400 text-white p-3 rounded-lg font-semibold hover:bg-gray-500 action-btn hidden">Cancel Edit</button>
-                    </form>
-                </div>
-            </div>
+                        {menu && <div className="bg-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
+                            <button onClick={()=>{setShowAcc(true); setMenu(false);}} className="text-gray-600 flex flex-col items-center gap-1"><div className="p-2 bg-gray-100 rounded-full"><Icon name="user-circle" className="w-5 h-5"/></div><span className="text-xs">Profile</span></button>
+                            <select value={filter} onChange={e=>setFilter(e.target.value)} className="bg-gray-50 border p-2 rounded-lg text-sm">{months.map(m=><option key={m.val} value={m.val}>{m.lbl}</option>)}</select>
+                            <button onClick={()=>{setShowSet(true); setMenu(false);}} className="text-gray-600 flex flex-col items-center gap-1"><div className="p-2 bg-gray-100 rounded-full"><Icon name="settings" className="w-5 h-5"/></div><span className="text-xs">Settings</span></button>
+                        </div>}
 
-            <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div id="milk-records-header" class="flex justify-between items-center mb-4 cursor-pointer">
-                    <h2 class="text-xl font-bold text-gray-700">منتخب مہینے کا ریکارڈ (Daily Records)</h2>
-                    <span id="milk-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
-                </div>
-                <div id="milk-records-content" class="pt-2 border-t mt-2">
-                    <div class="overflow-x-auto overflow-y-auto max-h-96 rounded-lg border">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100 sticky top-0">
-                                <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Ltr)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="milk-records-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
+                        <SummaryCards stats={stats} />
+
+                        <div className="flex bg-gray-200 p-1 rounded-xl mb-4">
+                             <button onClick={()=>setTab('milk')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='milk'?'bg-white text-blue-600 shadow':'text-gray-500'}`}><Icon name="droplet" className="w-4 h-4"/> Milk</button>
+                             <button onClick={()=>setTab('payment')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='payment'?'bg-white text-orange-600 shadow':'text-gray-500'}`}><Icon name="wallet" className="w-4 h-4"/> Payment</button>
+                        </div>
+
+                        {tab==='milk' ? 
+                            <MilkManager records={milk} price={conf.pricePerUnit} filterMonth={filter} 
+                                onAdd={r=>{ setMilk(p=>[{...r, pricePerUnit:conf.pricePerUnit, id:Date.now().toString(), timestamp:Date.now()},...p].sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Added!'); }}
+                                onUpdate={u=>{ setMilk(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Updated!'); }}
+                                onDelete={id=>setDel({id, type:'milk'})}
+                            /> : 
+                            <PaymentManager records={pay} 
+                                onAdd={r=>{ setPay(p=>[{...r, id:Date.now().toString(), timestamp:Date.now()},...p].sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Paid!'); }}
+                                onUpdate={u=>{ setPay(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Updated!'); }}
+                                onDelete={id=>setDel({id, type:'payment'})}
+                            />
+                        }
+                        
+                        {/* Settings Modal */}
+                        {showSet && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
+                                <div className="p-4 border-b flex justify-between bg-gray-50"><h2 className="font-bold">Settings</h2><button onClick={()=>setShowSet(false)}><Icon name="x" className="w-5 h-5"/></button></div>
+                                <div className="p-6 space-y-4">
+                                    <div><label className="block font-bold text-right mb-1">Price (Rs)</label><input type="number" value={conf.pricePerUnit} onChange={e=>setConf({...conf, pricePerUnit: parseFloat(e.target.value)})} className="w-full p-3 border rounded text-left"/></div>
+                                    <div><label className="block font-bold text-right mb-1">Name</label><input type="text" value={conf.milkmanName} onChange={e=>setConf({...conf, milkmanName: e.target.value})} className="w-full p-3 border rounded text-right"/></div>
+                                    <button onClick={()=>setShowSet(false)} className="w-full bg-indigo-600 text-white py-3 rounded font-bold">Save</button>
+                                </div>
+                            </div>
+                        </div>}
+
+                         {/* Access Modal */}
+                         {showAcc && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden">
+                                <div className="p-4 border-b flex justify-between bg-gray-50"><h2 className="font-bold">Profile Access</h2><button onClick={()=>setShowAcc(false)}><Icon name="x" className="w-5 h-5"/></button></div>
+                                <div className="p-6 space-y-4 text-center">
+                                    <div className="bg-blue-50 p-4 rounded text-2xl font-mono font-bold text-blue-900">{key}</div>
+                                    <p className="text-xs text-gray-500">Your secret code (اپنا کوڈ محفوظ رکھیں)</p>
+                                    <input id="newKey" type="text" placeholder="ENTER CODE" className="w-full p-3 border rounded text-center uppercase" />
+                                    <button onClick={()=>{ const k=document.getElementById('newKey').value.toUpperCase(); if(k.length>3){setKey(k); setShowAcc(false); showMsg('Profile Loaded');} }} className="w-full bg-blue-600 text-white py-3 rounded font-bold">Load Profile</button>
+                                </div>
+                            </div>
+                        </div>}
+
                     </div>
                 </div>
-            </div>
+            );
+        };
 
-            <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div id="milk-history-header" class="flex justify-between items-center mb-4 cursor-pointer">
-                    <h2 class="text-xl font-bold text-gray-700">دوسرے مہینوں کا ریکارڈ (Milk History)</h2>
-                    <span id="milk-history-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
-                </div>
-                <div id="milk-history-content" class="hidden pt-2 border-t mt-2">
-                    <div class="overflow-x-auto overflow-y-auto max-h-96 rounded-lg border">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100 sticky top-0">
-                                <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 ltr-column">Quantity (Ltr)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4 currency-display">Amount (Rupees)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="milk-history-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <div id="payment-records-header" class="flex justify-between items-center mb-4 cursor-pointer">
-                    <h2 class="text-xl font-bold text-gray-700">ادائیگی کی تاریخ (Payment History)</h2>
-                    <span id="payment-records-icon" class="text-gray-500 hover:text-gray-800 transition-transform" data-lucide="chevron-down"></span>
-                </div>
-                <div id="payment-records-content" class="pt-2 border-t mt-2">
-                    <div class="overflow-x-auto overflow-y-auto max-h-96 rounded-lg border">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100 sticky top-0">
-                                <tr>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 ltr-column">Date (تاریخ)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3 currency-display">Amount Paid (ادا کردہ رقم)</th>
-                                    <th class="table-cell-padding px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="payment-records-table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="pwa-install-container" class="bg-white p-6 rounded-xl shadow-xl mb-8 urdu-text">
-                <h3 class="text-xl font-bold text-gray-700 mb-2 border-b pb-2">ایپ انسٹال کریں (Install App)</h3>
-                <p class="text-gray-600 text-sm mb-3">فوری آف لائن رسائی کے لیے اس ٹریکر کو اپنے موبائل پر انسٹال کریں۔</p>
-                <button id="install-button" class="w-full bg-blue-500 text-white p-3 rounded-lg font-semibold hover:bg-blue-600 action-btn flex items-center justify-center space-x-reverse space-x-2">
-                    <span data-lucide="download"></span>
-                    <span>Install Milk Tracker</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        class DataPersistence {
-            constructor() {
-                this.LS_KEY_MILK = 'milk_records_';
-                this.LS_KEY_PAYMENT = 'payment_records_';
-                this.LS_KEY_SETTINGS = 'settings_';
-                this.GUEST_KEY = 'GUEST_MODE';
-            }
-
-            loadData(key, storageKey) {
-                const rawData = localStorage.getItem(storageKey + key);
-                return rawData ? JSON.parse(rawData) : [];
-            }
-            
-            saveData(key, storageKey, data) {
-                try {
-                    localStorage.setItem(storageKey + key, JSON.stringify(data));
-                    return true;
-                } catch (e) {
-                    console.error("Error saving data:", e);
-                    return false;
-                }
-            }
-            
-            loadSettings(key) {
-                const defaults = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
-                const storedSettings = this.loadData(key, this.LS_KEY_SETTINGS);
-                return (Array.isArray(storedSettings) && storedSettings.length === 0) ? defaults : { ...defaults, ...storedSettings };
-            }
-            
-            saveSettings(key, settings) {
-                return this.saveData(key, this.LS_KEY_SETTINGS, settings);
-            }
-        }
-
-        class MilkTrackerApp {
-            constructor() {
-                this.persistence = new DataPersistence();
-                this.groupKey = localStorage.getItem('milk_tracker_key') || this.persistence.GUEST_KEY;
-                this.milkRecords = []; 
-                this.paymentRecords = [];
-                this.pricePerUnit = 120;
-                this.milkmanName = '';
-                this.milkmanContact = '';
-                this.currentFilterMonth = this.getCurrentMonthYearString();
-                this.isAuthReady = false; 
-                this.recordToDelete = { id: null, type: null }; 
-                this.isMenuOpen = false; 
-                this.deferredPrompt = null; 
-                this.els = {};
-            }
-
-            vibrate() { if ('vibrate' in navigator) { navigator.vibrate(50); } }
-
-            initializeElementReferences() {
-                const els = {};
-                els.loadingOverlay = document.getElementById('loading-overlay');
-                els.customModal = document.getElementById('custom-modal');
-                els.modalMessageEl = document.getElementById('modal-message');
-                els.modalTitleEl = document.getElementById('modal-title');
-                els.modalCloseBtn = document.getElementById('modal-close-btn');
-                els.confirmationModal = document.getElementById('confirmation-modal');
-                els.confirmCancelBtn = document.getElementById('confirm-cancel-btn');
-                els.confirmYesBtn = document.getElementById('confirm-yes-btn');
-                els.totalMilkEl = document.getElementById('total-milk');
-                els.netBalanceEl = document.getElementById('net-balance');
-                els.balanceCard = document.getElementById('balance-card');
-                els.totalDaysEl = document.getElementById('total-days');
-                els.totalAbsentEl = document.getElementById('total-absent'); 
-                els.balanceLabelWrapper = document.getElementById('balance-label-wrapper');
-                els.monthSelector = document.getElementById('month-selector');
-                els.currentMonthDisplay = document.getElementById('current-month-display');
-                els.milkRecordsTableBody = document.getElementById('milk-records-table-body');
-                els.milkHistoryTableBody = document.getElementById('milk-history-table-body');
-                els.paymentRecordsTableBody = document.getElementById('payment-records-table-body');
-                els.settingsIconBtn = document.getElementById('settings-icon-btn');
-                els.profileIconBtn = document.getElementById('profile-icon-btn');
-                els.mainToggleBtn = document.getElementById('main-toggle-btn');
-                els.toggledMenu = document.getElementById('toggled-menu');
-                els.accessModal = document.getElementById('access-modal');
-                els.accessSecretKey = document.getElementById('access-secret-key');
-                els.newKeyInput = document.getElementById('new-key-input');
-                els.changeKeyMessageEl = document.getElementById('change-key-message');
-                els.changeKeyForm = document.getElementById('change-key-form');
-                els.settingsModal = document.getElementById('settings-modal');
-                els.pricePerUnitInputSettings = document.getElementById('price-per-unit-settings');
-                els.milkmanNameInputSettings = document.getElementById('milkman-name-settings');
-                els.milkmanContactInputSettings = document.getElementById('milkman-contact-settings');
-                els.milkmanDetailsFormSettings = document.getElementById('milkman-details-form-settings');
-                els.milkEntryForm = document.getElementById('milk-entry-form');
-                els.milkFormTitleEl = document.getElementById('milk-form-title');
-                els.milkCancelEditBtn = document.getElementById('milk-cancel-edit-btn');
-                els.absentBtn = document.getElementById('absent-btn'); 
-                els.paymentEntryForm = document.getElementById('payment-entry-form');
-                els.paymentFormTitleEl = document.getElementById('payment-form-title');
-                els.paymentCancelEditBtn = document.getElementById('payment-cancel-edit-btn');
-                els.pwaInstallContainer = document.getElementById('pwa-install-container');
-                els.installButton = document.getElementById('install-button');
-                els.milkRecordsHeader = document.getElementById('milk-records-header');
-                els.milkHistoryHeader = document.getElementById('milk-history-header');
-                els.paymentRecordsHeader = document.getElementById('payment-records-header');
-                this.els = els;
-            }
-
-            attachEventListeners() {
-                this.els.mainToggleBtn.addEventListener('click', () => this.toggleMenu());
-                this.els.settingsIconBtn.addEventListener('click', () => { this.toggleMenu(false); this.showSettingsModal(); });
-                this.els.profileIconBtn.addEventListener('click', () => { this.toggleMenu(false); this.showAccessModal(); });
-                this.els.modalCloseBtn.addEventListener('click', () => { this.els.customModal.classList.add('hidden'); this.vibrate(); });
-                this.els.milkRecordsHeader.addEventListener('click', () => { this.vibrate(); document.getElementById('milk-records-content').classList.toggle('hidden'); document.querySelector('#milk-records-icon').classList.toggle('rotate-180'); });
-                this.els.milkHistoryHeader.addEventListener('click', () => { this.vibrate(); document.getElementById('milk-history-content').classList.toggle('hidden'); document.querySelector('#milk-history-icon').classList.toggle('rotate-180'); });
-                this.els.paymentRecordsHeader.addEventListener('click', () => { this.vibrate(); document.getElementById('payment-records-content').classList.toggle('hidden'); document.querySelector('#payment-records-icon').classList.toggle('rotate-180'); });
-                this.els.installButton.addEventListener('click', () => this.handlePWAInstall());
-                this.els.milkEntryForm.addEventListener('submit', (e) => this.handleMilkEntrySubmit(e));
-                this.els.paymentEntryForm.addEventListener('submit', (e) => this.handlePaymentEntrySubmit(e));
-                this.els.absentBtn.addEventListener('click', () => this.handleAbsentClickAndSubmit());
-                this.els.monthSelector.addEventListener('change', (e) => this.handleMonthChange(e.target.value));
-                this.els.confirmCancelBtn.addEventListener('click', () => { this.els.confirmationModal.classList.add('hidden'); this.vibrate(); });
-                this.els.confirmYesBtn.addEventListener('click', () => this.handleConfirmDelete());
-                document.getElementById('access-close-btn').addEventListener('click', () => { this.closeAccessModal(); this.vibrate(); });
-                document.getElementById('settings-close-btn').addEventListener('click', () => { this.closeSettingsModal(); this.vibrate(); });
-                document.getElementById('save-price-btn-settings').addEventListener('click', () => this.handlePriceSave());
-                document.getElementById('milkman-details-form-settings').addEventListener('submit', (e) => this.handleMilkmanSave(e));
-                document.getElementById('generate-key-btn').addEventListener('click', () => { this.generateRandomKey(); this.vibrate(); });
-                this.els.changeKeyForm.addEventListener('submit', (e) => this.handleKeyChange(e));
-                this.els.milkCancelEditBtn.addEventListener('click', () => { this.resetMilkForm(); this.vibrate(); });
-                this.els.paymentCancelEditBtn.addEventListener('click', () => { this.resetPaymentForm(); this.vibrate(); });
-                document.getElementById('tab-milk').addEventListener('click', () => { this.switchAppTab('milk'); this.vibrate(); });
-                document.getElementById('tab-payment').addEventListener('click', () => { this.switchAppTab('payment'); this.vibrate(); });
-                
-                // Event Delegation for Dynamic Tables (ONE LISTENER FOR ALL BUTTONS)
-                const handleTableAction = (e, type) => {
-                    const btn = e.target.closest('button');
-                    if (!btn) return;
-                    this.vibrate();
-                    const action = btn.dataset.action;
-                    const id = btn.dataset.recordId;
-                    if (!action || !id) return;
-                    
-                    if (action === `edit-${type}`) {
-                        type === 'milk' ? this.editMilkRecord(id) : this.editPaymentRecord(id);
-                    } else if (action === `delete-${type}`) {
-                        this.prepareDeleteRecord(id, type);
-                    }
-                };
-
-                this.els.milkRecordsTableBody.addEventListener('click', (e) => handleTableAction(e, 'milk'));
-                this.els.milkHistoryTableBody.addEventListener('click', (e) => handleTableAction(e, 'milk'));
-                this.els.paymentRecordsTableBody.addEventListener('click', (e) => handleTableAction(e, 'payment'));
-            }
-
-            toggleMenu(force) {
-                this.vibrate();
-                this.isMenuOpen = (typeof force === 'boolean') ? force : !this.isMenuOpen;
-                if (this.isMenuOpen) {
-                    this.els.toggledMenu.classList.remove('hidden');
-                    this.els.mainToggleBtn.classList.add('rotate-180');
-                } else {
-                    this.els.toggledMenu.classList.add('hidden');
-                    this.els.mainToggleBtn.classList.remove('rotate-180');
-                }
-            }
-            
-            fullDataSync() {
-                this.milkRecords = this.persistence.loadData(this.groupKey, this.persistence.LS_KEY_MILK);
-                this.paymentRecords = this.persistence.loadData(this.groupKey, this.persistence.LS_KEY_PAYMENT);
-                const settings = this.persistence.loadSettings(this.groupKey);
-                this.pricePerUnit = parseFloat(settings.pricePerUnit) || 120;
-                this.milkmanName = settings.milkmanName || '';
-                this.milkmanContact = settings.milkmanContact || '';
-                this.milkRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-                this.paymentRecords.sort((a, b) => b.date.localeCompare(a.date) || b.timestamp - a.timestamp);
-                this.isAuthReady = true; 
-                if (this.els.monthSelector) this.populateMonthSelector(); 
-                if (this.els.milkRecordsTableBody) this.renderMilkRecords();
-                if (this.els.paymentRecordsTableBody) this.renderPaymentRecords();
-                if (this.els.totalMilkEl) this.updateSummary();
-                lucide.createIcons();
-            }
-
-            showLoading() { this.els.loadingOverlay.classList.remove('hidden'); }
-            hideLoading() { this.els.loadingOverlay.classList.add('hidden'); }
-            showModal(message, title = 'Notification (اطلاع)') {
-                this.els.modalTitleEl.textContent = title;
-                this.els.modalMessageEl.innerHTML = message; 
-                this.els.customModal.classList.remove('hidden');
-            }
-            getCurrentMonthYearString() {
-                const today = new Date();
-                const year = today.getFullYear();
-                const month = String(today.getMonth() + 1).padStart(2, '0');
-                return `${year}-${month}`;
-            }
-            getMonthName(dateStr) {
-                const date = new Date(dateStr); 
-                try { return date.toLocaleString('ur-PK', { month: 'long', year: 'numeric' }); } catch (e) { return dateStr.substring(0, 7); }
-            }
-            populateMonthSelector() {
-                const today = new Date();
-                let optionsHTML = '';
-                for (let i = 0; i < 12; i++) {
-                    const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                    const year = date.getFullYear();
-                    const month = String(date.getMonth() + 1).padStart(2, '0'); 
-                    const monthYearKey = `${year}-${month}`;
-                    const displayDate = this.getMonthName(monthYearKey + '-01'); 
-                    const isSelected = monthYearKey === this.currentFilterMonth ? 'selected' : '';
-                    optionsHTML += `<option value="${monthYearKey}" ${isSelected}>${displayDate}</option>`;
-                }
-                this.els.monthSelector.innerHTML = optionsHTML;
-            }
-            handleMonthChange(selectedMonthYear) {
-                this.vibrate();
-                this.currentFilterMonth = selectedMonthYear;
-                this.updateSummary();
-                this.renderMilkRecords();
-                const milkRecordsContent = document.getElementById('milk-records-content');
-                if (milkRecordsContent && milkRecordsContent.classList.contains('hidden')) {
-                    milkRecordsContent.classList.remove('hidden');
-                    document.querySelector('#milk-records-icon').classList.remove('rotate-180');
-                }
-            }
-            updateSummary() {
-                if (!this.els.totalMilkEl) return; 
-                const filterMonthYear = this.currentFilterMonth;
-                const displayDate = filterMonthYear + '-01'; 
-                const currentMonthName = this.getMonthName(displayDate);
-                const filteredMilkRecords = this.milkRecords.filter(r => r.date && r.date.startsWith(filterMonthYear));
-                const overallMilkTotal = this.milkRecords.reduce((sum, record) => sum + (parseFloat(record.quantity) || 0), 0);
-                const overallMilkPrice = Math.round(overallMilkTotal * this.pricePerUnit);
-                const overallPaymentsMade = this.paymentRecords.reduce((sum, record) => sum + (parseFloat(record.amount) || 0), 0);
-                const netBalanceDue = overallMilkPrice - overallPaymentsMade;
-                const activeDays = filteredMilkRecords.filter(r => parseFloat(r.quantity) > 0);
-                const totalActiveDays = new Set(activeDays.map(r => r.date)).size; 
-                const totalAbsenceDays = filteredMilkRecords.filter(r => r.isAbsent === true).length;
-
-                this.els.totalMilkEl.textContent = `${overallMilkTotal.toFixed(2)} Ltr`;
-                if (this.els.totalDaysEl) this.els.totalDaysEl.textContent = `${totalActiveDays} Days`;
-                if (this.els.totalAbsentEl) this.els.totalAbsentEl.textContent = `${totalAbsenceDays} Days`; 
-                const formattedAmount = Math.round(Math.abs(netBalanceDue)).toLocaleString('ur-PK');
-                this.els.netBalanceEl.textContent = `Rs. ${formattedAmount}`; 
-                const banknoteIcon = this.els.balanceCard.querySelector('span[data-lucide="banknote"]');
-                if (netBalanceDue > 0) {
-                    this.els.balanceCard.className = 'bg-red-100 p-4 rounded-xl shadow-lg border-2 border-red-300 flex flex-col items-center text-center';
-                    if (banknoteIcon) banknoteIcon.className = 'w-8 h-8 text-red-600 mx-auto mb-2';
-                    this.els.balanceLabelWrapper.innerHTML = `Amount Due <span class="block text-sm font-normal urdu-text text-center">(واجب الادا رقم)</span>`;
-                    this.els.netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-red-800 mt-1 currency-display text-center';
-                } else {
-                    this.els.balanceCard.className = 'bg-emerald-100 p-4 rounded-xl shadow-lg border-2 border-emerald-200 flex flex-col items-center text-center';
-                    if (banknoteIcon) banknoteIcon.className = 'w-8 h-8 text-emerald-500 mx-auto mb-2';
-                    this.els.balanceLabelWrapper.innerHTML = `Credit Advance <span class="block text-sm font-normal urdu-text text-center">(ایڈوانس رقم)</span>`;
-                    this.els.netBalanceEl.className = 'text-xl sm:text-2xl font-extrabold text-emerald-900 mt-1 currency-display text-center';
-                }
-                lucide.createIcons();
-            }
-            renderMilkRecords() {
-                const filterMonthYear = this.currentFilterMonth;
-                const currentMonthYear = this.getCurrentMonthYearString();
-                const filteredRecords = this.milkRecords.filter(r => r.date && r.date.startsWith(filterMonthYear));
-                const isSelectedMonthCurrent = filterMonthYear === currentMonthYear;
-                this.renderMilkTable(filteredRecords, this.els.milkRecordsTableBody, isSelectedMonthCurrent); 
-                const historyRecords = this.milkRecords.filter(r => r.date && r.date.localeCompare(filterMonthYear) < 0);
-                this.renderMilkTable(historyRecords, this.els.milkHistoryTableBody, false); 
-                lucide.createIcons();
-            }
-            renderMilkTable(recordsToRender, tableBodyEl, isEditable) {
-                tableBodyEl.innerHTML = '';
-                if (recordsToRender.length === 0) {
-                    const colspan = 4;
-                    let message = isEditable ? 'Start adding records for this month.' : 'No older records found.';
-                    tableBodyEl.innerHTML = `<tr><td colspan="${colspan}" class="text-center py-4 text-gray-500">${message} (کوئی ریکارڈ نہیں ملا)</td></tr>`;
-                    return;
-                }
-                const fragment = document.createDocumentFragment();
-                recordsToRender.forEach(record => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50';
-                    const quantity = parseFloat(record.quantity) || 0;
-                    const payment = Math.round(quantity * this.pricePerUnit); 
-                    const dateParts = record.date.split('-'); 
-                    const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; 
-                    let quantityDisplay;
-                    let rowClasses = '';
-                    if (record.isAbsent) {
-                        quantityDisplay = `<span class="font-bold text-red-600">ABSENT (غیر حاضر)</span>`;
-                        rowClasses = 'bg-red-50/50';
-                    } else {
-                        quantityDisplay = `<span dir="ltr">${quantity.toFixed(2)}</span>`;
-                    }
-
-                    const actionButtons = isEditable ? `
-                        <button data-record-id="${record.id}" data-action="edit-milk" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
-                            <span data-lucide="square-pen" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Edit</span>
-                        </button>
-                        <button data-record-id="${record.id}" data-action="delete-milk" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
-                            <span data-lucide="trash-2" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Delete</span>
-                        </button>
-                    ` : '<span class="text-gray-400">View Only</span>';
-
-                    const displayAmount = `Rs. ${payment.toLocaleString('ur-PK')}`;
-
-                    row.innerHTML = `<td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} ltr-column">${displayDate}</td>
-                        <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 ${rowClasses} ltr-column">${quantityDisplay}</td>
-                        <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ${rowClasses} currency-display">${displayAmount}</td>
-                        <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-center text-sm font-medium ${rowClasses}">${actionButtons}</td>`;
-                    fragment.appendChild(row);
-                });
-                tableBodyEl.appendChild(fragment);
-                
-                // Re-attach listeners for dynamically created buttons (Using delegation is better, but this is a direct fix for your current code)
-                tableBodyEl.querySelectorAll('[data-action="edit-milk"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => { this.editMilkRecord(e.currentTarget.dataset.recordId); this.vibrate(); });
-                });
-                tableBodyEl.querySelectorAll('[data-action="delete-milk"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => { this.prepareDeleteRecord(e.currentTarget.dataset.recordId, 'milk'); this.vibrate(); });
-                });
-            }
-
-            renderPaymentRecords() {
-                this.els.paymentRecordsTableBody.innerHTML = '';
-                if (this.paymentRecords.length === 0) {
-                    this.els.paymentRecordsTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">No payment history found. (کوئی ادائیگی کی تاریخ نہیں ملی)</td></tr>';
-                    return;
-                }
-                const fragment = document.createDocumentFragment();
-                this.paymentRecords.forEach(record => {
-                    const row = document.createElement('tr');
-                    row.className = 'hover:bg-gray-50';
-                    const amount = parseFloat(record.amount) || 0;
-                    const dateParts = record.date.split('-'); 
-                    const displayDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`; 
-                    const displayAmount = `Rs. ${Math.round(amount).toLocaleString('ur-PK')}`;
-                    row.innerHTML = `<td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm text-gray-800 ltr-column">${displayDate}</td>
-                        <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-sm font-medium text-gray-900 currency-display">${displayAmount}</td>
-                        <td class="table-cell-padding px-3 py-2 whitespace-nowrap text-center text-sm font-medium">
-                            <button data-record-id="${record.id}" data-action="edit-payment" class="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-100 transition">
-                                <span data-lucide="square-pen" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Edit</span>
-                            </button>
-                            <button data-record-id="${record.id}" data-action="delete-payment" class="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-100 transition ml-2">
-                                <span data-lucide="trash-2" class="w-4 h-4 inline-block"></span><span class="hidden sm:inline-block">Delete</span>
-                            </button>
-                        </td>`;
-                    fragment.appendChild(row);
-                });
-                this.els.paymentRecordsTableBody.appendChild(fragment);
-                lucide.createIcons();
-                
-                // Re-attach listeners for dynamically created buttons
-                this.els.paymentRecordsTableBody.querySelectorAll('[data-action="edit-payment"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => { this.editPaymentRecord(e.currentTarget.dataset.recordId); this.vibrate(); });
-                });
-                this.els.paymentRecordsTableBody.querySelectorAll('[data-action="delete-payment"]').forEach(btn => {
-                    btn.addEventListener('click', (e) => { this.prepareDeleteRecord(e.currentTarget.dataset.recordId, 'payment'); this.vibrate(); });
-                });
-            }
-            
-            showAccessModal() { this.vibrate(); document.getElementById('access-secret-key').textContent = this.groupKey; document.getElementById('access-modal').classList.remove('hidden'); }
-            closeAccessModal() { this.vibrate(); document.getElementById('access-modal').classList.add('hidden'); }
-            showSettingsModal() { this.vibrate(); document.getElementById('price-per-unit-settings').value = this.pricePerUnit.toFixed(2); document.getElementById('milkman-name-settings').value = this.milkmanName; document.getElementById('milkman-contact-settings').value = this.milkmanContact; document.getElementById('settings-modal').classList.remove('hidden'); }
-            closeSettingsModal() { this.vibrate(); document.getElementById('settings-modal').classList.add('hidden'); }
-
-            generateRandomKey() { 
-                let result = ''; const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                for (let i = 0; i < 11; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
-                this.els.newKeyInput.value = result.toUpperCase();
-                this.els.changeKeyMessageEl.textContent = 'Random code generated.'; this.els.changeKeyMessageEl.classList.remove('hidden', 'text-red-600'); this.els.changeKeyMessageEl.classList.add('text-green-600');
-                setTimeout(() => this.els.changeKeyMessageEl.classList.add('hidden'), 3000);
-            }
-            handleKeyChange(e) { 
-                e.preventDefault(); this.vibrate(); 
-                const newKey = this.els.newKeyInput.value.trim().toUpperCase();
-                if (newKey.length < 6) { this.els.changeKeyMessageEl.textContent = 'Code min 6 chars.'; this.els.changeKeyMessageEl.classList.add('text-red-600'); return; }
-                if (newKey === this.groupKey) return;
-                this.groupKey = newKey; localStorage.setItem('milk_tracker_key', this.groupKey); this.fullDataSync();
-                this.els.changeKeyMessageEl.textContent = 'Success!'; this.els.changeKeyMessageEl.classList.add('text-green-600');
-                setTimeout(() => { this.closeAccessModal(); this.els.changeKeyMessageEl.classList.add('hidden'); }, 1000);
-            }
-            handlePriceSave() { 
-                this.vibrate(); 
-                const price = parseFloat(this.els.pricePerUnitInputSettings.value);
-                if (isNaN(price) || price < 0) { this.showModal('Please enter a valid price.', 'Data Error'); return; }
-                const s = this.persistence.loadSettings(this.groupKey); s.pricePerUnit = price;
-                if(this.persistence.saveSettings(this.groupKey, s)){
-                    this.fullDataSync();
-                    this.showModal(`Price updated to Rs. ${price.toFixed(2)}.`, 'Settings Saved');
-                }
-            }
-            handleMilkmanSave(e) { 
-                e.preventDefault(); this.vibrate(); 
-                const s = this.persistence.loadSettings(this.groupKey);
-                s.milkmanName = this.els.milkmanNameInputSettings.value; s.milkmanContact = this.els.milkmanContactInputSettings.value;
-                if(this.persistence.saveSettings(this.groupKey, s)){
-                    this.fullDataSync();
-                    this.showModal('Milkman details saved successfully!', 'Settings Saved');
-                }
-            }
-
-            generateId() { return Date.now().toString() + Math.random().toString(36).substring(2, 9); }
-            handleAbsentClickAndSubmit() { 
-                this.vibrate(); document.getElementById('milk-entry-quantity').value = '0.00';
-                this.els.milkEntryForm.dataset.isAbsent = 'true'; this.handleMilkEntrySubmit({ preventDefault: () => {} }, true);
-            }
-            handleMilkEntrySubmit(e, isAutoSubmit = false) { 
-                e.preventDefault(); if (!isAutoSubmit) this.vibrate();
-                if (!this.isAuthReady) return;
-                const id = document.getElementById('milk-entry-id').value;
-                const date = document.getElementById('milk-entry-date').value;
-                let quantity = parseFloat(document.getElementById('milk-entry-quantity').value);
-                const isAbsentFlag = this.els.milkEntryForm.dataset.isAbsent === 'true'; delete this.els.milkEntryForm.dataset.isAbsent; 
-                if (isAbsentFlag) quantity = 0.00; 
-                if (isNaN(quantity)) { this.showModal('Invalid Quantity', 'Error'); return; }
-                this.showLoading();
-                const record = { id: id || this.generateId(), date, quantity: quantity.toFixed(2), isAbsent: isAbsentFlag, timestamp: Date.now() };
-                try {
-                    if (id) { const idx = this.milkRecords.findIndex(r => r.id === id); if (idx !== -1) this.milkRecords[idx] = record; } else { this.milkRecords.unshift(record); }
-                    if (!this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords)) { throw new Error("Local Storage Save Failed."); }
-                    this.resetMilkForm(); this.fullDataSync(); 
-                    this.showModal(id ? 'Record updated successfully.' : 'New Milk Entry added!');
-                } catch (error) { this.showModal(`Failed to save Milk Record. Error: ${error.message}`, 'Error'); } finally { this.hideLoading(); }
-            }
-            handlePaymentEntrySubmit(e) {
-                e.preventDefault(); this.vibrate();
-                if (!this.isAuthReady) return;
-                const id = document.getElementById('payment-entry-id').value;
-                const date = document.getElementById('payment-entry-date').value;
-                const amount = parseFloat(document.getElementById('payment-entry-amount').value);
-                if (isNaN(amount) || amount <= 0) { this.showModal('Invalid Amount', 'Error'); return; }
-                this.showLoading();
-                const record = { id: id || this.generateId(), date, amount, timestamp: Date.now() };
-                try {
-                    if (id) { const idx = this.paymentRecords.findIndex(r => r.id === id); if (idx !== -1) this.paymentRecords[idx] = record; } else { this.paymentRecords.unshift(record); }
-                    if (!this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords)) { throw new Error("Local Storage Save Failed."); }
-                    this.resetPaymentForm(); this.fullDataSync(); 
-                    this.showModal(id ? 'Payment updated successfully.' : 'New Payment Entry added!');
-                } catch (error) { this.showModal(`Failed to save Payment Record. Error: ${error.message}`, 'Error'); } finally { this.hideLoading(); }
-            }
-            
-            editMilkRecord(id) { 
-                this.vibrate(); this.switchAppTab('milk');
-                const r = this.milkRecords.find(x => x.id === id); 
-                if (!r) { this.showModal('Record not found.', 'Error'); return; }
-                if (!r.date.startsWith(this.currentFilterMonth)) { this.showModal('Record belongs to previous month.', 'Edit Restricted'); return; }
-
-                document.getElementById('milk-entry-id').value = r.id;
-                document.getElementById('milk-entry-date').value = r.date;
-                document.getElementById('milk-entry-quantity').value = r.quantity;
-                this.els.milkFormTitleEl.textContent = 'Edit Milk Entry';
-                this.els.milkEntryForm.querySelector('button[type="submit"]').textContent = 'Save Changes';
-                this.els.milkEntryForm.querySelector('button[type="submit"]').classList.replace('bg-green-600', 'bg-blue-600'); // Change color for edit mode
-                this.els.milkCancelEditBtn.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            resetMilkForm() {
-                document.getElementById('milk-entry-id').value = ''; 
-                this.els.milkEntryForm.reset();
-                const d = new Date(); document.getElementById('milk-entry-date').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                this.els.milkFormTitleEl.textContent = 'دودھ کا اندراج (Milk Entry)';
-                this.els.milkEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Milk Entry';
-                this.els.milkEntryForm.querySelector('button[type="submit"]').classList.replace('bg-blue-600', 'bg-green-600');
-                this.els.milkCancelEditBtn.classList.add('hidden');
-            }
-            editPaymentRecord(id) {
-                this.vibrate(); this.switchAppTab('payment');
-                const r = this.paymentRecords.find(x => x.id === id); 
-                if (!r) { this.showModal('Record not found.', 'Error'); return; }
-                
-                document.getElementById('payment-entry-id').value = r.id;
-                document.getElementById('payment-entry-date').value = r.date;
-                document.getElementById('payment-entry-amount').value = r.amount;
-                this.els.paymentFormTitleEl.textContent = 'Edit Payment Entry';
-                this.els.paymentEntryForm.querySelector('button[type="submit"]').textContent = 'Save Changes';
-                this.els.paymentEntryForm.querySelector('button[type="submit"]').classList.replace('bg-orange-600', 'bg-blue-600'); // Change color for edit mode
-                this.els.paymentCancelEditBtn.classList.remove('hidden');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-            resetPaymentForm() {
-                document.getElementById('payment-entry-id').value = ''; 
-                this.els.paymentEntryForm.reset();
-                const d = new Date(); document.getElementById('payment-entry-date').value = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-                this.els.paymentFormTitleEl.textContent = 'ادائیگی کا اندراج (Payment Entry)';
-                this.els.paymentEntryForm.querySelector('button[type="submit"]').textContent = 'Submit Payment Entry';
-                this.els.paymentEntryForm.querySelector('button[type="submit"]').classList.replace('bg-blue-600', 'bg-orange-600');
-                this.els.paymentCancelEditBtn.classList.add('hidden');
-            }
-            switchAppTab(tabName) {
-                this.els.milkCancelEditBtn.click(); this.els.paymentCancelEditBtn.click();
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
-                if (tabName === 'milk') { document.getElementById('tab-milk').classList.add('active'); document.getElementById('milk-tab-content').classList.remove('hidden'); }
-                else { document.getElementById('tab-payment').classList.add('active'); document.getElementById('payment-tab-content').classList.remove('hidden'); }
-                lucide.createIcons();
-            }
-            prepareDeleteRecord(id, type) { 
-                this.vibrate(); 
-                this.recordToDelete = { id, type }; 
-                this.els.confirmationModal.classList.remove('hidden'); 
-            }
-            handleConfirmDelete() { 
-                this.vibrate(); 
-                this.showLoading();
-                let success = false;
-                if (this.recordToDelete.type === 'milk') {
-                    const idx = this.milkRecords.findIndex(r => r.id === this.recordToDelete.id);
-                    if (idx !== -1) { this.milkRecords.splice(idx, 1); success = this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_MILK, this.milkRecords); }
-                } else {
-                    const idx = this.paymentRecords.findIndex(r => r.id === this.recordToDelete.id);
-                    if (idx !== -1) { this.paymentRecords.splice(idx, 1); success = this.persistence.saveData(this.groupKey, this.persistence.LS_KEY_PAYMENT, this.paymentRecords); }
-                }
-                this.els.confirmationModal.classList.add('hidden'); 
-                this.hideLoading();
-                this.fullDataSync();
-                if(success) this.showModal('Record deleted successfully.', 'Success');
-                else this.showModal('Failed to delete record.', 'Error');
-
-            }
-
-            handlePWAInstall() { this.vibrate(); if (this.deferredPrompt) { this.deferredPrompt.prompt(); } }
-
-            init() {
-                this.initializeElementReferences(); this.attachEventListeners();
-                this.resetMilkForm(); this.resetPaymentForm();
-                window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); this.deferredPrompt = e; this.els.pwaInstallContainer.classList.remove('hidden'); this.els.installButton.style.display = 'flex'; });
-                setTimeout(() => { if (this.deferredPrompt) this.deferredPrompt.prompt(); }, 1000);
-                if (window.matchMedia('(display-mode: standalone)').matches) this.els.pwaInstallContainer.classList.add('hidden');
-                this.fullDataSync();
-            }
-        }
-        window.app = new MilkTrackerApp();
-        window.onload = () => window.app.init();
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
