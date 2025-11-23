@@ -7,13 +7,15 @@
     <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
     
-    <!-- Libraries -->
+    <!-- 1. LIBRARIES (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Icons Library -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
+    <!-- 2. STYLES -->
     <style>
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
@@ -23,117 +25,83 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        input[type="number"], input[type="date"], input[type="tel"] { direction: ltr; }
+        
+        input[type="number"], input[type="date"], input[type="tel"], input[type="month"] { direction: ltr; }
         input[type="text"] { direction: rtl; }
+        
         @media (max-width: 640px) { .table-cell-padding { padding: 0.75rem 0.5rem; } }
+        
+        /* Animation Utilities */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
+    <!-- 3. APPLICATION LOGIC -->
     <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
+        const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- ICONS ---
-        const Icons = {
-             Droplet: () => <i data-lucide="droplet"></i>,
-             Calendar: () => <i data-lucide="calendar"></i>,
-             XCircle: () => <i data-lucide="x-circle"></i>,
-             Banknote: () => <i data-lucide="banknote"></i>,
-             Trash2: () => <i data-lucide="trash-2"></i>,
-             SquarePen: () => <i data-lucide="square-pen"></i>,
-             ChevronDown: () => <i data-lucide="chevron-down"></i>,
-             ChevronUp: () => <i data-lucide="chevron-up"></i>,
-             List: () => <i data-lucide="list"></i>,
-             Settings: () => <i data-lucide="settings"></i>,
-             UserCircle: () => <i data-lucide="user-circle"></i>,
-             Wallet: () => <i data-lucide="wallet"></i>,
-             X: () => <i data-lucide="x"></i>,
-             Save: () => <i data-lucide="save"></i>,
-             AlertTriangle: () => <i data-lucide="alert-triangle"></i>,
-             Key: () => <i data-lucide="key"></i>,
-             RefreshCw: () => <i data-lucide="refresh-cw"></i>,
-             LogIn: () => <i data-lucide="log-in"></i>,
-             Download: () => <i data-lucide="download"></i>,
-             CheckCircle2: () => <i data-lucide="check-circle-2"></i>
-        };
-        
-        // Helper to render icons since Lucide React isn't direct in CDN
-        const Icon = ({ name, className }) => {
+        // --- ICON HELPER ---
+        const LucideIcon = ({ name, className, onClick }) => {
+            const ref = useRef(null);
             useEffect(() => {
-                if(window.lucide) window.lucide.createIcons();
+                if (window.lucide && ref.current) {
+                    window.lucide.createIcons({
+                        root: ref.current.parentNode,
+                        nameAttr: 'data-lucide',
+                        attrs: { class: className }
+                    });
+                }
             });
-            return <span className={className}><i data-lucide={name}></i></span>;
+            return <i data-lucide={name} className={className} onClick={onClick} ref={ref}></i>;
         };
 
+        // --- CONSTANTS ---
+        const KEYS = { MILK: 'milk_records_', PAYMENT: 'payment_records_', SETTINGS: 'settings_', GROUP_KEY: 'milk_tracker_key' };
+        const DEFAULT_SETTINGS = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
 
-        // --- SERVICES & TYPES ---
-        const KEYS = {
-            MILK: 'milk_records_',
-            PAYMENT: 'payment_records_',
-            SETTINGS: 'settings_',
-            GROUP_KEY: 'milk_tracker_key'
-        };
-
-        const DEFAULT_SETTINGS = {
-            pricePerUnit: 120,
-            milkmanName: '',
-            milkmanContact: ''
-        };
-
-        const StorageService = {
-            getGroupKey: () => localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE',
-            setGroupKey: (key) => localStorage.setItem(KEYS.GROUP_KEY, key),
-            getMilkRecords: (key) => {
-                try { return JSON.parse(localStorage.getItem(KEYS.MILK + key) || '[]'); } catch { return []; }
-            },
-            saveMilkRecords: (key, rec) => localStorage.setItem(KEYS.MILK + key, JSON.stringify(rec)),
-            getPaymentRecords: (key) => {
-                try { return JSON.parse(localStorage.getItem(KEYS.PAYMENT + key) || '[]'); } catch { return []; }
-            },
-            savePaymentRecords: (key, rec) => localStorage.setItem(KEYS.PAYMENT + key, JSON.stringify(rec)),
-            getSettings: (key) => {
-                try { return { ...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEYS.SETTINGS + key) || '{}') }; } catch { return DEFAULT_SETTINGS; }
-            },
-            saveSettings: (key, set) => localStorage.setItem(KEYS.SETTINGS + key, JSON.stringify(set))
+        // --- STORAGE SERVICE ---
+        const Storage = {
+            getKey: () => localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE',
+            setKey: (k) => localStorage.setItem(KEYS.GROUP_KEY, k),
+            getMilk: (k) => JSON.parse(localStorage.getItem(KEYS.MILK + k) || '[]'),
+            saveMilk: (k, d) => localStorage.setItem(KEYS.MILK + k, JSON.stringify(d)),
+            getPay: (k) => JSON.parse(localStorage.getItem(KEYS.PAYMENT + k) || '[]'),
+            savePay: (k, d) => localStorage.setItem(KEYS.PAYMENT + k, JSON.stringify(d)),
+            getSet: (k) => ({...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEYS.SETTINGS + k) || '{}')}),
+            saveSet: (k, d) => localStorage.setItem(KEYS.SETTINGS + k, JSON.stringify(d))
         };
 
         // --- COMPONENTS ---
 
-        const Toast = ({ message, isVisible, onClose }) => {
-            useEffect(() => {
-                if (isVisible) {
-                    const timer = setTimeout(onClose, 3000);
-                    return () => clearTimeout(timer);
-                }
-            }, [isVisible, onClose]);
-
-            if (!isVisible) return null;
+        const Toast = ({ msg, show, close }) => {
+            useEffect(() => { if(show) setTimeout(close, 3000); }, [show]);
+            if (!show) return null;
             return (
-                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in w-11/12 max-w-sm">
+                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-fade-in w-11/12 max-w-sm">
                     <div className="bg-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-emerald-500">
-                        <Icon name="check-circle-2" className="w-6 h-6 text-emerald-200" />
-                        <span className="font-bold text-sm sm:text-base">{message}</span>
+                        <LucideIcon name="check-circle-2" className="w-6 h-6 text-emerald-200" />
+                        <span className="font-bold text-sm">{msg}</span>
                     </div>
                 </div>
             );
         };
 
-        const ConfirmModal = ({ isOpen, onClose, onConfirm }) => {
-            if (!isOpen) return null;
+        const ConfirmModal = ({ open, close, confirm }) => {
+            if (!open) return null;
             return (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
                         <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Icon name="alert-triangle" className="w-6 h-6 text-red-600" />
+                            <LucideIcon name="alert-triangle" className="w-6 h-6 text-red-600" />
                         </div>
-                        <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Record?</h3>
-                        <p className="text-sm text-gray-500 mb-6 font-urdu">
-                            Are you sure you want to delete this record? <br/>(کیا آپ واقعی اسے حذف کرنا چاہتے ہیں؟)
-                        </p>
+                        <h3 className="text-lg font-bold mb-2">Delete Record?</h3>
+                        <p className="text-sm text-gray-500 mb-6 font-urdu">Are you sure? (کیا آپ واقعی حذف کرنا چاہتے ہیں؟)</p>
                         <div className="flex gap-3">
-                            <button onClick={onClose} className="flex-1 py-2.5 px-4 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200">Cancel</button>
-                            <button onClick={onConfirm} className="flex-1 py-2.5 px-4 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700">Yes, Delete</button>
+                            <button onClick={close} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-700">Cancel</button>
+                            <button onClick={confirm} className="flex-1 py-2 bg-red-600 rounded-lg font-bold text-white">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -141,325 +109,286 @@
         };
 
         const SummaryCards = ({ stats }) => {
-            const isPositive = stats.netBalance > 0;
-            const balColor = isPositive ? 'text-red-800' : 'text-emerald-900';
-            const balBg = isPositive ? 'bg-red-100 border-red-300' : 'bg-emerald-100 border-emerald-200';
-            const balLabel = isPositive ? 'Amount Due' : 'Credit Advance';
-            
+            const isPos = stats.net > 0;
             return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    <div className="bg-indigo-50 p-3 sm:p-4 rounded-xl shadow-sm border border-indigo-100 flex flex-col items-center text-center">
-                        <Icon name="droplet" className="w-6 h-6 text-indigo-500 mb-2" />
-                        <div className="text-indigo-800 font-bold text-sm sm:text-base">Milk <span className="block text-xs font-normal font-urdu">(دودھ)</span></div>
-                        <div className="text-lg sm:text-2xl font-extrabold text-indigo-900 mt-1">{stats.totalMilk.toFixed(2)} Ltr</div>
+                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
+                        <LucideIcon name="droplet" className="w-6 h-6 text-indigo-500 mb-2" />
+                        <div className="text-indigo-800 font-bold text-sm">Milk <span className="block text-xs font-normal font-urdu">(دودھ)</span></div>
+                        <div className="text-lg font-extrabold text-indigo-900 mt-1">{stats.milk.toFixed(2)} Ltr</div>
                     </div>
-                    <div className="bg-lime-50 p-3 sm:p-4 rounded-xl shadow-sm border border-lime-100 flex flex-col items-center text-center">
-                        <Icon name="calendar" className="w-6 h-6 text-lime-600 mb-2" />
-                        <div className="text-lime-800 font-bold text-sm sm:text-base">Present <span className="block text-xs font-normal font-urdu">(حاضری)</span></div>
-                        <div className="text-lg sm:text-2xl font-extrabold text-lime-900 mt-1">{stats.totalDays} Days</div>
+                    <div className="bg-lime-50 p-3 rounded-xl border border-lime-100 flex flex-col items-center text-center">
+                        <LucideIcon name="calendar" className="w-6 h-6 text-lime-600 mb-2" />
+                        <div className="text-lime-800 font-bold text-sm">Present <span className="block text-xs font-normal font-urdu">(حاضری)</span></div>
+                        <div className="text-lg font-extrabold text-lime-900 mt-1">{stats.days} Days</div>
                     </div>
-                    <div className="bg-rose-50 p-3 sm:p-4 rounded-xl shadow-sm border border-rose-100 flex flex-col items-center text-center">
-                        <Icon name="x-circle" className="w-6 h-6 text-rose-500 mb-2" />
-                        <div className="text-rose-800 font-bold text-sm sm:text-base">Absent <span className="block text-xs font-normal font-urdu">(غیر حاضری)</span></div>
-                        <div className="text-lg sm:text-2xl font-extrabold text-rose-900 mt-1">{stats.totalAbsent} Days</div>
+                    <div className="bg-rose-50 p-3 rounded-xl border border-rose-100 flex flex-col items-center text-center">
+                        <LucideIcon name="x-circle" className="w-6 h-6 text-rose-500 mb-2" />
+                        <div className="text-rose-800 font-bold text-sm">Absent <span className="block text-xs font-normal font-urdu">(غیر حاضری)</span></div>
+                        <div className="text-lg font-extrabold text-rose-900 mt-1">{stats.absent} Days</div>
                     </div>
-                    <div className={`${balBg} p-3 sm:p-4 rounded-xl shadow-sm border flex flex-col items-center text-center`}>
-                        <Icon name="banknote" className={`w-6 h-6 ${isPositive ? 'text-red-600' : 'text-emerald-600'} mb-2`} />
-                        <div className="text-gray-800 font-bold text-sm sm:text-base">{balLabel} <span className="block text-xs font-normal font-urdu">(رقم)</span></div>
-                        <div className={`text-lg sm:text-2xl font-extrabold ${balColor} mt-1`}>Rs. {Math.round(Math.abs(stats.netBalance)).toLocaleString()}</div>
+                    <div className={`${isPos?'bg-red-100 border-red-300':'bg-emerald-100 border-emerald-200'} p-3 rounded-xl border flex flex-col items-center text-center`}>
+                        <LucideIcon name="banknote" className={`w-6 h-6 ${isPos?'text-red-600':'text-emerald-600'} mb-2`} />
+                        <div className="text-gray-800 font-bold text-sm">{isPos?'Due':'Advance'} <span className="block text-xs font-normal font-urdu">(رقم)</span></div>
+                        <div className={`text-lg font-extrabold ${isPos?'text-red-800':'text-emerald-900'} mt-1`}>Rs. {Math.round(Math.abs(stats.net)).toLocaleString()}</div>
                     </div>
                 </div>
             );
         };
 
-        const CalendarView = ({ records, currentMonth }) => {
-            const [year, month] = currentMonth.split('-').map(Number);
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const firstDay = new Date(year, month - 1, 1).getDay();
-            const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-            const pads = Array.from({ length: firstDay }, (_, i) => i);
+        const CalendarView = ({ records, month }) => {
+            const [y, m] = month.split('-').map(Number);
+            const daysInM = new Date(y, m, 0).getDate();
+            const startDay = new Date(y, m - 1, 1).getDay();
+            const days = Array.from({length: daysInM}, (_, i) => i + 1);
+            const pads = Array.from({length: startDay}, (_, i) => i);
+            const getR = (d) => records.find(r => r.date === `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
 
-            const getRec = (d) => records.find(r => r.date === `${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-            
             return (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
                     <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold text-gray-400">
-                        {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d}>{d}</div>)}
+                        {['S','M','T','W','T','F','S'].map(d=><div key={d}>{d}</div>)}
                     </div>
                     <div className="grid grid-cols-7 gap-2">
-                        {pads.map(i => <div key={`p-${i}`} />)}
+                        {pads.map(i=><div key={`p${i}`} />)}
                         {days.map(d => {
-                            const rec = getRec(d);
-                            let cls = 'bg-gray-50 text-gray-400 border-gray-100';
-                            if(rec) cls = rec.isAbsent ? 'bg-red-100 text-red-700 border-red-200 font-bold' : 'bg-emerald-100 text-emerald-700 border-emerald-200 font-bold';
+                            const r = getR(d);
+                            let cls = r ? (r.isAbsent ? 'bg-red-100 text-red-700 font-bold border-red-200' : 'bg-emerald-100 text-emerald-700 font-bold border-emerald-200') : 'bg-gray-50 text-gray-400 border-gray-100';
                             return (
-                                <div key={d} className={`aspect-square rounded-lg border ${cls} flex flex-col items-center justify-center relative text-xs`}>
+                                <div key={d} className={`aspect-square rounded-lg border ${cls} flex flex-col items-center justify-center text-xs relative`}>
                                     <span>{d}</span>
-                                    {rec && !rec.isAbsent && <span className="text-[10px] mt-0.5">{rec.quantity}</span>}
-                                    {rec && rec.isAbsent && <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></div>}
+                                    {r && !r.isAbsent && <span className="text-[10px] mt-0.5">{r.quantity}</span>}
+                                    {r && r.isAbsent && <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></div>}
                                 </div>
                             );
                         })}
                     </div>
+                    <div className="flex justify-center gap-4 mt-4 text-xs text-gray-500 font-urdu">
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-emerald-100 border border-emerald-200 rounded"></div><span>Present</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div><span>Absent</span></div>
+                    </div>
                 </div>
             );
         };
 
-        const MilkManager = ({ records, onAdd, onUpdate, onDelete, price, filterMonth }) => {
-            const [date, setDate] = useState(() => new Date(new Date().getTime() - (new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0]);
-            const [qty, setQty] = useState('');
-            const [editId, setEditId] = useState(null);
+        const MilkManager = ({ data, add, upd, del, price, month }) => {
+            const [dt, setDt] = useState(new Date().toISOString().split('T')[0]);
+            const [q, setQ] = useState('');
+            const [eid, setEid] = useState(null);
             const [view, setView] = useState('list');
             const [showHist, setShowHist] = useState(false);
 
-            const curRecs = useMemo(() => records.filter(r => r.date.startsWith(filterMonth)), [records, filterMonth]);
-            const histRecs = useMemo(() => records.filter(r => !r.date.startsWith(filterMonth)), [records, filterMonth]);
+            const cur = data.filter(r => r.date.startsWith(month));
+            const hist = data.filter(r => !r.date.startsWith(month));
 
-            const handleSubmit = (e, isAbsent = false) => {
+            const sub = (e, abs) => {
                 e.preventDefault();
-                const payload = { date, quantity: isAbsent ? 0 : parseFloat(qty)||0, isAbsent };
-                if(editId) {
-                    const ex = records.find(r => r.id === editId);
-                    if(ex) onUpdate({ ...ex, ...payload });
-                    setEditId(null);
-                } else onAdd(payload);
-                if(!editId) setQty('');
+                const pl = { date: dt, quantity: abs?0:parseFloat(q)||0, isAbsent: abs };
+                if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
+                else add(pl);
+                if(!eid) setQ('');
             };
 
-            const renderTable = (data, title, toggle = false, hidden = false, onTog) => (
+            const renderTable = (list, title, tog=false, hid=false, onTog) => (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 font-urdu">
-                    <div className={`p-4 bg-gray-50 border-b border-gray-100 flex justify-between items-center ${toggle?'cursor-pointer':''}`} onClick={toggle?onTog:undefined}>
-                         <h3 className="font-bold text-gray-700 text-lg text-right w-full">{title}</h3>
-                         {toggle && <Icon name={hidden?'chevron-down':'chevron-up'} className="text-gray-400" />}
+                    <div className="p-4 bg-gray-50 border-b flex justify-between items-center" onClick={tog?onTog:undefined}>
+                        <h3 className="font-bold text-gray-700 text-lg text-right w-full">{title}</h3>
+                        {tog && <LucideIcon name={hid?'chevron-down':'chevron-up'} className="w-5 h-5 text-gray-400"/>}
                     </div>
-                    {!hidden && <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-gray-600 text-right">
-                            <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Qty</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {data.length===0 ? <tr><td colSpan={4} className="px-4 py-6 text-center text-gray-400">No records</td></tr> : 
-                                data.map(r => (
-                                    <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
-                                        <td className="px-4 py-3 font-medium" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
-                                        <td className="px-4 py-3" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT</span>:r.quantity.toFixed(2)}</td>
-                                        <td className="px-4 py-3 font-mono" dir="ltr">Rs. {Math.round(r.quantity * (r.pricePerUnit||price)).toLocaleString()}</td>
-                                        <td className="px-4 py-3 flex justify-center gap-2">
-                                            <button onClick={()=> { setDate(r.date); setQty(r.quantity); setEditId(r.id); window.scrollTo(0,0); }} className="p-1.5 text-blue-600 bg-blue-50 rounded"><Icon name="square-pen" className="w-4 h-4"/></button>
-                                            <button onClick={()=> onDelete(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><Icon name="trash-2" className="w-4 h-4"/></button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>}
+                    {!hid && <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 text-right">
+                        <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Qty</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
+                        <tbody>{list.length===0?<tr><td colSpan={4} className="p-4 text-center">No records</td></tr>:list.map(r=>(
+                            <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
+                                <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                <td className="px-4 py-3" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT</span>:r.quantity.toFixed(2)}</td>
+                                <td className="px-4 py-3 font-mono" dir="ltr">Rs. {Math.round(r.quantity*(r.pricePerUnit||price)).toLocaleString()}</td>
+                                <td className="px-4 py-3 flex justify-center gap-2">
+                                    <button onClick={()=>{setDt(r.date);setQ(r.quantity);setEid(r.id);window.scrollTo(0,0)}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
+                                    <button onClick={()=>del(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
+                                </td>
+                            </tr>
+                        ))}</tbody>
+                    </table></div>}
                 </div>
             );
 
             return (
                 <div className="space-y-6">
                     <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4 text-right font-urdu">دودھ کا اندراج (Milk Entry)</h2>
+                        <h2 className="text-xl font-bold mb-4 text-right font-urdu">دودھ کا اندراج (Entry)</h2>
                         <form className="space-y-4">
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-medium text-right mb-1">تاریخ (Date)</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
-                                <div>
-                                    <label className="block text-sm font-medium text-right mb-1">مقدار (Qty)</label>
-                                    <div className="flex gap-2">
-                                        <input type="number" step="0.01" value={qty} onChange={e=>setQty(e.target.value)} className="flex-1 p-2.5 border rounded-lg text-right" dir="ltr" placeholder="0.00"/>
-                                        <button type="button" onClick={e=>handleSubmit(e,true)} className="px-3 bg-red-100 text-red-700 rounded-lg text-sm">Absent<br/>(غیر حاضر)</button>
-                                    </div>
-                                </div>
+                                <div><label className="block text-sm font-bold text-right mb-1">Date</label><input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
+                                <div><label className="block text-sm font-bold text-right mb-1">Quantity</label><div className="flex gap-2">
+                                    <input type="number" step="0.01" value={q} onChange={e=>setQ(e.target.value)} placeholder="0.00" className="flex-1 p-2.5 border rounded-lg text-right" dir="ltr"/>
+                                    <button type="button" onClick={e=>sub(e,true)} className="px-3 bg-red-100 text-red-700 rounded-lg text-sm">Absent</button>
+                                </div></div>
                             </div>
                             <div className="flex gap-3 pt-2">
-                                <button onClick={e=>handleSubmit(e,false)} className={`flex-1 py-3 rounded-lg font-semibold text-white ${editId?'bg-blue-600':'bg-green-600'}`}>{editId?'Update':'Submit'}</button>
-                                {editId && <button type="button" onClick={()=>{setEditId(null); setQty('');}} className="px-4 bg-gray-200 rounded-lg">Cancel</button>}
+                                <button type="button" onClick={e=>sub(e,false)} className={`flex-1 py-3 rounded-lg font-bold text-white ${eid?'bg-blue-600':'bg-green-600'}`}>{eid?'Update':'Submit'}</button>
+                                {eid && <button type="button" onClick={()=>{setEid(null);setQ('')}} className="px-4 bg-gray-200 rounded-lg font-bold">Cancel</button>}
                             </div>
                         </form>
                     </div>
-                    <div className="flex justify-end mb-2 gap-2">
-                         <button onClick={()=>setView('list')} className={`p-2 rounded shadow ${view==='list'?'bg-white text-blue-600':'bg-gray-100 text-gray-500'}`}><Icon name="list" className="w-5 h-5"/></button>
-                         <button onClick={()=>setView('calendar')} className={`p-2 rounded shadow ${view==='calendar'?'bg-white text-blue-600':'bg-gray-100 text-gray-500'}`}><Icon name="calendar" className="w-5 h-5"/></button>
+                    <div className="flex justify-end mb-2 gap-1">
+                        <button onClick={()=>setView('list')} className={`p-2 rounded ${view==='list'?'bg-white shadow text-blue-600':'text-gray-400'}`}><LucideIcon name="list" className="w-5 h-5"/></button>
+                        <button onClick={()=>setView('calendar')} className={`p-2 rounded ${view==='calendar'?'bg-white shadow text-blue-600':'text-gray-400'}`}><LucideIcon name="calendar" className="w-5 h-5"/></button>
                     </div>
-                    {view==='list' ? renderTable(curRecs, 'منتخب مہینے کا ریکارڈ') : <CalendarView records={curRecs} currentMonth={filterMonth}/>}
-                    {histRecs.length>0 && renderTable(histRecs, 'دوسرے مہینوں کا ریکارڈ', true, !showHist, ()=>setShowHist(!showHist))}
+                    {view==='list' ? renderTable(cur, 'منتخب مہینے کا ریکارڈ') : <CalendarView records={cur} month={month} />}
+                    {hist.length>0 && renderTable(hist, 'ہسٹری (History)', true, !showHist, ()=>setShowHist(!showHist))}
                 </div>
             );
         };
 
-        const PaymentManager = ({ records, onAdd, onUpdate, onDelete }) => {
-            const [date, setDate] = useState(() => new Date(new Date().getTime() - (new Date().getTimezoneOffset()*60000)).toISOString().split('T')[0]);
-            const [amt, setAmt] = useState('');
-            const [editId, setEditId] = useState(null);
-
-            const handleSubmit = (e) => {
+        const PaymentManager = ({ data, add, upd, del }) => {
+            const [dt, setDt] = useState(new Date().toISOString().split('T')[0]);
+            const [a, setA] = useState('');
+            const [eid, setEid] = useState(null);
+            
+            const sub = (e) => {
                 e.preventDefault();
-                const val = parseFloat(amt);
-                if(isNaN(val) || val<=0) return;
-                if(editId) {
-                    const ex = records.find(r=>r.id===editId);
-                    if(ex) onUpdate({...ex, date, amount: val});
-                    setEditId(null);
-                } else onAdd({ date, amount: val });
-                if(!editId) setAmt('');
+                const pl = { date: dt, amount: parseFloat(a)||0 };
+                if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); } else add(pl);
+                if(!eid) setA('');
             };
 
             return (
                 <div className="space-y-6">
                     <div className="bg-white p-5 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4 text-right font-urdu">ادائیگی کا اندراج (Payment)</h2>
-                        <form className="space-y-4">
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div><label className="block text-sm font-medium text-right mb-1">تاریخ (Date)</label><input type="date" value={date} onChange={e=>setDate(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
-                                <div><label className="block text-sm font-medium text-right mb-1">رقم (Amount)</label><input type="number" value={amt} onChange={e=>setAmt(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr" placeholder="0"/></div>
-                             </div>
-                             <div className="flex gap-3 pt-2">
-                                <button onClick={handleSubmit} className={`flex-1 py-3 rounded-lg font-semibold text-white ${editId?'bg-blue-600':'bg-orange-600'}`}>{editId?'Update':'Submit'}</button>
-                                {editId && <button type="button" onClick={()=>{setEditId(null); setAmt('');}} className="px-4 bg-gray-200 rounded-lg">Cancel</button>}
-                             </div>
+                        <h2 className="text-xl font-bold mb-4 text-right font-urdu">ادائیگی کا اندراج (Payment)</h2>
+                        <form onSubmit={sub} className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div><label className="block text-sm font-bold text-right mb-1">Date</label><input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
+                                <div><label className="block text-sm font-bold text-right mb-1">Amount</label><input type="number" value={a} onChange={e=>setA(e.target.value)} className="w-full p-2.5 border rounded-lg text-right" dir="ltr"/></div>
+                            </div>
+                            <div className="flex gap-3 pt-2">
+                                <button className={`flex-1 py-3 rounded-lg font-bold text-white ${eid?'bg-blue-600':'bg-orange-600'}`}>{eid?'Update':'Submit'}</button>
+                                {eid && <button type="button" onClick={()=>{setEid(null);setA('')}} className="px-4 bg-gray-200 rounded-lg font-bold">Cancel</button>}
+                            </div>
                         </form>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 font-urdu">
-                         <div className="p-4 bg-gray-50 border-b"><h3 className="font-bold text-right">ادائیگی کی تاریخ (History)</h3></div>
-                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-gray-600 text-right">
-                                <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {records.map(r=>(
-                                        <tr key={r.id}>
-                                            <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
-                                            <td className="px-4 py-3 font-bold text-emerald-700" dir="ltr">Rs. {r.amount.toLocaleString()}</td>
-                                            <td className="px-4 py-3 flex justify-center gap-2">
-                                                <button onClick={()=>{setDate(r.date); setAmt(r.amount); setEditId(r.id); window.scrollTo(0,0);}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><Icon name="square-pen" className="w-4 h-4"/></button>
-                                                <button onClick={()=>onDelete(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><Icon name="trash-2" className="w-4 h-4"/></button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                         </div>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden font-urdu">
+                        <div className="p-4 bg-gray-50 border-b"><h3 className="font-bold text-right">ہسٹری (History)</h3></div>
+                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 text-right">
+                            <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date</th><th className="px-4 py-3 text-right">Amount</th><th className="px-4 py-3 text-center">Act</th></tr></thead>
+                            <tbody>{data.map(r=>(
+                                <tr key={r.id}>
+                                    <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                    <td className="px-4 py-3 font-bold text-emerald-700" dir="ltr">Rs. {r.amount.toLocaleString()}</td>
+                                    <td className="px-4 py-3 flex justify-center gap-2">
+                                        <button type="button" onClick={()=>{setDt(r.date);setA(r.amount);setEid(r.id);window.scrollTo(0,0)}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
+                                        <button type="button" onClick={()=>del(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
+                                    </td>
+                                </tr>
+                            ))}</tbody>
+                        </table></div>
                     </div>
                 </div>
             );
         };
 
-        // --- MAIN APP ---
         const App = () => {
-            const [key, setKey] = useState(StorageService.getGroupKey());
+            const [key, setKey] = useState(Storage.getKey());
             const [milk, setMilk] = useState([]);
             const [pay, setPay] = useState([]);
-            const [conf, setConf] = useState(DEFAULT_SETTINGS);
+            const [set, setSet] = useState(DEFAULT_SETTINGS);
             const [tab, setTab] = useState('milk');
             const [menu, setMenu] = useState(false);
-            const [toast, setToast] = useState({msg:'', show:false});
+            const [toast, setToast] = useState({m:'', s:false});
             const [del, setDel] = useState(null);
-            const [filter, setFilter] = useState(new Date().toISOString().substring(0, 7));
-            
-            // Modals
-            const [showSet, setShowSet] = useState(false);
-            const [showAcc, setShowAcc] = useState(false);
+            const [mon, setMon] = useState(new Date().toISOString().substring(0,7));
+            const [modal, setModal] = useState({set:false, acc:false});
 
             useEffect(() => {
-                setMilk(StorageService.getMilkRecords(key));
-                setPay(StorageService.getPaymentRecords(key));
-                setConf(StorageService.getSettings(key));
+                setMilk(Storage.getMilk(key));
+                setPay(Storage.getPay(key));
+                setSet(Storage.getSet(key));
             }, [key]);
 
-            useEffect(() => { StorageService.saveMilkRecords(key, milk); }, [milk, key]);
-            useEffect(() => { StorageService.savePaymentRecords(key, pay); }, [pay, key]);
-            useEffect(() => { StorageService.saveSettings(key, conf); }, [conf, key]);
-            useEffect(() => { StorageService.setGroupKey(key); }, [key]);
+            useEffect(() => Storage.saveMilk(key, milk), [milk]);
+            useEffect(() => Storage.savePay(key, pay), [pay]);
+            useEffect(() => Storage.saveSet(key, set), [set]);
+            useEffect(() => Storage.setKey(key), [key]);
 
-            const showMsg = (m) => setToast({msg:m, show:true});
-
+            const notify = (m) => setToast({m, s:true});
             const stats = useMemo(() => {
                 const tM = milk.reduce((a,r)=>a+r.quantity,0);
-                const tC = milk.reduce((a,r)=>a+(r.quantity*(r.pricePerUnit||conf.pricePerUnit)),0);
+                const tC = milk.reduce((a,r)=>a+(r.quantity*(r.pricePerUnit||set.pricePerUnit)),0);
                 const tP = pay.reduce((a,r)=>a+r.amount,0);
-                const mM = milk.filter(r=>r.date.startsWith(filter));
-                return { totalMilk: tM, netBalance: tC-tP, totalDays: new Set(mM.filter(r=>!r.isAbsent).map(r=>r.date)).size, totalAbsent: mM.filter(r=>r.isAbsent).length };
-            }, [milk, pay, conf.pricePerUnit, filter]);
+                const cur = milk.filter(r=>r.date.startsWith(mon));
+                return { milk: tM, days: new Set(cur.filter(r=>!r.isAbsent).map(r=>r.date)).size, absent: cur.filter(r=>r.isAbsent).length, net: tC-tP };
+            }, [milk, pay, set.pricePerUnit, mon]);
 
-            const months = useMemo(() => {
-                 const arr = []; const d = new Date();
-                 for(let i=0;i<12;i++) {
-                     const x = new Date(d.getFullYear(), d.getMonth()-i, 1);
-                     const l = new Date(x.getTime() - (x.getTimezoneOffset()*60000));
-                     arr.push({ val: l.toISOString().substring(0,7), lbl: l.toLocaleString('default',{month:'long',year:'numeric'}) });
-                 }
-                 return arr;
-            }, []);
+            const months = useMemo(() => Array.from({length:12}, (_,i)=>{
+                const d = new Date(); d.setMonth(d.getMonth()-i);
+                return {v: d.toISOString().substring(0,7), l: d.toLocaleString('default',{month:'long',year:'numeric'})};
+            }), []);
 
             return (
                 <div className="min-h-screen bg-gray-50 flex justify-center pb-20">
-                    <div className="w-full max-w-3xl p-3 sm:p-4 flex flex-col">
-                        <Toast message={toast.msg} isVisible={toast.show} onClose={()=>setToast({msg:'',show:false})} />
-                        <ConfirmModal isOpen={!!del} onClose={()=>setDel(null)} onConfirm={()=>{
-                            if(del.type==='milk') setMilk(p=>p.filter(r=>r.id!==del.id));
+                    <div className="w-full max-w-3xl p-3 sm:p-4">
+                        <Toast msg={toast.m} show={toast.s} close={()=>setToast({...toast,s:false})}/>
+                        <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
+                            if(del.t==='m') setMilk(p=>p.filter(r=>r.id!==del.id));
                             else setPay(p=>p.filter(r=>r.id!==del.id));
-                            setDel(null); showMsg('Deleted!');
+                            setDel(null); notify('Deleted');
                         }}/>
-
-                        {/* Header */}
-                        <div className="flex justify-center mb-2">
-                            <button onClick={()=>setMenu(!menu)} className="text-gray-400 hover:text-indigo-600 p-1"><Icon name={menu?'chevron-up':'chevron-down'} className="w-6 h-6"/></button>
+                        
+                        <div className="flex justify-center mb-1 relative z-20">
+                            <button onClick={()=>setMenu(!menu)} className="text-gray-400 p-1"><LucideIcon name={menu?'chevron-up':'chevron-down'} className="w-6 h-6"/></button>
                         </div>
-                        {menu && <div className="bg-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center">
-                            <button onClick={()=>{setShowAcc(true); setMenu(false);}} className="text-gray-600 flex flex-col items-center gap-1"><div className="p-2 bg-gray-100 rounded-full"><Icon name="user-circle" className="w-5 h-5"/></div><span className="text-xs">Profile</span></button>
-                            <select value={filter} onChange={e=>setFilter(e.target.value)} className="bg-gray-50 border p-2 rounded-lg text-sm">{months.map(m=><option key={m.val} value={m.val}>{m.lbl}</option>)}</select>
-                            <button onClick={()=>{setShowSet(true); setMenu(false);}} className="text-gray-600 flex flex-col items-center gap-1"><div className="p-2 bg-gray-100 rounded-full"><Icon name="settings" className="w-5 h-5"/></div><span className="text-xs">Settings</span></button>
+                        {menu && <div className="bg-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center gap-2 animate-fade-in">
+                            <button onClick={()=>{setModal({...modal,acc:true});setMenu(false)}} className="flex flex-col items-center gap-1 text-gray-600"><div className="p-2 bg-gray-100 rounded-full"><LucideIcon name="user-circle" className="w-5 h-5"/></div><span className="text-xs">Profile</span></button>
+                            <select value={mon} onChange={e=>setMon(e.target.value)} className="flex-1 bg-gray-50 border p-2 rounded-lg text-sm text-center font-bold">{months.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select>
+                            <button onClick={()=>{setModal({...modal,set:true});setMenu(false)}} className="flex flex-col items-center gap-1 text-gray-600"><div className="p-2 bg-gray-100 rounded-full"><LucideIcon name="settings" className="w-5 h-5"/></div><span className="text-xs">Settings</span></button>
                         </div>}
 
                         <SummaryCards stats={stats} />
-
                         <div className="flex bg-gray-200 p-1 rounded-xl mb-4">
-                             <button onClick={()=>setTab('milk')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='milk'?'bg-white text-blue-600 shadow':'text-gray-500'}`}><Icon name="droplet" className="w-4 h-4"/> Milk</button>
-                             <button onClick={()=>setTab('payment')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='payment'?'bg-white text-orange-600 shadow':'text-gray-500'}`}><Icon name="wallet" className="w-4 h-4"/> Payment</button>
+                            <button onClick={()=>setTab('milk')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='milk'?'bg-white text-blue-600 shadow':'text-gray-500'}`}><LucideIcon name="droplet" className="w-4 h-4"/> Milk</button>
+                            <button onClick={()=>setTab('payment')} className={`flex-1 py-2 rounded-lg text-sm font-bold flex justify-center gap-2 ${tab==='payment'?'bg-white text-orange-600 shadow':'text-gray-500'}`}><LucideIcon name="wallet" className="w-4 h-4"/> Payment</button>
                         </div>
 
-                        {tab==='milk' ? 
-                            <MilkManager records={milk} price={conf.pricePerUnit} filterMonth={filter} 
-                                onAdd={r=>{ setMilk(p=>[{...r, pricePerUnit:conf.pricePerUnit, id:Date.now().toString(), timestamp:Date.now()},...p].sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Added!'); }}
-                                onUpdate={u=>{ setMilk(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Updated!'); }}
-                                onDelete={id=>setDel({id, type:'milk'})}
-                            /> : 
-                            <PaymentManager records={pay} 
-                                onAdd={r=>{ setPay(p=>[{...r, id:Date.now().toString(), timestamp:Date.now()},...p].sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Paid!'); }}
-                                onUpdate={u=>{ setPay(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date))); showMsg('Updated!'); }}
-                                onDelete={id=>setDel({id, type:'payment'})}
-                            />
-                        }
-                        
+                        {tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
+                            add={r=>{setMilk(p=>[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...p].sort((a,b)=>b.date.localeCompare(a.date)));notify('Added')}}
+                            upd={u=>{setMilk(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)));notify('Updated')}}
+                            del={id=>setDel({id,t:'m'})}
+                        /> : <PaymentManager data={pay} 
+                            add={r=>{setPay(p=>[{...r,id:Date.now().toString()},...p].sort((a,b)=>b.date.localeCompare(a.date)));notify('Paid')}}
+                            upd={u=>{setPay(p=>p.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)));notify('Updated')}}
+                            del={id=>setDel({id,t:'p'})}
+                        />}
+
                         {/* Settings Modal */}
-                        {showSet && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
-                                <div className="p-4 border-b flex justify-between bg-gray-50"><h2 className="font-bold">Settings</h2><button onClick={()=>setShowSet(false)}><Icon name="x" className="w-5 h-5"/></button></div>
-                                <div className="p-6 space-y-4">
-                                    <div><label className="block font-bold text-right mb-1">Price (Rs)</label><input type="number" value={conf.pricePerUnit} onChange={e=>setConf({...conf, pricePerUnit: parseFloat(e.target.value)})} className="w-full p-3 border rounded text-left"/></div>
-                                    <div><label className="block font-bold text-right mb-1">Name</label><input type="text" value={conf.milkmanName} onChange={e=>setConf({...conf, milkmanName: e.target.value})} className="w-full p-3 border rounded text-right"/></div>
-                                    <button onClick={()=>setShowSet(false)} className="w-full bg-indigo-600 text-white py-3 rounded font-bold">Save</button>
+                        {modal.set && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-md p-6">
+                                <div className="flex justify-between mb-4"><h2 className="font-bold">Settings</h2><button onClick={()=>setModal({...modal,set:false})}><LucideIcon name="x" className="w-5 h-5"/></button></div>
+                                <div className="space-y-4">
+                                    <div><label className="block font-bold text-right">Price</label><input type="number" value={set.pricePerUnit} onChange={e=>setSet({...set,pricePerUnit:parseFloat(e.target.value)})} className="w-full p-3 border rounded"/></div>
+                                    <div><label className="block font-bold text-right">Name</label><input type="text" value={set.milkmanName} onChange={e=>setSet({...set,milkmanName:e.target.value})} className="w-full p-3 border rounded text-right"/></div>
+                                    <button onClick={()=>setModal({...modal,set:false})} className="w-full bg-indigo-600 text-white py-3 rounded font-bold">Save</button>
                                 </div>
                             </div>
                         </div>}
-
-                         {/* Access Modal */}
-                         {showAcc && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-                            <div className="bg-white rounded-2xl w-full max-w-sm overflow-hidden">
-                                <div className="p-4 border-b flex justify-between bg-gray-50"><h2 className="font-bold">Profile Access</h2><button onClick={()=>setShowAcc(false)}><Icon name="x" className="w-5 h-5"/></button></div>
-                                <div className="p-6 space-y-4 text-center">
-                                    <div className="bg-blue-50 p-4 rounded text-2xl font-mono font-bold text-blue-900">{key}</div>
-                                    <p className="text-xs text-gray-500">Your secret code (اپنا کوڈ محفوظ رکھیں)</p>
-                                    <input id="newKey" type="text" placeholder="ENTER CODE" className="w-full p-3 border rounded text-center uppercase" />
-                                    <button onClick={()=>{ const k=document.getElementById('newKey').value.toUpperCase(); if(k.length>3){setKey(k); setShowAcc(false); showMsg('Profile Loaded');} }} className="w-full bg-blue-600 text-white py-3 rounded font-bold">Load Profile</button>
+                        
+                        {/* Access Modal */}
+                        {modal.acc && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl w-full max-w-sm p-6 text-center">
+                                <h2 className="font-bold text-lg mb-4">Profile Code</h2>
+                                <div className="bg-blue-50 p-4 rounded text-2xl font-mono font-bold text-blue-900 mb-4">{key}</div>
+                                <input id="nk" placeholder="ENTER CODE" className="w-full p-3 border rounded text-center uppercase mb-4"/>
+                                <div className="flex gap-2">
+                                    <button onClick={()=>setModal({...modal,acc:false})} className="flex-1 py-3 bg-gray-200 rounded font-bold">Close</button>
+                                    <button onClick={()=>{const k=document.getElementById('nk').value.trim().toUpperCase();if(k.length>3){setKey(k);setModal({...modal,acc:false});notify('Loaded')}}} className="flex-1 py-3 bg-blue-600 text-white rounded font-bold">Load</button>
                                 </div>
                             </div>
                         </div>}
-
                     </div>
                 </div>
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
     </script>
 </body>
 </html>
