@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Milk Tracker Pro</title>
+    <title>Milk Tracker</title>
     <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
     
@@ -43,34 +43,57 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- ICON HELPER ---
+        // --- ICON HELPER (IMPROVED: Stable & Full Features) ---
         const LucideIcon = ({ name, className, onClick }) => {
             const ref = useRef(null);
+            
             useEffect(() => {
-                if (window.lucide && ref.current) {
-                    window.lucide.createIcons({
-                        root: ref.current.parentNode,
-                        nameAttr: 'data-lucide',
-                        attrs: { class: className }
-                    });
-                }
-            });
-            return <i data-lucide={name} className={className} onClick={onClick} ref={ref}></i>;
+                const updateIcon = () => {
+                    if (window.lucide && ref.current) {
+                        // Create temp element
+                        const i = document.createElement('i');
+                        i.setAttribute('data-lucide', name);
+                        if(className) i.setAttribute('class', className);
+                        
+                        // Clear and append
+                        ref.current.innerHTML = '';
+                        ref.current.appendChild(i);
+                        
+                        // Render
+                        window.lucide.createIcons({
+                            root: ref.current,
+                            nameAttr: 'data-lucide'
+                        });
+                    }
+                };
+                
+                updateIcon();
+                // Ensure it loads even if script is slow
+                const t = setTimeout(updateIcon, 500);
+                return () => clearTimeout(t);
+            }, [name, className]);
+
+            return <span ref={ref} onClick={onClick} className="inline-flex items-center justify-center"></span>;
         };
 
         // --- CONSTANTS ---
         const KEYS = { MILK: 'milk_records_', PAYMENT: 'payment_records_', SETTINGS: 'settings_', GROUP_KEY: 'milk_tracker_key' };
         const DEFAULT_SETTINGS = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
 
-        // --- STORAGE SERVICE ---
+        // --- STORAGE SERVICE (SAFE) ---
+        const safeParse = (str, fallback) => {
+            try { return str ? JSON.parse(str) : fallback; } 
+            catch (e) { return fallback; }
+        };
+
         const Storage = {
             getKey: () => localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE',
             setKey: (k) => localStorage.setItem(KEYS.GROUP_KEY, k),
-            getMilk: (k) => JSON.parse(localStorage.getItem(KEYS.MILK + k) || '[]'),
+            getMilk: (k) => safeParse(localStorage.getItem(KEYS.MILK + k), []),
             saveMilk: (k, d) => localStorage.setItem(KEYS.MILK + k, JSON.stringify(d)),
-            getPay: (k) => JSON.parse(localStorage.getItem(KEYS.PAYMENT + k) || '[]'),
+            getPay: (k) => safeParse(localStorage.getItem(KEYS.PAYMENT + k), []),
             savePay: (k, d) => localStorage.setItem(KEYS.PAYMENT + k, JSON.stringify(d)),
-            getSet: (k) => ({...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEYS.SETTINGS + k) || '{}')}),
+            getSet: (k) => ({...DEFAULT_SETTINGS, ...safeParse(localStorage.getItem(KEYS.SETTINGS + k), {})}),
             saveSet: (k, d) => localStorage.setItem(KEYS.SETTINGS + k, JSON.stringify(d))
         };
 
