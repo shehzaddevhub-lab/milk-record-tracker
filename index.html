@@ -20,24 +20,22 @@
         body {
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: #f8f9fa;
+            overscroll-behavior-y: none;
+            touch-action: manipulation;
         }
         .font-urdu { font-family: system-ui, -apple-system, sans-serif; }
         
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         
-        /* Input Directions */
         input[type="number"], input[type="date"], input[type="tel"], input[type="month"] { direction: ltr; }
         input[type="text"] { direction: rtl; }
         
-        /* Mobile Padding Fix */
-        @media (max-width: 640px) { .table-cell-padding { padding: 0.75rem 0.5rem; } }
+        @media (max-width: 640px) { .table-cell-padding { padding: 0.5rem 0.25rem; } }
         
-        /* Animation */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.2s ease-out; }
     </style>
 </head>
 <body>
@@ -47,30 +45,23 @@
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
 
-        // --- 1. ROBUST ICON COMPONENT ---
+        const vibrate = () => { if (navigator.vibrate) navigator.vibrate(15); };
+
         const LucideIcon = ({ name, className, onClick }) => {
             const ref = useRef(null);
-            
             useEffect(() => {
                 if (window.lucide && ref.current) {
                     const i = document.createElement('i');
                     i.setAttribute('data-lucide', name);
                     if (className) i.className = className;
-                    
                     ref.current.innerHTML = '';
                     ref.current.appendChild(i);
-                    
-                    window.lucide.createIcons({
-                        root: ref.current,
-                        nameAttr: 'data-lucide'
-                    });
+                    window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' });
                 }
             }, [name, className]);
-
             return <span ref={ref} onClick={onClick} className="inline-flex justify-center items-center"></span>;
         };
 
-        // --- 2. CONSTANTS & STORAGE SERVICE ---
         const KEYS = { MILK: 'milk_records_', PAYMENT: 'payment_records_', SETTINGS: 'settings_', GROUP_KEY: 'milk_tracker_key' };
         const DEFAULT_SETTINGS = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
 
@@ -85,15 +76,13 @@
             saveSet: (k, d) => localStorage.setItem(KEYS.SETTINGS + k, JSON.stringify(d))
         };
 
-        // --- 3. REUSABLE COMPONENTS ---
-
         const Toast = ({ msg, show, close }) => {
-            useEffect(() => { if(show) setTimeout(close, 3000); }, [show, close]);
+            useEffect(() => { if(show) setTimeout(close, 2000); }, [show, close]);
             if (!show) return null;
             return (
-                <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] animate-fade-in w-11/12 max-w-sm">
-                    <div className="bg-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 border border-emerald-500">
-                        <LucideIcon name="check-circle-2" className="w-6 h-6 text-emerald-200" />
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-fade-in w-11/12 max-w-xs">
+                    <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-3 border border-emerald-500">
+                        <LucideIcon name="check-circle-2" className="w-5 h-5 text-emerald-100" />
                         <span className="font-bold text-sm">{msg}</span>
                     </div>
                 </div>
@@ -103,16 +92,16 @@
         const ConfirmModal = ({ open, close, confirm }) => {
             if (!open) return null;
             return (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
-                        <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <LucideIcon name="alert-triangle" className="w-6 h-6 text-red-600" />
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-xs p-5 text-center">
+                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <LucideIcon name="alert-triangle" className="w-5 h-5 text-red-600" />
                         </div>
-                        <h3 className="text-lg font-bold mb-2">Delete Record?</h3>
-                        <p className="text-sm text-gray-500 mb-6 font-urdu">Are you sure? (کیا آپ واقعی حذف کرنا چاہتے ہیں؟)</p>
-                        <div className="flex gap-3">
-                            <button onClick={close} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-700">Cancel</button>
-                            <button onClick={confirm} className="flex-1 py-2 bg-red-600 rounded-lg font-bold text-white">Delete</button>
+                        <h3 className="text-base font-bold mb-1">Delete Record?</h3>
+                        <p className="text-xs text-gray-500 mb-4 font-urdu">Are you sure? (کیا آپ واقعی حذف کرنا چاہتے ہیں؟)</p>
+                        <div className="flex gap-2">
+                            <button onClick={()=>{vibrate(); close()}} className="flex-1 py-2 bg-gray-100 rounded-lg font-bold text-gray-700 text-sm">Cancel</button>
+                            <button onClick={()=>{vibrate(); confirm()}} className="flex-1 py-2 bg-red-600 rounded-lg font-bold text-white text-sm">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -122,44 +111,35 @@
         const InstallApp = () => {
             const [deferredPrompt, setDeferredPrompt] = useState(null);
             const [show, setShow] = useState(false);
-
             useEffect(() => {
-                const handler = (e) => {
-                    e.preventDefault();
-                    setDeferredPrompt(e);
-                    setShow(true);
-                };
+                const handler = (e) => { e.preventDefault(); setDeferredPrompt(e); setShow(true); };
                 window.addEventListener('beforeinstallprompt', handler);
                 if(window.matchMedia('(display-mode: standalone)').matches) setShow(false);
                 return () => window.removeEventListener('beforeinstallprompt', handler);
             }, []);
-
             if (!show) return null;
-
             const handleInstall = async () => {
+                vibrate();
                 if (!deferredPrompt) return;
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
                 if (outcome === 'accepted') setShow(false);
             };
-
             return (
-                <div className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-3 animate-fade-in">
-                    <div className="max-w-3xl mx-auto flex items-center justify-between gap-3">
+                <div className="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-2 animate-fade-in">
+                    <div className="max-w-3xl mx-auto flex items-center justify-between gap-2">
                         <div className="flex-1 text-right">
                             <p className="text-sm font-bold text-gray-800 font-urdu">Install App (ایپ انسٹال کریں)</p>
-                            <p className="text-xs text-gray-500 font-urdu">آف لائن استعمال کے لیے ڈاؤنلوڈ کریں</p>
+                            <p className="text-[10px] text-gray-500 font-urdu">آف لائن استعمال کے لیے ڈاؤنلوڈ کریں</p>
                         </div>
                         <div className="flex gap-2">
-                            <button onClick={() => setShow(false)} className="p-2 bg-gray-100 rounded-full text-gray-500"><LucideIcon name="x" className="w-5 h-5"/></button>
-                            <button onClick={handleInstall} className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-semibold shadow-md flex items-center gap-2 text-sm"><LucideIcon name="download" className="w-4 h-4"/> Install</button>
+                            <button onClick={() => {vibrate(); setShow(false)}} className="p-1.5 bg-gray-100 rounded-full text-gray-500"><LucideIcon name="x" className="w-4 h-4"/></button>
+                            <button onClick={handleInstall} className="bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold shadow-md flex items-center gap-1.5 text-xs"><LucideIcon name="download" className="w-3.5 h-3.5"/> Install</button>
                         </div>
                     </div>
                 </div>
             );
         };
-
-        // --- 4. FEATURE COMPONENTS ---
 
         const SummaryCards = ({ stats }) => {
             const isPos = stats.net > 0;
@@ -169,31 +149,26 @@
             const balIconColor = isPos ? 'text-red-600' : 'text-emerald-600';
 
             return (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-                    {/* Row 1 - RTL: Right=Milk, Left=Present */}
-                    <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
-                        <LucideIcon name="droplet" className="w-6 h-6 text-indigo-500 mb-2" />
-                        <div className="text-indigo-800 font-bold text-sm">Milk<span className="block text-xs font-normal font-urdu">(دودھ)</span></div>
-                        <div className="text-xl font-extrabold text-indigo-900 mt-1">{stats.milk.toFixed(2)} Ltr</div>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
+                        <LucideIcon name="droplet" className="w-5 h-5 text-indigo-500 mb-1" />
+                        <div className="text-indigo-800 font-bold text-xs">Milk<span className="block text-[10px] font-normal font-urdu">(دودھ)</span></div>
+                        <div className="text-lg font-extrabold text-indigo-900 leading-tight">{stats.milk.toFixed(2)} <span className="text-xs">Ltr</span></div>
                     </div>
-
-                    <div className="bg-lime-50 p-4 rounded-xl border border-lime-100 flex flex-col items-center text-center">
-                        <LucideIcon name="calendar" className="w-6 h-6 text-lime-600 mb-2" />
-                        <div className="text-lime-800 font-bold text-sm">Present<span className="block text-xs font-normal font-urdu">(حاضری)</span></div>
-                        <div className="text-xl font-extrabold text-lime-900 mt-1">{stats.days} Days</div>
+                    <div className="bg-lime-50 p-3 rounded-xl border border-lime-100 flex flex-col items-center text-center">
+                        <LucideIcon name="calendar" className="w-5 h-5 text-lime-600 mb-1" />
+                        <div className="text-lime-800 font-bold text-xs">Present<span className="block text-[10px] font-normal font-urdu">(حاضری)</span></div>
+                        <div className="text-lg font-extrabold text-lime-900 leading-tight">{stats.days} <span className="text-xs">Days</span></div>
                     </div>
-
-                    {/* Row 2 - RTL: Right=Absent, Left=Credit */}
-                    <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 flex flex-col items-center text-center">
-                        <LucideIcon name="x-circle" className="w-6 h-6 text-rose-500 mb-2" />
-                        <div className="text-rose-800 font-bold text-sm">Absent<span className="block text-xs font-normal font-urdu">(غیر حاضری)</span></div>
-                        <div className="text-xl font-extrabold text-rose-900 mt-1">{stats.absent} Days</div>
+                    <div className="bg-rose-50 p-3 rounded-xl border border-rose-100 flex flex-col items-center text-center">
+                        <LucideIcon name="x-circle" className="w-5 h-5 text-rose-500 mb-1" />
+                        <div className="text-rose-800 font-bold text-xs">Absent<span className="block text-[10px] font-normal font-urdu">(غیر حاضری)</span></div>
+                        <div className="text-lg font-extrabold text-rose-900 leading-tight">{stats.absent} <span className="text-xs">Days</span></div>
                     </div>
-
-                    <div className={`${balColor} p-4 rounded-xl border flex flex-col items-center text-center`}>
-                        <LucideIcon name="banknote" className={`w-6 h-6 ${balIconColor} mb-2`} />
-                        <div className="text-gray-800 font-bold text-sm">{balLabel}<span className="block text-xs font-normal font-urdu">(رقم)</span></div>
-                        <div className={`text-xl font-extrabold ${balTextColor} mt-1`}>Rs. {Math.round(Math.abs(stats.net)).toLocaleString()}</div>
+                    <div className={`${balColor} p-3 rounded-xl border flex flex-col items-center text-center`}>
+                        <LucideIcon name="banknote" className={`w-5 h-5 ${balIconColor} mb-1`} />
+                        <div className="text-gray-800 font-bold text-xs">{balLabel}<span className="block text-[10px] font-normal font-urdu">(رقم)</span></div>
+                        <div className={`text-lg font-extrabold ${balTextColor} leading-tight`}>Rs. {Math.round(Math.abs(stats.net)).toLocaleString()}</div>
                     </div>
                 </div>
             );
@@ -208,27 +183,27 @@
             const getR = (d) => records.find(r => r.date === `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
 
             return (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-                    <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-bold text-gray-400 uppercase">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
+                    <div className="grid grid-cols-7 gap-1 mb-2 text-center text-[10px] font-bold text-gray-400 uppercase">
                         {['S','M','T','W','T','F','S'].map(d=><div key={d}>{d}</div>)}
                     </div>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-7 gap-1.5">
                         {pads.map(i=><div key={`p${i}`} />)}
                         {days.map(d => {
                             const r = getR(d);
                             let cls = r ? (r.isAbsent ? 'bg-red-100 text-red-700 font-bold border-red-200' : 'bg-emerald-100 text-emerald-700 font-bold border-emerald-200') : 'bg-gray-50 text-gray-400 border-gray-100';
                             return (
-                                <div key={d} className={`aspect-square rounded-lg border ${cls} flex flex-col items-center justify-center text-xs relative`}>
+                                <div key={d} className={`aspect-square rounded-lg border ${cls} flex flex-col items-center justify-center text-[10px] relative`}>
                                     <span>{d}</span>
-                                    {r && !r.isAbsent && <span className="text-[10px] mt-0.5">{r.quantity}</span>}
-                                    {r && r.isAbsent && <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-1"></div>}
+                                    {r && !r.isAbsent && <span className="text-[9px] mt-0.5">{r.quantity}</span>}
+                                    {r && r.isAbsent && <div className="w-1.5 h-1.5 bg-red-500 rounded-full mt-0.5"></div>}
                                 </div>
                             );
                         })}
                     </div>
-                    <div className="flex justify-center gap-4 mt-4 text-xs text-gray-500 font-urdu">
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-emerald-100 border border-emerald-200 rounded"></div><span>Present (حاضر)</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 bg-red-100 border border-red-200 rounded"></div><span>Absent (غیر حاضر)</span></div>
+                    <div className="flex justify-center gap-3 mt-3 text-[10px] text-gray-500 font-urdu">
+                        <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 bg-emerald-100 border border-emerald-200 rounded"></div><span>Present (حاضر)</span></div>
+                        <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 bg-red-100 border border-red-200 rounded"></div><span>Absent (غیر حاضر)</span></div>
                     </div>
                 </div>
             );
@@ -239,91 +214,84 @@
             const [q, setQ] = useState('');
             const [eid, setEid] = useState(null);
             const [view, setView] = useState('list');
+            const listRef = useRef(null);
+            const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
+            const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
             const [showHist, setShowHist] = useState(false);
-
-            const cur = data.filter(r => r.date.startsWith(month));
-            const hist = data.filter(r => !r.date.startsWith(month));
 
             const sub = (e, abs) => {
                 e.preventDefault();
+                vibrate();
                 const pl = { date: dt, quantity: abs?0:parseFloat(q)||0, isAbsent: abs };
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
                 if(!eid) setQ('');
             };
 
-            const renderTable = (list, title, tog=false, hid=false, onTog) => (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-6 font-urdu">
-                    <div className="p-4 bg-gray-50 border-b flex justify-between items-center" onClick={tog?onTog:undefined}>
-                        <h3 className="font-bold text-gray-700 text-lg text-right w-full">{title}</h3>
-                        {tog && <LucideIcon name={hid?'chevron-down':'chevron-up'} className="w-5 h-5 text-gray-400"/>}
+            const renderTable = (list, title, toggle=false, hidden=false, onTog) => (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-2 font-urdu">
+                    <div className="p-3 bg-gray-50 border-b flex justify-between items-center" onClick={toggle?onTog:undefined}>
+                        <h3 className="font-bold text-gray-700 text-sm w-full text-right">{title}</h3>
+                        {toggle && <LucideIcon name={hidden?'chevron-down':'chevron-up'} className="w-4 h-4 text-gray-400"/>}
                     </div>
-                    {!hid && <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 text-right">
-                        <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date (تاریخ)</th><th className="px-4 py-3 text-right">Quantity (Ltr)</th><th className="px-4 py-3 text-right">Amount (Rupees)</th><th className="px-4 py-3 text-center">Actions</th></tr></thead>
-                        <tbody>{list.length===0?<tr><td colSpan={4} className="p-4 text-center">No records</td></tr>:list.map(r=>(
-                            <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
-                                <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
-                                <td className="px-4 py-3" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT (غیر حاضر)</span>:r.quantity.toFixed(2)}</td>
-                                <td className="px-4 py-3 font-mono" dir="ltr">Rs. {Math.round(r.quantity*(r.pricePerUnit||price)).toLocaleString()}</td>
-                                <td className="px-4 py-3 flex justify-center gap-2">
-                                    <button type="button" onClick={()=>{setDt(r.date);setQ(r.quantity);setEid(r.id);window.scrollTo(0,0)}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
-                                    <button type="button" onClick={()=>del(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
-                                </td>
-                            </tr>
-                        ))}</tbody>
-                    </table></div>}
+                    {!hidden && <div className="overflow-x-auto max-h-56 overflow-y-auto" ref={listRef}>
+                        <table className="w-full text-xs text-gray-600 text-right">
+                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date (تاریخ)</th><th className="px-3 py-2 text-right">Quantity (Ltr)</th><th className="px-3 py-2 text-right">Amount (Rupees)</th><th className="px-3 py-2 text-center">Actions</th></tr></thead>
+                            <tbody>{list.length===0?<tr><td colSpan={4} className="p-4 text-center text-gray-400">No records found for this period. (کوئی ریکارڈ نہیں)</td></tr>:list.map(r=>(
+                                <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
+                                    <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                    <td className="px-3 py-2" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT (غیر حاضر)</span>:r.quantity.toFixed(2)}</td>
+                                    <td className="px-3 py-2 font-mono" dir="ltr">Rs. {Math.round(r.quantity*(r.pricePerUnit||price)).toLocaleString()}</td>
+                                    <td className="px-3 py-2 flex justify-center gap-2">
+                                        <button onClick={()=>{vibrate(); setDt(r.date);setQ(r.quantity);setEid(r.id);window.scrollTo(0,0)}} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
+                                        <button onClick={()=>{vibrate(); del(r.id)}} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
+                                    </td>
+                                </tr>
+                            ))}</tbody>
+                        </table>
+                    </div>}
                 </div>
             );
 
             return (
-                <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-xl font-bold mb-6 text-center text-gray-800 font-urdu">دودھ کا اندراج (Milk Entry)</h2>
-                        <form className="space-y-6">
-                            
-                            {/* Row 1: Date */}
+                <div className="space-y-3">
+                    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+                        <h2 className="text-lg font-bold mb-4 text-center text-gray-800 font-urdu">دودھ کا اندراج (Milk Entry)</h2>
+                        <form className="space-y-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-600 mb-1 text-right">تاریخ (Date)</label>
+                                <label className="block text-xs font-bold text-gray-500 mb-1 text-right">تاریخ (Date)</label>
                                 <div className="relative">
-                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500" dir="ltr"/>
-                                    <LucideIcon name="calendar" className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
+                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500 text-sm font-bold text-gray-700" dir="ltr"/>
+                                    <LucideIcon name="calendar" className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2"/>
                                 </div>
                             </div>
-
-                            {/* Row 2: Absent & Quantity */}
-                            <div className="flex gap-3">
-                                {/* Quantity (Right in RTL) */}
+                            <div className="flex gap-3 items-end">
                                 <div className="flex-1">
-                                    <label className="block text-sm font-bold text-gray-600 mb-1 text-right">مقدار - Ltr (Quantity)</label>
-                                    <input type="number" step="0.01" value={q} onChange={e=>setQ(e.target.value)} placeholder="0.00" className="w-full p-3 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500" dir="ltr"/>
+                                    <label className="block text-xs font-bold text-gray-500 mb-1 text-right">مقدار - Ltr (Quantity)</label>
+                                    <input type="number" step="0.01" value={q} onChange={e=>setQ(e.target.value)} placeholder="0.00" className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500 text-sm" dir="ltr"/>
                                 </div>
-
-                                {/* Absent Button (Left in RTL) - Aligned to bottom */}
                                 <div className="w-auto flex items-end">
-                                    <button type="button" onClick={e=>sub(e,true)} className="w-[100px] h-[50px] bg-red-100 text-red-600 rounded-lg text-sm font-bold flex flex-col items-center justify-center border border-red-200 hover:bg-red-200 transition-colors">
+                                    <button type="button" onClick={e=>sub(e,true)} className="h-[42px] px-4 bg-red-100 text-red-600 rounded-lg text-xs font-bold flex flex-col items-center justify-center border border-red-200 active:scale-95 transition-transform">
                                         <span>Absent</span>
-                                        <span className="font-urdu text-[10px]">(غیر حاضر)</span>
+                                        <span className="font-urdu text-[9px]">(غیر حاضر)</span>
                                     </button>
                                 </div>
                             </div>
-
-                            <div className="pt-2">
-                                <button type="button" onClick={e=>sub(e,false)} className={`w-full py-3.5 rounded-lg font-bold text-white shadow-lg transition-transform active:scale-95 ${eid?'bg-blue-600':'bg-green-600 hover:bg-green-700'}`}>{eid?'Update Entry':'Submit Entry'}</button>
-                                {eid && <button type="button" onClick={()=>{setEid(null);setQ('')}} className="w-full mt-2 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-lg">Cancel</button>}
+                            <div className="pt-1">
+                                <button type="button" onClick={e=>sub(e,false)} className={`w-full py-3 rounded-lg font-bold text-white shadow-md active:scale-95 transition-transform text-sm ${eid?'bg-blue-600':'bg-green-600 hover:bg-green-700'}`}>{eid?'Update Entry':'Submit Entry'}</button>
+                                {eid && <button type="button" onClick={()=>{vibrate(); setEid(null);setQ('')}} className="w-full mt-2 py-2 text-gray-500 font-bold bg-gray-100 rounded-lg text-xs">Cancel</button>}
                             </div>
                         </form>
                     </div>
-                    
-                    <div className="flex justify-between items-center px-2">
-                        <h3 className="font-bold text-gray-700 text-lg">Records</h3>
-                        <div className="flex gap-2 bg-white p-1 rounded-lg border shadow-sm">
-                            <button onClick={()=>setView('list')} className={`p-2 rounded-md transition-all ${view==='list'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="list" className="w-5 h-5"/></button>
-                            <button onClick={()=>setView('calendar')} className={`p-2 rounded-md transition-all ${view==='calendar'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="calendar" className="w-5 h-5"/></button>
+                    <div className="flex justify-between items-center px-1">
+                        <h3 className="font-bold text-gray-600 text-sm">Records History</h3>
+                        <div className="flex gap-1 bg-white p-0.5 rounded-lg border shadow-sm">
+                            <button onClick={()=>{vibrate(); setView('list')}} className={`p-1.5 rounded-md transition-all ${view==='list'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="list" className="w-4 h-4"/></button>
+                            <button onClick={()=>{vibrate(); setView('calendar')}} className={`p-1.5 rounded-md transition-all ${view==='calendar'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="calendar" className="w-4 h-4"/></button>
                         </div>
                     </div>
-
                     {view==='list' ? renderTable(cur, 'منتخب مہینے کا ریکارڈ (Daily Records)') : <CalendarView records={cur} month={month} />}
-                    {hist.length>0 && renderTable(hist, 'ہسٹری (History)', true, !showHist, ()=>setShowHist(!showHist))}
+                    {hist.length>0 && renderTable(hist, 'دوسرے مہینوں کا ریکارڈ (Milk History)', true, !showHist, ()=>setShowHist(!showHist))}
                 </div>
             );
         };
@@ -335,43 +303,44 @@
             
             const sub = (e) => {
                 e.preventDefault();
+                vibrate();
                 const pl = { date: dt, amount: parseFloat(a)||0 };
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); } else add(pl);
                 if(!eid) setA('');
             };
 
             return (
-                <div className="space-y-6">
-                    <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                        <h2 className="text-xl font-bold mb-6 text-center text-gray-800 font-urdu">ادائیگی کا اندراج (Payment Entry)</h2>
-                        <form onSubmit={sub} className="space-y-5">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 w-full space-y-1">
-                                    <label className="block text-sm font-bold text-right text-gray-600">تاریخ (Date)</label>
-                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-orange-500" dir="ltr"/>
+                <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
+                        <h2 className="text-lg font-bold mb-4 text-center text-gray-800 font-urdu">ادائیگی کا اندراج (Payment Entry)</h2>
+                        <form onSubmit={sub} className="space-y-4">
+                            <div className="flex gap-3">
+                                <div className="flex-1">
+                                    <label className="block text-xs font-bold text-right text-gray-500 mb-1">تاریخ (Date)</label>
+                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-orange-500 text-sm" dir="ltr"/>
                                 </div>
-                                <div className="flex-1 w-full space-y-1">
-                                    <label className="block text-sm font-bold text-right text-gray-600">رقم (Rupees - Amount)</label>
-                                    <input type="number" value={a} onChange={e=>setA(e.target.value)} className="w-full p-3 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-orange-500" dir="ltr" placeholder="0"/>
+                                <div className="flex-1">
+                                    <label className="block text-xs font-bold text-right text-gray-500 mb-1">رقم (Amount)</label>
+                                    <input type="number" value={a} onChange={e=>setA(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-orange-500 text-sm" dir="ltr" placeholder="0"/>
                                 </div>
                             </div>
-                            <div className="pt-2">
-                                <button type="submit" className={`w-full py-3.5 rounded-lg font-bold text-white shadow-lg transition-transform active:scale-95 ${eid?'bg-blue-600':'bg-orange-600 hover:bg-orange-700'}`}>{eid?'Update Entry':'Submit Payment'}</button>
-                                {eid && <button type="button" onClick={()=>{setEid(null);setA('')}} className="w-full mt-2 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-lg">Cancel</button>}
+                            <div className="pt-1">
+                                <button type="submit" className={`w-full py-3 rounded-lg font-bold text-white shadow-md active:scale-95 transition-transform text-sm ${eid?'bg-blue-600':'bg-orange-600 hover:bg-orange-700'}`}>{eid?'Update Entry':'Submit Payment'}</button>
+                                {eid && <button type="button" onClick={()=>{vibrate(); setEid(null);setA('')}} className="w-full mt-2 py-2 text-gray-500 font-bold bg-gray-100 rounded-lg text-xs">Cancel</button>}
                             </div>
                         </form>
                     </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden font-urdu">
-                        <div className="p-4 bg-gray-50 border-b"><h3 className="font-bold text-right">ادائیگی کی تاریخ (Payment History)</h3></div>
-                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 text-right">
-                            <thead className="bg-gray-50 border-b"><tr><th className="px-4 py-3 text-right">Date (تاریخ)</th><th className="px-4 py-3 text-right">AMOUNT PAID (ادا کردہ رقم)</th><th className="px-4 py-3 text-center">ACTIONS</th></tr></thead>
-                            <tbody>{data.length===0 ? <tr><td colSpan={3} className="p-6 text-center text-gray-400 italic">.No payments recorded yet</td></tr> : data.map(r=>(
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-2 font-urdu">
+                        <div className="p-3 bg-gray-50 border-b"><h3 className="font-bold text-sm text-right">Payment History</h3></div>
+                        <div className="overflow-x-auto max-h-56 overflow-y-auto"><table className="w-full text-xs text-gray-600 text-right">
+                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Paid</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
+                            <tbody>{data.length===0 ? <tr><td colSpan={3} className="p-4 text-center text-gray-400 italic">No payments</td></tr> : data.map(r=>(
                                 <tr key={r.id}>
-                                    <td className="px-4 py-3" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
-                                    <td className="px-4 py-3 font-bold text-emerald-700" dir="ltr">Rs. {r.amount.toLocaleString()}</td>
-                                    <td className="px-4 py-3 flex justify-center gap-2">
-                                        <button type="button" onClick={()=>{setDt(r.date);setA(r.amount);setEid(r.id);window.scrollTo(0,0)}} className="p-1.5 text-blue-600 bg-blue-50 rounded"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
-                                        <button type="button" onClick={()=>del(r.id)} className="p-1.5 text-red-600 bg-red-50 rounded"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
+                                    <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                    <td className="px-3 py-2 font-bold text-emerald-700" dir="ltr">{r.amount.toLocaleString()}</td>
+                                    <td className="px-3 py-2 flex justify-center gap-2">
+                                        <button type="button" onClick={()=>{vibrate(); setDt(r.date);setA(r.amount);setEid(r.id);window.scrollTo(0,0)}} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
+                                        <button type="button" onClick={()=>{vibrate(); del(r.id)}} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
                                     </td>
                                 </tr>
                             ))}</tbody>
@@ -387,12 +356,13 @@
             const [pay, setPay] = useState([]);
             const [set, setSet] = useState(DEFAULT_SETTINGS);
             const [tab, setTab] = useState('milk');
-            const [menu, setMenu] = useState(false);
+            const [menuOpen, setMenuOpen] = useState(false);
             const [toast, setToast] = useState({m:'', s:false});
             const [del, setDel] = useState(null);
             const [mon, setMon] = useState(new Date().toISOString().substring(0,7));
             const [modal, setModal] = useState({set:false, acc:false});
             const [batchMon, setBatchMon] = useState('');
+            const [showAdv, setShowAdv] = useState(false);
 
             useEffect(() => {
                 setMilk(Storage.getMilk(key));
@@ -406,7 +376,7 @@
             useEffect(() => Storage.saveSet(key, set), [set]);
             useEffect(() => Storage.setKey(key), [key]);
 
-            const notify = (m) => setToast({m, s:true});
+            const notify = (m) => { vibrate(); setToast({m, s:true}); };
             const stats = useMemo(() => {
                 const tM = milk.reduce((a,r)=>a+r.quantity,0);
                 const tC = milk.reduce((a,r)=>a+(r.quantity*(r.pricePerUnit||set.pricePerUnit)),0);
@@ -421,20 +391,22 @@
             }), []);
 
             const batchUpdate = (m, p) => {
+                vibrate();
                 if(!confirm(`Update price for all records in ${m}?`)) return;
                 setMilk(prev => prev.map(r => r.date.startsWith(m) ? {...r, pricePerUnit: p} : r));
                 notify('Batch Updated');
             };
 
             const genKey = (setter) => {
+                vibrate();
                 const c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                 let r = ''; for(let i=0;i<8;i++) r += c.charAt(Math.floor(Math.random()*c.length));
                 setter(r);
             };
 
             return (
-                <div className="min-h-screen bg-gray-50 flex justify-center pb-20">
-                    <div className="w-full max-w-3xl p-3 sm:p-4">
+                <div className="min-h-screen bg-gray-50 flex justify-center pb-16">
+                    <div className="w-full max-w-md p-3">
                         <Toast msg={toast.m} show={toast.s} close={()=>setToast({...toast,s:false})}/>
                         <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
                             if(del.t==='m') setMilk(p=>p.filter(r=>r.id!==del.id));
@@ -442,25 +414,42 @@
                             setDel(null); notify('Deleted');
                         }}/>
                         
-                        {/* TOGGLE MENU HEADER */}
-                        <div className="flex justify-center mb-2 relative z-20">
-                            <button onClick={()=>setMenu(!menu)} className="text-gray-400 p-1"><LucideIcon name={menu?'chevron-up':'chevron-down'} className="w-6 h-6"/></button>
+                        {/* TOGGLE ARROW HEADER */}
+                        <div className="flex justify-center -mb-2 z-10 relative">
+                            <button onClick={() => {vibrate(); setMenuOpen(!menuOpen)}} className="text-gray-300 hover:text-gray-500 p-1 transition-colors">
+                                <LucideIcon name={menuOpen ? "chevron-up" : "chevron-down"} className="w-5 h-5" />
+                            </button>
                         </div>
-                        {menu && <div className="bg-white p-4 rounded-2xl shadow-md mb-4 flex justify-between items-center gap-2 animate-fade-in">
-                            <button onClick={()=>{setModal({...modal,acc:true});setMenu(false)}} className="flex flex-col items-center gap-1 text-gray-600"><div className="p-2 bg-gray-100 rounded-full"><LucideIcon name="user-circle" className="w-5 h-5"/></div><span className="text-xs">Profile</span></button>
-                            <select value={mon} onChange={e=>setMon(e.target.value)} className="flex-1 bg-gray-50 border p-2 rounded-lg text-sm text-center font-bold" dir="ltr">{months.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select>
-                            <button onClick={()=>{setModal({...modal,set:true});setMenu(false)}} className="flex flex-col items-center gap-1 text-gray-600"><div className="p-2 bg-gray-100 rounded-full"><LucideIcon name="settings" className="w-5 h-5"/></div><span className="text-xs">Settings</span></button>
-                        </div>}
+
+                        {/* COLLAPSIBLE MENU (Shown when arrow clicked) */}
+                        {menuOpen && (
+                            <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-3 flex justify-between items-center animate-fade-in">
+                                {/* Profile (Right in RTL) */}
+                                <button onClick={()=>{vibrate(); setModal({...modal,acc:true})}} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full flex flex-col items-center">
+                                    <LucideIcon name="user-circle" className="w-5 h-5"/>
+                                </button>
+
+                                {/* Month Selector (Center) */}
+                                <select value={mon} onChange={e=>{vibrate(); setMon(e.target.value)}} className="bg-transparent text-sm font-bold text-gray-700 outline-none dir-ltr cursor-pointer">
+                                    {months.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}
+                                </select>
+
+                                {/* Settings (Left in RTL) */}
+                                <button onClick={()=>{vibrate(); setModal({...modal,set:true})}} className="p-2 text-gray-500 hover:bg-gray-100 rounded-full flex flex-col items-center">
+                                    <LucideIcon name="settings" className="w-5 h-5"/>
+                                </button>
+                            </div>
+                        )}
 
                         <SummaryCards stats={stats} />
                         
-                        {/* Styled Tabs (UPDATED ORDER) */}
-                        <div className="bg-gray-100 p-1.5 rounded-xl flex gap-1 mb-6">
-                            <button onClick={()=>setTab('milk')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${tab==='milk'?'bg-white text-blue-600 shadow-sm':'text-gray-500 hover:text-gray-600'}`}>
-                                <span>Milk Entry</span> <LucideIcon name="droplet" className="w-4 h-4"/>
+                        {/* COMPACT TABS */}
+                        <div className="bg-gray-200 p-1 rounded-lg flex gap-1 mb-4 mt-2">
+                            <button onClick={()=>{vibrate(); setTab('milk')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='milk'?'bg-white text-blue-600 shadow-sm':'text-gray-500'}`}>
+                                <span>Milk Entry</span> <LucideIcon name="droplet" className="w-3.5 h-3.5"/>
                             </button>
-                            <button onClick={()=>setTab('payment')} className={`flex-1 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500 hover:text-gray-600'}`}>
-                                <span>Payments</span> <LucideIcon name="wallet" className="w-4 h-4"/>
+                            <button onClick={()=>{vibrate(); setTab('payment')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500'}`}>
+                                <span>Payments</span> <LucideIcon name="wallet" className="w-3.5 h-3.5"/>
                             </button>
                         </div>
 
@@ -476,7 +465,7 @@
 
                         <InstallApp />
 
-                        <div className="mt-8 text-center text-xs text-gray-400 font-urdu pb-6">Safe & Local Data Storage • {set.milkmanName && `Milkman: ${set.milkmanName}`}</div>
+                        <div className="mt-6 text-center text-[10px] text-gray-400 font-urdu pb-2">Safe & Local Data • {set.milkmanName && `Milkman: ${set.milkmanName}`}</div>
 
                         {/* Settings Modal (UPDATED DESIGN) */}
                         {modal.set && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
@@ -540,21 +529,32 @@
 
                                     {/* Save Button */}
                                     <button 
-                                        onClick={()=>setModal({...modal,set:false})} 
+                                        onClick={()=>{vibrate(); setModal({...modal,set:false})}} 
                                         className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-lg shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 mt-8"
                                     >
                                         <LucideIcon name="save" className="w-5 h-5"/> Save Settings
                                     </button>
 
                                     {/* Batch Update (Collapsible) */}
-                                    <div className="mt-6 pt-4 border-t border-dashed border-gray-200">
-                                        <div className="bg-orange-50 p-3 rounded-lg border border-orange-100">
-                                            <h3 className="font-bold text-orange-800 text-xs mb-2 text-right">Advanced: Batch Price Update</h3>
-                                            <div className="flex gap-2 items-center">
-                                                <button onClick={()=>batchUpdate(batchMon, set.pricePerUnit)} className="bg-orange-200 text-orange-800 px-3 py-2 rounded text-xs font-bold whitespace-nowrap">Apply Price</button>
-                                                <input type="month" value={batchMon} onChange={e=>setBatchMon(e.target.value)} className="flex-1 p-2 border border-orange-200 rounded text-sm bg-white"/>
+                                    <div className="mt-4">
+                                        <button onClick={()=>{vibrate(); setShowAdv(!showAdv)}} className="text-indigo-600 text-sm font-medium mb-3 hover:underline w-full text-right block">
+                                            {showAdv ? "Hide Options" : "Show Advanced Options"}
+                                        </button>
+
+                                        {showAdv && (
+                                            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 animate-fade-in">
+                                                <h3 className="font-bold text-orange-900 text-sm mb-2 text-right flex items-center justify-end gap-2">
+                                                    بیچ پرائس اپ ڈیٹ (Batch Price Update) <LucideIcon name="alert-triangle" className="w-4 h-4 text-orange-600"/>
+                                                </h3>
+                                                <p className="text-orange-800 text-xs text-right mb-3 font-urdu leading-relaxed">
+                                                    منتخب مہینے کے تمام <span className="underline font-bold">پرانے ریکارڈز</span> پر یہ قیمت (Rs. {set.pricePerUnit}) لاگو کریں۔
+                                                </p>
+                                                <div className="flex gap-2 items-center">
+                                                    <button onClick={()=>batchUpdate(batchMon, set.pricePerUnit)} className="bg-orange-300 text-orange-900 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-400 transition-colors whitespace-nowrap">Apply</button>
+                                                    <input type="month" value={batchMon} onChange={e=>setBatchMon(e.target.value)} className="flex-1 p-2 border border-orange-200 rounded text-sm bg-white outline-none focus:border-orange-400 text-right"/>
+                                                </div>
                                             </div>
-                                        </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -568,7 +568,7 @@
                                     <h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                                         <LucideIcon name="key" className="w-5 h-5 text-blue-600"/> Data Access
                                     </h2>
-                                    <button onClick={()=>setModal({...modal,acc:false})} className="p-2 hover:bg-gray-100 rounded-full">
+                                    <button onClick={()=>{vibrate(); setModal({...modal,acc:false})}} className="p-2 hover:bg-gray-100 rounded-full">
                                         <LucideIcon name="x" className="w-5 h-5 text-gray-500"/>
                                     </button>
                                 </div>
@@ -594,14 +594,14 @@
                                                 dir="ltr"
                                             />
                                             {/* Refresh Button */}
-                                            <button type="button" onClick={()=>{genKey((v)=>document.getElementById('nk').value=v)}} className="bg-emerald-100 text-emerald-600 p-3 rounded-lg hover:bg-emerald-200 transition-colors">
+                                            <button type="button" onClick={()=>{vibrate(); genKey((v)=>document.getElementById('nk').value=v)}} className="bg-emerald-100 text-emerald-600 p-3 rounded-lg hover:bg-emerald-200 transition-colors">
                                                 <LucideIcon name="refresh-cw" className="w-6 h-6"/>
                                             </button>
                                         </div>
 
                                         {/* Load Button */}
                                         <button 
-                                            onClick={()=>{const k=document.getElementById('nk').value.trim().toUpperCase();if(k.length>3){setKey(k);setModal({...modal,acc:false});notify('Loaded')}}}
+                                            onClick={()=>{const k=document.getElementById('nk').value.trim().toUpperCase();if(k.length>3){vibrate(); setKey(k);setModal({...modal,acc:false});notify('Loaded')}}}
                                             className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
                                         >
                                             <LucideIcon name="log-in" className="w-5 h-5"/> Load / Switch Profile 
