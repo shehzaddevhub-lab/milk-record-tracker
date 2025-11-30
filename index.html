@@ -25,15 +25,19 @@
         }
         .font-urdu { font-family: system-ui, -apple-system, sans-serif; }
         
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 2px; }
         
+        /* Input Directions */
         input[type="number"], input[type="date"], input[type="tel"], input[type="month"] { direction: ltr; }
         input[type="text"] { direction: rtl; }
         
+        /* Mobile Padding Fix */
         @media (max-width: 640px) { .table-cell-padding { padding: 0.5rem 0.25rem; } }
         
+        /* Animation */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.2s ease-out; }
     </style>
@@ -215,8 +219,12 @@
             const [eid, setEid] = useState(null);
             const [view, setView] = useState('list');
             const listRef = useRef(null);
+            
+            // Current Month Records
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
+            // History (Previous Records) - excluding current month
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
+            
             const [showHist, setShowHist] = useState(false);
 
             const sub = (e, abs) => {
@@ -228,28 +236,48 @@
                 if(!eid) setQ('');
             };
 
-            const renderTable = (list, title, toggle=false, hidden=false, onTog) => (
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-2 font-urdu">
-                    <div className="p-3 bg-gray-50 border-b flex justify-between items-center" onClick={toggle?onTog:undefined}>
-                        <h3 className="font-bold text-gray-700 text-sm w-full text-right">{title}</h3>
-                        {toggle && <LucideIcon name={hidden?'chevron-down':'chevron-up'} className="w-4 h-4 text-gray-400"/>}
+            // Updated Render Table to support Titles and Toggle
+            const renderTable = (list, title, toggle=false, isHidden=false, onToggle=null) => (
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-3 font-urdu">
+                    <div 
+                        className={`p-3 bg-gray-50 border-b flex justify-between items-center ${toggle ? 'cursor-pointer hover:bg-gray-100 transition-colors' : ''}`} 
+                        onClick={toggle ? onToggle : undefined}
+                    >
+                        {toggle && <LucideIcon name={isHidden ? 'chevron-down' : 'chevron-up'} className="w-4 h-4 text-gray-400"/>}
+                        <h3 className={`font-bold text-gray-700 text-sm w-full text-right ${toggle ? 'pr-2' : ''}`}>{title}</h3>
                     </div>
-                    {!hidden && <div className="overflow-x-auto max-h-56 overflow-y-auto" ref={listRef}>
-                        <table className="w-full text-xs text-gray-600 text-right">
-                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date (تاریخ)</th><th className="px-3 py-2 text-right">Quantity (Ltr)</th><th className="px-3 py-2 text-right">Amount (Rupees)</th><th className="px-3 py-2 text-center">Actions</th></tr></thead>
-                            <tbody>{list.length===0?<tr><td colSpan={4} className="p-4 text-center text-gray-400">No records found for this period. (کوئی ریکارڈ نہیں)</td></tr>:list.map(r=>(
-                                <tr key={r.id} className={r.isAbsent?'bg-red-50':''}>
-                                    <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
-                                    <td className="px-3 py-2" dir="ltr">{r.isAbsent?<span className="text-red-600 font-bold" dir="rtl">ABSENT (غیر حاضر)</span>:r.quantity.toFixed(2)}</td>
-                                    <td className="px-3 py-2 font-mono" dir="ltr">Rs. {Math.round(r.quantity*(r.pricePerUnit||price)).toLocaleString()}</td>
-                                    <td className="px-3 py-2 flex justify-center gap-2">
-                                        <button onClick={()=>{vibrate(); setDt(r.date);setQ(r.quantity);setEid(r.id);window.scrollTo(0,0)}} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
-                                        <button onClick={()=>{vibrate(); del(r.id)}} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
-                                    </td>
-                                </tr>
-                            ))}</tbody>
-                        </table>
-                    </div>}
+                    
+                    {!isHidden && (
+                        <div className="overflow-x-auto max-h-64 overflow-y-auto" ref={list === cur ? listRef : null}>
+                            <table className="w-full text-xs text-gray-600 text-right">
+                                <thead className="bg-gray-50 border-b sticky top-0">
+                                    <tr>
+                                        <th className="px-3 py-2 text-right">Date</th>
+                                        <th className="px-3 py-2 text-right">Qty</th>
+                                        <th className="px-3 py-2 text-right">Amt</th>
+                                        <th className="px-3 py-2 text-center">Act</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {list.length === 0 ? (
+                                        <tr><td colSpan={4} className="p-4 text-center text-gray-400 text-[10px]">No records</td></tr>
+                                    ) : (
+                                        list.map(r => (
+                                            <tr key={r.id} className={r.isAbsent ? 'bg-red-50' : 'border-b last:border-0'}>
+                                                <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                                <td className="px-3 py-2" dir="ltr">{r.isAbsent ? <span className="text-red-600 font-bold" dir="rtl">ABSENT</span> : r.quantity.toFixed(2)}</td>
+                                                <td className="px-3 py-2 font-mono" dir="ltr">{Math.round(r.quantity * (r.pricePerUnit || price)).toLocaleString()}</td>
+                                                <td className="px-3 py-2 flex justify-center gap-2">
+                                                    <button onClick={() => { vibrate(); setDt(r.date); setQ(r.quantity); setEid(r.id); window.scrollTo(0, 0); }} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4" /></button>
+                                                    <button onClick={() => { vibrate(); del(r.id) }} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4" /></button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
             );
 
@@ -284,14 +312,18 @@
                         </form>
                     </div>
                     <div className="flex justify-between items-center px-1">
-                        <h3 className="font-bold text-gray-600 text-sm">Records History</h3>
+                        <h3 className="font-bold text-gray-600 text-sm">Records</h3>
                         <div className="flex gap-1 bg-white p-0.5 rounded-lg border shadow-sm">
                             <button onClick={()=>{vibrate(); setView('list')}} className={`p-1.5 rounded-md transition-all ${view==='list'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="list" className="w-4 h-4"/></button>
                             <button onClick={()=>{vibrate(); setView('calendar')}} className={`p-1.5 rounded-md transition-all ${view==='calendar'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="calendar" className="w-4 h-4"/></button>
                         </div>
                     </div>
-                    {view==='list' ? renderTable(cur, 'منتخب مہینے کا ریکارڈ (Daily Records)') : <CalendarView records={cur} month={month} />}
-                    {hist.length>0 && renderTable(hist, 'دوسرے مہینوں کا ریکارڈ (Milk History)', true, !showHist, ()=>setShowHist(!showHist))}
+                    
+                    {/* CURRENT MONTH RECORDS */}
+                    {view==='list' ? renderTable(cur, 'Daily Records (موجودہ ریکارڈ)') : <CalendarView records={cur} month={month} />}
+                    
+                    {/* PREVIOUS HISTORY (COLLAPSIBLE) */}
+                    {hist.length > 0 && renderTable(hist, 'Previous History (پرانا ریکارڈ)', true, !showHist, () => {vibrate(); setShowHist(!showHist)})}
                 </div>
             );
         };
@@ -404,6 +436,52 @@
                 setter(r);
             };
 
+            // NEW: Backup & Restore Logic
+            const backupData = () => {
+                vibrate();
+                const data = {
+                    milk: Storage.getMilk(key),
+                    payment: Storage.getPay(key),
+                    settings: Storage.getSet(key),
+                    date: new Date().toISOString()
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `milk_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                notify("Backup Downloaded");
+            };
+
+            const restoreData = (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if(data.milk && data.payment) {
+                            if(confirm("Are you sure? This will replace your current data.\n(کیا آپ واقعی پرانا ڈیٹا ختم کر کے یہ فائل بحال کرنا چاہتے ہیں؟)")) {
+                                vibrate();
+                                setMilk(data.milk);
+                                setPay(data.payment);
+                                if(data.settings) setSet(data.settings);
+                                notify("Data Restored!");
+                                setModal({...modal, set:false});
+                            }
+                        } else {
+                            alert("Invalid Backup File");
+                        }
+                    } catch(err) {
+                        alert("Error reading file");
+                    }
+                };
+                reader.readAsText(file);
+            };
+
             return (
                 <div className="min-h-screen bg-gray-50 flex justify-center pb-16">
                     <div className="w-full max-w-md p-3">
@@ -473,7 +551,7 @@
                                 {/* Header */}
                                 <div className="p-4 border-b flex justify-between items-center">
                                     <h2 className="font-bold text-xl text-gray-800">Settings (سیٹنگز)</h2>
-                                    <button onClick={()=>setModal({...modal,set:false})} className="p-1 hover:bg-gray-100 rounded-full">
+                                    <button onClick={()=>{vibrate(); setModal({...modal,set:false})}} className="p-1 hover:bg-gray-100 rounded-full">
                                         <LucideIcon name="x" className="w-5 h-5 text-gray-500"/>
                                     </button>
                                 </div>
@@ -535,23 +613,40 @@
                                         <LucideIcon name="save" className="w-5 h-5"/> Save Settings
                                     </button>
 
-                                    {/* Batch Update (Collapsible) */}
+                                    {/* Batch Update & Backup Toggle */}
                                     <div className="mt-4">
                                         <button onClick={()=>{vibrate(); setShowAdv(!showAdv)}} className="text-indigo-600 text-sm font-medium mb-3 hover:underline w-full text-right block">
                                             {showAdv ? "Hide Options" : "Show Advanced Options"}
                                         </button>
 
                                         {showAdv && (
-                                            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 animate-fade-in">
-                                                <h3 className="font-bold text-orange-900 text-sm mb-2 text-right flex items-center justify-end gap-2">
-                                                    بیچ پرائس اپ ڈیٹ (Batch Price Update) <LucideIcon name="alert-triangle" className="w-4 h-4 text-orange-600"/>
-                                                </h3>
-                                                <p className="text-orange-800 text-xs text-right mb-3 font-urdu leading-relaxed">
-                                                    منتخب مہینے کے تمام <span className="underline font-bold">پرانے ریکارڈز</span> پر یہ قیمت (Rs. {set.pricePerUnit}) لاگو کریں۔
-                                                </p>
-                                                <div className="flex gap-2 items-center">
-                                                    <button onClick={()=>batchUpdate(batchMon, set.pricePerUnit)} className="bg-orange-300 text-orange-900 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-400 transition-colors whitespace-nowrap">Apply</button>
-                                                    <input type="month" value={batchMon} onChange={e=>setBatchMon(e.target.value)} className="flex-1 p-2 border border-orange-200 rounded text-sm bg-white outline-none focus:border-orange-400 text-right"/>
+                                            <div className="space-y-4 animate-fade-in">
+                                                {/* Batch Price Update */}
+                                                <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                                                    <h3 className="font-bold text-orange-900 text-sm mb-2 text-right flex items-center justify-end gap-2">
+                                                        بیچ پرائس اپ ڈیٹ (Batch Price Update) <LucideIcon name="alert-triangle" className="w-4 h-4 text-orange-600"/>
+                                                    </h3>
+                                                    <p className="text-orange-800 text-xs text-right mb-3 font-urdu leading-relaxed">
+                                                        منتخب مہینے کے تمام <span className="underline font-bold">پرانے ریکارڈز</span> پر یہ قیمت (Rs. {set.pricePerUnit}) لاگو کریں۔
+                                                    </p>
+                                                    <div className="flex gap-2 items-center">
+                                                        <button onClick={()=>batchUpdate(batchMon, set.pricePerUnit)} className="bg-orange-300 text-orange-900 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-400 transition-colors whitespace-nowrap">Apply</button>
+                                                        <input type="month" value={batchMon} onChange={e=>setBatchMon(e.target.value)} className="flex-1 p-2 border border-orange-200 rounded text-sm bg-white outline-none focus:border-orange-400 text-right"/>
+                                                    </div>
+                                                </div>
+
+                                                {/* Data Backup & Restore */}
+                                                <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                    <h3 className="font-bold text-gray-700 text-sm mb-2 text-right">Data Backup (ڈیٹا بیک اپ)</h3>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={backupData} className="flex-1 bg-teal-600 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow hover:bg-teal-700">
+                                                            <LucideIcon name="download" className="w-3 h-3"/> Download
+                                                        </button>
+                                                        <label className="flex-1 bg-gray-600 text-white py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1 shadow hover:bg-gray-700 cursor-pointer">
+                                                            <LucideIcon name="upload" className="w-3 h-3"/> Restore
+                                                            <input type="file" accept=".json" className="hidden" onChange={restoreData}/>
+                                                        </label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
