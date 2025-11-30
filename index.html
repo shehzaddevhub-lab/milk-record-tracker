@@ -57,7 +57,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        // --- FIREBASE CONFIGURATION (UPDATED WITH YOUR KEYS) ---
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyAVRZiWF2R0Dv2_njOwwXq0IRV43d9C-ok",
             authDomain: "milk-tracker-ae3b3.firebaseapp.com",
@@ -78,11 +78,7 @@
             
             // Enable Offline Persistence
             enableIndexedDbPersistence(db).catch((err) => {
-                if (err.code == 'failed-precondition') {
-                    console.log('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
-                } else if (err.code == 'unimplemented') {
-                    console.log('The current browser does not support all of the features required to enable persistence');
-                }
+                console.log("Offline persistence error:", err.code);
             });
         } catch (e) {
             console.error("Firebase Init Error", e);
@@ -140,21 +136,20 @@
         // --- CLOUD STORAGE SERVICE ---
         const CloudService = {
             // Listen to Real-time updates
-            subscribe: (profileCode, callback) => {
+            subscribe: (profileCode, callback, onError) => {
                 if (!window.db || !profileCode) return () => {};
                 
-                // Using a unique path for your users
-                // Using 'milk_tracker_users' collection inside your project
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
                 
                 return window.onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         callback(docSnap.data());
                     } else {
-                        console.log("New profile created on cloud");
+                        console.log("New/Empty profile on cloud");
                     }
                 }, (error) => {
-                    console.error("Sync Error (Net issue?):", error);
+                    console.error("Sync Error:", error);
+                    if(onError) onError(error);
                 });
             },
 
@@ -312,20 +307,17 @@
             
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
+            
             const [showHist, setShowHist] = useState(false);
 
             const sub = (e, abs) => {
                 e.preventDefault();
                 vibrate();
-                
                 const val = parseFloat(q) || 0;
                 if (!abs && val <= 0) return;
-
                 const pl = { date: dt, quantity: abs ? 0 : val, isAbsent: abs };
-                
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
-                
                 if(!eid) setQ('');
             };
 
@@ -338,6 +330,7 @@
                         {toggle && <LucideIcon name={isHidden ? 'chevron-down' : 'chevron-up'} className="w-4 h-4 text-gray-400"/>}
                         <h3 className={`font-bold text-gray-700 text-sm w-full text-right ${toggle ? 'pr-2' : ''}`}>{title}</h3>
                     </div>
+                    
                     {!isHidden && (
                         <div className="overflow-x-auto max-h-64 overflow-y-auto" ref={list === cur ? listRef : null}>
                             <table className="w-full text-xs text-gray-600 text-right">
@@ -490,25 +483,36 @@
             const [batchMon, setBatchMon] = useState('');
             const [showAdv, setShowAdv] = useState(false);
             const [loading, setLoading] = useState(false); // Changed default to false to show UI immediately
+            const [user, setUser] = useState(null);
 
             // Authenticate Anonymously on Load
             useEffect(() => {
                 if (window.signInAnonymously && window.auth) {
                     window.signInAnonymously(window.auth).catch((error) => console.error("Auth Error", error));
                 }
+                // Track auth state
+                if (window.auth && window.onAuthStateChanged) {
+                    window.onAuthStateChanged(window.auth, (u) => setUser(u));
+                }
             }, []);
 
             // Real-time Sync (Background)
             useEffect(() => {
-                if (CloudService && window.db) {
+                // Only sync if user is logged in (even anonymously)
+                if (CloudService && window.db && user) {
                     const unsubscribe = CloudService.subscribe(key, (data) => {
                         if(data.milk) setMilk(data.milk);
                         if(data.payment) setPay(data.payment);
                         if(data.settings) setSet(data.settings);
+                    }, (err) => {
+                        if(err.code === 'permission-denied') {
+                            // Notify user about rules if they fail
+                            notify('Sync Error: Permission Denied. Check Firebase Rules.');
+                        }
                     });
                     return () => unsubscribe();
                 }
-            }, [key]);
+            }, [key, user]); // Dependency on user ensures we wait for auth
 
             // Local Storage as Backup
             useEffect(() => localStorage.setItem(KEYS.GROUP_KEY, key), [key]);
@@ -527,14 +531,26 @@
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
             
             const stats = useMemo(() => {
+                // Filter records for the SELECTED MONTH only
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
+                
+                // Calculate Total Milk for SELECTED MONTH
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
+                
+                // Calculate Stats for SELECTED MONTH
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
-                
+
+                // Net Balance remains ALL TIME (Total Cost - Total Paid)
                 const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
                 const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
-                return { milk: tM, days: presentDays, absent: absentDays, net: totalCostAllTime - totalPaidAllTime };
+
+                return { 
+                    milk: tM, 
+                    days: presentDays, 
+                    absent: absentDays, 
+                    net: totalCostAllTime - totalPaidAllTime 
+                };
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
@@ -654,7 +670,7 @@
                             <button onClick={()=>{vibrate(); setTab('payment')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500'}`}><span>Payments</span> <LucideIcon name="wallet" className="w-3.5 h-3.5"/></button>
                         </div>
 
-                        {/* REMOVED LOADING BLOCK - ALWAYS RENDER CONTENT */}
+                        {/* CONTENT RENDER */}
                         {tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
                             add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
                             upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
