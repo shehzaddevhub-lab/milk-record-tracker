@@ -489,46 +489,43 @@
             const [modal, setModal] = useState({set:false, acc:false});
             const [batchMon, setBatchMon] = useState('');
             const [showAdv, setShowAdv] = useState(false);
-            const [loading, setLoading] = useState(true);
+            const [loading, setLoading] = useState(false); // Changed default to false to show UI immediately
 
             // Authenticate Anonymously on Load
             useEffect(() => {
-                if (window.signInAnonymously) {
-                    window.signInAnonymously(window.auth).then(() => {
-                        console.log("Signed in anonymously");
-                    }).catch((error) => {
-                        console.error("Auth Error", error);
-                    });
+                if (window.signInAnonymously && window.auth) {
+                    window.signInAnonymously(window.auth).catch((error) => console.error("Auth Error", error));
                 }
             }, []);
 
-            // Real-time Sync
+            // Real-time Sync (Background)
             useEffect(() => {
-                setLoading(true);
-                if (CloudService) {
+                if (CloudService && window.db) {
                     const unsubscribe = CloudService.subscribe(key, (data) => {
-                        setMilk(data.milk || []);
-                        setPay(data.payment || []);
-                        setSet(data.settings || DEFAULT_SETTINGS);
-                        setLoading(false);
+                        if(data.milk) setMilk(data.milk);
+                        if(data.payment) setPay(data.payment);
+                        if(data.settings) setSet(data.settings);
                     });
                     return () => unsubscribe();
                 }
             }, [key]);
 
-            // Local Storage as Backup (Optional, mostly using Cloud now)
+            // Local Storage as Backup
             useEffect(() => localStorage.setItem(KEYS.GROUP_KEY, key), [key]);
 
             // Helper to Save to Cloud
             const saveDataToCloud = (newMilk, newPay, newSet) => {
-                CloudService.save(key, {
-                    milk: newMilk !== undefined ? newMilk : milk,
-                    payment: newPay !== undefined ? newPay : pay,
-                    settings: newSet !== undefined ? newSet : set
-                });
+                if(CloudService) {
+                    CloudService.save(key, {
+                        milk: newMilk !== undefined ? newMilk : milk,
+                        payment: newPay !== undefined ? newPay : pay,
+                        settings: newSet !== undefined ? newSet : set
+                    });
+                }
             };
 
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
+            
             const stats = useMemo(() => {
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
@@ -612,8 +609,8 @@
                     <div className="w-full max-w-md p-3">
                         <Toast msg={toast.m} show={toast.s} close={()=>setToast({...toast,s:false})}/>
                         <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
-                            if(del.t==='m') setMilk(p=>p.filter(r=>r.id!==del.id));
-                            else setPay(p=>p.filter(r=>r.id!==del.id));
+                            if(del.t==='m') { const n=milk.filter(r=>r.id!==del.id); setMilk(n); saveDataToCloud(n); }
+                            else { const n=pay.filter(r=>r.id!==del.id); setPay(n); saveDataToCloud(undefined, n); }
                             setDel(null); notify('Deleted');
                         }}/>
                         
@@ -657,17 +654,16 @@
                             <button onClick={()=>{vibrate(); setTab('payment')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500'}`}><span>Payments</span> <LucideIcon name="wallet" className="w-3.5 h-3.5"/></button>
                         </div>
 
-                        {loading ? <div className="text-center py-10 text-gray-500 animate-pulse">Syncing Data...</div> : 
-                            (tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
-                                add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
-                                upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
-                                del={id=>setDel({id,t:'m'})}
-                            /> : <PaymentManager data={pay} 
-                                add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
-                                upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
-                                del={id=>setDel({id,t:'p'})}
-                            />)
-                        }
+                        {/* REMOVED LOADING BLOCK - ALWAYS RENDER CONTENT */}
+                        {tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
+                            add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
+                            upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
+                            del={id=>setDel({id,t:'m'})}
+                        /> : <PaymentManager data={pay} 
+                            add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
+                            upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
+                            del={id=>setDel({id,t:'p'})}
+                        />}
 
                         <InstallApp />
                         <div className="mt-6 text-center text-[10px] text-gray-400 font-urdu pb-2">Cloud Sync Enabled • {set.milkmanName}</div>
