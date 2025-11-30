@@ -57,7 +57,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        // --- FIREBASE CONFIGURATION ---
+        // --- FIREBASE CONFIGURATION (UPDATED WITH YOUR KEYS) ---
         const firebaseConfig = {
             apiKey: "AIzaSyAVRZiWF2R0Dv2_njOwwXq0IRV43d9C-ok",
             authDomain: "milk-tracker-ae3b3.firebaseapp.com",
@@ -78,7 +78,11 @@
             
             // Enable Offline Persistence
             enableIndexedDbPersistence(db).catch((err) => {
-                console.log("Offline persistence error:", err.code);
+                if (err.code == 'failed-precondition') {
+                    console.log('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
+                } else if (err.code == 'unimplemented') {
+                    console.log('The current browser does not support all of the features required to enable persistence');
+                }
             });
         } catch (e) {
             console.error("Firebase Init Error", e);
@@ -136,20 +140,21 @@
         // --- CLOUD STORAGE SERVICE ---
         const CloudService = {
             // Listen to Real-time updates
-            subscribe: (profileCode, callback, onError) => {
+            subscribe: (profileCode, callback) => {
                 if (!window.db || !profileCode) return () => {};
                 
+                // Using a unique path for your users
+                // Using 'milk_tracker_users' collection inside your project
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
                 
                 return window.onSnapshot(docRef, (docSnap) => {
                     if (docSnap.exists()) {
                         callback(docSnap.data());
                     } else {
-                        console.log("New/Empty profile on cloud");
+                        console.log("New profile created on cloud");
                     }
                 }, (error) => {
-                    console.error("Sync Error:", error);
-                    if(onError) onError(error);
+                    console.error("Sync Error (Net issue?):", error);
                 });
             },
 
@@ -307,17 +312,20 @@
             
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
-            
             const [showHist, setShowHist] = useState(false);
 
             const sub = (e, abs) => {
                 e.preventDefault();
                 vibrate();
+                
                 const val = parseFloat(q) || 0;
                 if (!abs && val <= 0) return;
+
                 const pl = { date: dt, quantity: abs ? 0 : val, isAbsent: abs };
+                
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
+                
                 if(!eid) setQ('');
             };
 
@@ -330,7 +338,6 @@
                         {toggle && <LucideIcon name={isHidden ? 'chevron-down' : 'chevron-up'} className="w-4 h-4 text-gray-400"/>}
                         <h3 className={`font-bold text-gray-700 text-sm w-full text-right ${toggle ? 'pr-2' : ''}`}>{title}</h3>
                     </div>
-                    
                     {!isHidden && (
                         <div className="overflow-x-auto max-h-64 overflow-y-auto" ref={list === cur ? listRef : null}>
                             <table className="w-full text-xs text-gray-600 text-right">
@@ -482,75 +489,55 @@
             const [modal, setModal] = useState({set:false, acc:false});
             const [batchMon, setBatchMon] = useState('');
             const [showAdv, setShowAdv] = useState(false);
-            const [loading, setLoading] = useState(false); // Changed default to false to show UI immediately
-            const [user, setUser] = useState(null);
+            const [loading, setLoading] = useState(true);
 
             // Authenticate Anonymously on Load
             useEffect(() => {
-                if (window.signInAnonymously && window.auth) {
-                    window.signInAnonymously(window.auth).catch((error) => console.error("Auth Error", error));
-                }
-                // Track auth state
-                if (window.auth && window.onAuthStateChanged) {
-                    window.onAuthStateChanged(window.auth, (u) => setUser(u));
+                if (window.signInAnonymously) {
+                    window.signInAnonymously(window.auth).then(() => {
+                        console.log("Signed in anonymously");
+                    }).catch((error) => {
+                        console.error("Auth Error", error);
+                    });
                 }
             }, []);
 
-            // Real-time Sync (Background)
+            // Real-time Sync
             useEffect(() => {
-                // Only sync if user is logged in (even anonymously)
-                if (CloudService && window.db && user) {
+                setLoading(true);
+                if (CloudService) {
                     const unsubscribe = CloudService.subscribe(key, (data) => {
-                        if(data.milk) setMilk(data.milk);
-                        if(data.payment) setPay(data.payment);
-                        if(data.settings) setSet(data.settings);
-                    }, (err) => {
-                        if(err.code === 'permission-denied') {
-                            // Notify user about rules if they fail
-                            notify('Sync Error: Permission Denied. Check Firebase Rules.');
-                        }
+                        setMilk(data.milk || []);
+                        setPay(data.payment || []);
+                        setSet(data.settings || DEFAULT_SETTINGS);
+                        setLoading(false);
                     });
                     return () => unsubscribe();
                 }
-            }, [key, user]); // Dependency on user ensures we wait for auth
+            }, [key]);
 
-            // Local Storage as Backup
+            // Local Storage as Backup (Optional, mostly using Cloud now)
             useEffect(() => localStorage.setItem(KEYS.GROUP_KEY, key), [key]);
 
             // Helper to Save to Cloud
             const saveDataToCloud = (newMilk, newPay, newSet) => {
-                if(CloudService) {
-                    CloudService.save(key, {
-                        milk: newMilk !== undefined ? newMilk : milk,
-                        payment: newPay !== undefined ? newPay : pay,
-                        settings: newSet !== undefined ? newSet : set
-                    });
-                }
+                CloudService.save(key, {
+                    milk: newMilk !== undefined ? newMilk : milk,
+                    payment: newPay !== undefined ? newPay : pay,
+                    settings: newSet !== undefined ? newSet : set
+                });
             };
 
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
-            
             const stats = useMemo(() => {
-                // Filter records for the SELECTED MONTH only
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
-                
-                // Calculate Total Milk for SELECTED MONTH
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
-                
-                // Calculate Stats for SELECTED MONTH
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
-
-                // Net Balance remains ALL TIME (Total Cost - Total Paid)
+                
                 const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
                 const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
-
-                return { 
-                    milk: tM, 
-                    days: presentDays, 
-                    absent: absentDays, 
-                    net: totalCostAllTime - totalPaidAllTime 
-                };
+                return { milk: tM, days: presentDays, absent: absentDays, net: totalCostAllTime - totalPaidAllTime };
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
@@ -625,8 +612,8 @@
                     <div className="w-full max-w-md p-3">
                         <Toast msg={toast.m} show={toast.s} close={()=>setToast({...toast,s:false})}/>
                         <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
-                            if(del.t==='m') { const n=milk.filter(r=>r.id!==del.id); setMilk(n); saveDataToCloud(n); }
-                            else { const n=pay.filter(r=>r.id!==del.id); setPay(n); saveDataToCloud(undefined, n); }
+                            if(del.t==='m') setMilk(p=>p.filter(r=>r.id!==del.id));
+                            else setPay(p=>p.filter(r=>r.id!==del.id));
                             setDel(null); notify('Deleted');
                         }}/>
                         
@@ -670,16 +657,17 @@
                             <button onClick={()=>{vibrate(); setTab('payment')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500'}`}><span>Payments</span> <LucideIcon name="wallet" className="w-3.5 h-3.5"/></button>
                         </div>
 
-                        {/* CONTENT RENDER */}
-                        {tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
-                            add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
-                            upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
-                            del={id=>setDel({id,t:'m'})}
-                        /> : <PaymentManager data={pay} 
-                            add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
-                            upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
-                            del={id=>setDel({id,t:'p'})}
-                        />}
+                        {loading ? <div className="text-center py-10 text-gray-500 animate-pulse">Syncing Data...</div> : 
+                            (tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
+                                add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
+                                upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
+                                del={id=>setDel({id,t:'m'})}
+                            /> : <PaymentManager data={pay} 
+                                add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
+                                upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
+                                del={id=>setDel({id,t:'p'})}
+                            />)
+                        }
 
                         <InstallApp />
                         <div className="mt-6 text-center text-[10px] text-gray-400 font-urdu pb-2">Cloud Sync Enabled • {set.milkmanName}</div>
