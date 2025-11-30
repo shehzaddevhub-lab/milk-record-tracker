@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Milk Tracker Pro</title>
+    <title>Milk Tracker</title>
     <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
     
@@ -220,7 +220,9 @@
             const [view, setView] = useState('list');
             const listRef = useRef(null);
             
+            // Current Month Records
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
+            // History (Previous Records) - excluding current month
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
             
             const [showHist, setShowHist] = useState(false);
@@ -236,6 +238,7 @@
                 if(!eid) setQ('');
             };
 
+            // Updated Render Table to support Titles and Toggle
             const renderTable = (list, title, toggle=false, isHidden=false, onToggle=null) => (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-3 font-urdu">
                     <div 
@@ -259,7 +262,7 @@
                                 </thead>
                                 <tbody>
                                     {list.length === 0 ? (
-                                        <tr><td colSpan={4} className="p-4 text-center text-gray-400 text-[10px]">No records</td></tr>
+                                        <tr><td colSpan={4} className="p-4 text-center text-gray-400 text-[10px] italic">No records</td></tr>
                                     ) : (
                                         list.map(r => (
                                             <tr key={r.id} className={r.isAbsent ? 'bg-red-50' : 'border-b last:border-0'}>
@@ -285,11 +288,10 @@
                     <div className="bg-white p-4 rounded-xl shadow-md border border-gray-100">
                         <h2 className="text-lg font-bold mb-4 text-center text-gray-800 font-urdu">دودھ کا اندراج (Milk Entry)</h2>
                         <form className="space-y-4">
-                            {/* Date - Centered & Clear */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 mb-1 text-right">تاریخ (Date)</label>
                                 <div className="relative">
-                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-green-500 text-sm font-bold text-gray-700" dir="ltr"/>
+                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-green-500 text-sm font-bold text-gray-700" dir="ltr" lang="en-GB"/>
                                 </div>
                             </div>
                             
@@ -323,7 +325,10 @@
                         </div>
                     </div>
                     
+                    {/* CURRENT MONTH RECORDS */}
                     {view==='list' ? renderTable(cur, 'Daily Records (موجودہ ریکارڈ)') : <CalendarView records={cur} month={month} />}
+                    
+                    {/* PREVIOUS HISTORY (COLLAPSIBLE) */}
                     {hist.length > 0 && renderTable(hist, 'Previous History (پرانا ریکارڈ)', true, !showHist, () => {vibrate(); setShowHist(!showHist)})}
                 </div>
             );
@@ -351,9 +356,8 @@
                         <form onSubmit={sub} className="space-y-4">
                             <div className="flex gap-3">
                                 <div className="flex-1">
-                                    {/* Date - Centered */}
                                     <label className="block text-xs font-bold text-right text-gray-500 mb-1">تاریخ (Date)</label>
-                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-orange-500 text-sm" dir="ltr"/>
+                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-orange-500 text-sm" dir="ltr" lang="en-GB"/>
                                 </div>
                                 <div className="flex-1">
                                     <label className="block text-xs font-bold text-right text-gray-500 mb-1">رقم (Amount)</label>
@@ -369,12 +373,12 @@
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-2 font-urdu">
                         <div className="p-3 bg-gray-50 border-b"><h3 className="font-bold text-sm text-right">Payment History</h3></div>
                         <div className="overflow-x-auto max-h-56 overflow-y-auto"><table className="w-full text-xs text-gray-600 text-right">
-                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Qty</th><th className="px-3 py-2 text-right">Amt</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
-                            <tbody>{data.length===0 ? <tr><td colSpan={4} className="p-4 text-center text-gray-400 italic">No payments</td></tr> : data.map(r=>(
+                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Paid</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
+                            <tbody>{data.length===0 ? <tr><td colSpan={3} className="p-4 text-center text-gray-400 italic">No payments</td></tr> : data.map(r=>(
                                 <tr key={r.id}>
                                     <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
                                     <td className="px-3 py-2 font-bold text-emerald-700" dir="ltr">{r.amount.toLocaleString()}</td>
-                                    <td className="px-3 py-2 flex justify-center gap-2" colSpan={2}>
+                                    <td className="px-3 py-2 flex justify-center gap-2">
                                         <button type="button" onClick={()=>{vibrate(); setDt(r.date);setA(r.amount);setEid(r.id);window.scrollTo(0,0)}} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
                                         <button type="button" onClick={()=>{vibrate(); del(r.id)}} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4"/></button>
                                     </td>
@@ -413,7 +417,6 @@
             useEffect(() => Storage.setKey(key), [key]);
 
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
-            
             const stats = useMemo(() => {
                 // Filter records for the SELECTED MONTH only
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
@@ -456,6 +459,7 @@
                 setter(r);
             };
 
+            // NEW: Backup & Restore Logic
             const backupData = () => {
                 vibrate();
                 const data = {
@@ -524,7 +528,7 @@
                         {/* COLLAPSIBLE MENU */}
                         {menuOpen && (
                             <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 flex justify-between items-center animate-fade-in mx-1">
-                                {/* Profile */}
+                                {/* Profile (Right in RTL) */}
                                 <button onClick={()=>{vibrate(); setModal({...modal,acc:true})}} className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-800 min-w-[60px]">
                                     <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
                                         <LucideIcon name="user-circle" className="w-6 h-6 text-gray-500"/>
@@ -532,7 +536,7 @@
                                     <span className="text-[10px] font-medium text-gray-500">Profile</span>
                                 </button>
 
-                                {/* Month Selector */}
+                                {/* Month Selector (Center) */}
                                 <div className="flex flex-col items-center flex-1 px-2">
                                     <div className="relative w-full max-w-[140px]">
                                         <select value={mon} onChange={e=>{vibrate(); setMon(e.target.value)}} className="w-full appearance-none bg-white border border-gray-200 rounded-lg py-1.5 px-2 text-sm font-bold text-gray-700 shadow-sm outline-none focus:border-blue-400 dir-ltr text-center">
@@ -545,7 +549,7 @@
                                     <span className="text-[9px] text-gray-400 mt-1">Select Month</span>
                                 </div>
 
-                                {/* Settings */}
+                                {/* Settings (Left in RTL) */}
                                 <button onClick={()=>{vibrate(); setModal({...modal,set:true})}} className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-800 min-w-[60px]">
                                     <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
                                         <LucideIcon name="settings" className="w-6 h-6 text-gray-500"/>
