@@ -57,7 +57,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 
-        // --- FIREBASE CONFIGURATION (UPDATED WITH YOUR KEYS) ---
+        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyAVRZiWF2R0Dv2_njOwwXq0IRV43d9C-ok",
             authDomain: "milk-tracker-ae3b3.firebaseapp.com",
@@ -69,37 +69,30 @@
         };
 
         // Initialize Firebase
-        let app, db, auth, analytics;
         try {
-            app = initializeApp(firebaseConfig);
-            db = getFirestore(app);
-            auth = getAuth(app);
-            analytics = getAnalytics(app);
+            const app = initializeApp(firebaseConfig);
+            window.db = getFirestore(app);
+            window.auth = getAuth(app);
+            window.analytics = getAnalytics(app);
             
-            // Enable Offline Persistence
-            enableIndexedDbPersistence(db).catch((err) => {
-                if (err.code == 'failed-precondition') {
-                    console.log('Multiple tabs open, persistence can only be enabled in one tab at a a time.');
-                } else if (err.code == 'unimplemented') {
-                    console.log('The current browser does not support all of the features required to enable persistence');
-                }
+            // Expose functions globally
+            window.signInAnonymously = signInAnonymously;
+            window.onAuthStateChanged = onAuthStateChanged;
+            window.doc = doc;
+            window.setDoc = setDoc;
+            window.onSnapshot = onSnapshot;
+            
+            // Enable Persistence
+            enableIndexedDbPersistence(window.db).catch((err) => {
+                console.log("Offline persistence note:", err.code);
             });
+            
+            console.log("Firebase Initialized Successfully");
         } catch (e) {
             console.error("Firebase Init Error", e);
         }
 
         const appId = "milk-tracker-ae3b3";
-
-        // Expose React & Logic to Global Scope for Babel
-        window.db = db;
-        window.auth = auth;
-        window.signInAnonymously = signInAnonymously;
-        window.onAuthStateChanged = onAuthStateChanged;
-        window.doc = doc;
-        window.setDoc = setDoc;
-        window.onSnapshot = onSnapshot;
-        window.collection = collection;
-        window.appId = appId;
     </script>
 
     <script type="text/babel">
@@ -139,35 +132,22 @@
 
         // --- CLOUD STORAGE SERVICE ---
         const CloudService = {
-            // Listen to Real-time updates
             subscribe: (profileCode, callback, onError) => {
                 if (!window.db || !profileCode) return () => {};
-                
-                // Using 'milk_tracker_users' collection inside your project
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
-                
                 return window.onSnapshot(docRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        callback(docSnap.data());
-                    } else {
-                        console.log("New/Empty profile on cloud");
-                        // If empty, we might want to init it, but let's just wait for save
-                    }
+                    if (docSnap.exists()) callback(docSnap.data());
+                    else console.log("Profile not found on cloud (New)");
                 }, (error) => {
                     console.error("Sync Error:", error);
                     if(onError) onError(error);
                 });
             },
-
-            // Save Data
             save: async (profileCode, data) => {
                 if (!window.db || !profileCode) return;
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
-                try {
-                    await window.setDoc(docRef, data, { merge: true });
-                } catch (e) {
-                    console.error("Save Error:", e);
-                }
+                try { await window.setDoc(docRef, data, { merge: true }); } 
+                catch (e) { console.error("Save Error:", e); }
             }
         };
 
@@ -311,31 +291,21 @@
             const [view, setView] = useState('list');
             const listRef = useRef(null);
             
-            // Current Month Records
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
-            // History (Previous Records) - excluding current month
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
-            
             const [showHist, setShowHist] = useState(false);
 
             const sub = (e, abs) => {
                 e.preventDefault();
                 vibrate();
-                
                 const val = parseFloat(q) || 0;
-
-                // Validation: If NOT absent and value is 0, don't submit
                 if (!abs && val <= 0) return;
-
                 const pl = { date: dt, quantity: abs ? 0 : val, isAbsent: abs };
-                
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
-                
                 if(!eid) setQ('');
             };
 
-            // Updated Render Table to support Titles and Toggle
             const renderTable = (list, title, toggle=false, isHidden=false, onToggle=null) => (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-3 font-urdu">
                     <div 
@@ -345,7 +315,6 @@
                         {toggle && <LucideIcon name={isHidden ? 'chevron-down' : 'chevron-up'} className="w-4 h-4 text-gray-400"/>}
                         <h3 className={`font-bold text-gray-700 text-sm w-full text-right ${toggle ? 'pr-2' : ''}`}>{title}</h3>
                     </div>
-                    
                     {!isHidden && (
                         <div className="overflow-x-auto max-h-64 overflow-y-auto" ref={list === cur ? listRef : null}>
                             <table className="w-full text-xs text-gray-600 text-right">
@@ -391,18 +360,13 @@
                                     <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-green-500 text-sm font-bold text-gray-700" dir="ltr" lang="en-GB"/>
                                 </div>
                             </div>
-                            
                             <div className="flex gap-3 items-end">
                                 <div className="flex-1">
                                     <label className="block text-xs font-bold text-gray-500 mb-1 text-right">مقدار - Ltr (Quantity)</label>
                                     <input type="number" step="0.01" value={q} onChange={e=>setQ(e.target.value)} placeholder="0.00" className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500 text-sm" dir="ltr"/>
                                 </div>
                                 <div className="w-auto flex items-end">
-                                    <button 
-                                        type="button" 
-                                        onClick={e=>sub(e,true)} 
-                                        className="h-[42px] px-4 bg-red-600 text-white rounded-lg text-xs font-bold flex flex-col items-center justify-center border border-red-700 shadow-sm active:scale-95 transition-transform hover:bg-red-700"
-                                    >
+                                    <button type="button" onClick={e=>sub(e,true)} className="h-[42px] px-4 bg-red-600 text-white rounded-lg text-xs font-bold flex flex-col items-center justify-center border border-red-700 shadow-sm active:scale-95 transition-transform hover:bg-red-700">
                                         <span>Absent</span>
                                         <span className="font-urdu text-[9px]">(غیر حاضر)</span>
                                     </button>
@@ -421,11 +385,7 @@
                             <button onClick={()=>{vibrate(); setView('calendar')}} className={`p-1.5 rounded-md transition-all ${view==='calendar'?'bg-blue-50 text-blue-600':'text-gray-400 hover:text-gray-600'}`}><LucideIcon name="calendar" className="w-4 h-4"/></button>
                         </div>
                     </div>
-                    
-                    {/* CURRENT MONTH RECORDS */}
                     {view==='list' ? renderTable(cur, 'Daily Records (موجودہ ریکارڈ)') : <CalendarView records={cur} month={month} />}
-                    
-                    {/* PREVIOUS HISTORY (COLLAPSIBLE) */}
                     {hist.length > 0 && renderTable(hist, 'Previous History (پرانا ریکارڈ)', true, !showHist, () => {vibrate(); setShowHist(!showHist)})}
                 </div>
             );
@@ -439,12 +399,8 @@
             const sub = (e) => {
                 e.preventDefault();
                 vibrate();
-                
                 const val = parseFloat(a) || 0;
-
-                // Validation: If amount is 0, don't submit
                 if (val <= 0) return;
-
                 const pl = { date: dt, amount: val };
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); } else add(pl);
                 if(!eid) setA('');
@@ -504,42 +460,53 @@
             const [modal, setModal] = useState({set:false, acc:false});
             const [batchMon, setBatchMon] = useState('');
             const [showAdv, setShowAdv] = useState(false);
-            const [loading, setLoading] = useState(false); // Changed default to false to show UI immediately
+            const [loading, setLoading] = useState(false);
             const [user, setUser] = useState(null);
 
-            // Authenticate Anonymously on Load
+            // Check Auth + Wait for Firebase Init
             useEffect(() => {
-                if (window.signInAnonymously && window.auth) {
-                    window.signInAnonymously(window.auth).catch((error) => console.error("Auth Error", error));
-                }
-                // Track auth state
-                if (window.auth && window.onAuthStateChanged) {
-                    window.onAuthStateChanged(window.auth, (u) => setUser(u));
-                }
+                const initAuth = async () => {
+                    // Poll until window.auth is ready
+                    let attempts = 0;
+                    while (!window.auth && attempts < 50) {
+                        await new Promise(r => setTimeout(r, 100));
+                        attempts++;
+                    }
+
+                    if (window.auth) {
+                        window.onAuthStateChanged(window.auth, (u) => {
+                            if (u) {
+                                setUser(u);
+                            } else {
+                                // If not logged in, sign in anonymously
+                                window.signInAnonymously(window.auth).catch(e => console.error("Auth Failed", e));
+                            }
+                        });
+                    } else {
+                        console.error("Firebase Auth not loaded");
+                    }
+                };
+                initAuth();
             }, []);
 
-            // Real-time Sync (Background)
+            // Real-time Sync
             useEffect(() => {
-                // Only sync if user is logged in (even anonymously)
                 if (CloudService && window.db && user) {
                     const unsubscribe = CloudService.subscribe(key, (data) => {
-                        if(data.milk) setMilk(data.milk);
-                        if(data.payment) setPay(data.payment);
-                        if(data.settings) setSet(data.settings);
-                    }, (err) => {
-                        if(err.code === 'permission-denied') {
-                            // Notify user about rules if they fail
-                            notify('Sync Error: Permission Denied. Check Firebase Rules.');
+                        if(data) {
+                           if(data.milk) setMilk(data.milk);
+                           if(data.payment) setPay(data.payment);
+                           if(data.settings) setSet(data.settings);
                         }
+                    }, (err) => {
+                        if(err.code === 'permission-denied') notify('Sync Error: Check Rules');
                     });
                     return () => unsubscribe();
                 }
-            }, [key, user]); // Dependency on user ensures we wait for auth
+            }, [key, user]);
 
-            // Local Storage as Backup
             useEffect(() => localStorage.setItem(KEYS.GROUP_KEY, key), [key]);
 
-            // Helper to Save to Cloud
             const saveDataToCloud = (newMilk, newPay, newSet) => {
                 if(CloudService) {
                     CloudService.save(key, {
@@ -553,26 +520,13 @@
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
             
             const stats = useMemo(() => {
-                // Filter records for the SELECTED MONTH only
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
-                
-                // Calculate Total Milk for SELECTED MONTH
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
-                
-                // Calculate Stats for SELECTED MONTH
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
-
-                // Net Balance remains ALL TIME (Total Cost - Total Paid)
                 const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
                 const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
-
-                return { 
-                    milk: tM, 
-                    days: presentDays, 
-                    absent: absentDays, 
-                    net: totalCostAllTime - totalPaidAllTime 
-                };
+                return { milk: tM, days: presentDays, absent: absentDays, net: totalCostAllTime - totalPaidAllTime };
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
@@ -584,9 +538,7 @@
                 vibrate();
                 if(!confirm(`Update price for all records in ${m}?`)) return;
                 const newMilk = milk.map(r => r.date.startsWith(m) ? {...r, pricePerUnit: p} : r);
-                setMilk(newMilk); // Optimistic update
-                saveDataToCloud(newMilk);
-                notify('Batch Updated');
+                setMilk(newMilk); saveDataToCloud(newMilk); notify('Batch Updated');
             };
 
             const genKey = (setter) => {
@@ -596,48 +548,27 @@
                 setter(r);
             };
 
-            // NEW: Backup & Restore Logic
             const backupData = () => {
                 vibrate();
-                const data = {
-                    milk: Storage.getMilk(key),
-                    payment: Storage.getPay(key),
-                    settings: Storage.getSet(key),
-                    date: new Date().toISOString()
-                };
+                const data = { milk: Storage.getMilk(key), payment: Storage.getPay(key), settings: Storage.getSet(key), date: new Date().toISOString() };
                 const blob = new Blob([JSON.stringify(data, null, 2)], {type: "application/json"});
                 const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `milk_tracker_backup_${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                notify("Backup Downloaded");
+                const a = document.createElement("a"); a.href = url; a.download = `milk_tracker_backup.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a); notify("Backup Downloaded");
             };
 
             const restoreData = (e) => {
-                const file = e.target.files[0];
-                if(!file) return;
+                const file = e.target.files[0]; if(!file) return;
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
                         const data = JSON.parse(event.target.result);
-                        if(data.milk && data.payment) {
-                            if(confirm("Are you sure? This will replace your current data.\n(کیا آپ واقعی پرانا ڈیٹا ختم کر کے یہ فائل بحال کرنا چاہتے ہیں؟)")) {
-                                vibrate();
-                                setMilk(data.milk);
-                                setPay(data.payment);
-                                if(data.settings) setSet(data.settings);
-                                notify("Data Restored!");
-                                setModal({...modal, set:false});
-                            }
-                        } else {
-                            alert("Invalid Backup File");
+                        if(data.milk && data.payment && confirm("Replace current data?")) {
+                            vibrate(); setMilk(data.milk); setPay(data.payment); if(data.settings) setSet(data.settings);
+                            saveDataToCloud(data.milk, data.payment, data.settings);
+                            notify("Data Restored!"); setModal({...modal, set:false});
                         }
-                    } catch(err) {
-                        alert("Error reading file");
-                    }
+                    } catch(err) { alert("Error reading file"); }
                 };
                 reader.readAsText(file);
             };
@@ -652,17 +583,12 @@
                             setDel(null); notify('Deleted');
                         }}/>
                         
-                        {/* TOGGLE ARROW HEADER */}
                         <div className="flex justify-center py-2">
-                            <button 
-                                onClick={() => {vibrate(); setMenuOpen(!menuOpen)}} 
-                                className="text-gray-400 hover:text-gray-600 transition-colors p-1 outline-none"
-                            >
+                            <button onClick={() => {vibrate(); setMenuOpen(!menuOpen)}} className="text-gray-400 hover:text-gray-600 transition-colors p-1 outline-none">
                                 <LucideIcon name={menuOpen ? "chevron-up" : "chevron-down"} className="w-6 h-6" />
                             </button>
                         </div>
 
-                        {/* COLLAPSIBLE MENU */}
                         {menuOpen && (
                             <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 mb-4 flex justify-between items-center animate-fade-in mx-1">
                                 <button onClick={()=>{vibrate(); setModal({...modal,acc:true})}} className="flex flex-col items-center gap-1 text-gray-600 hover:text-gray-800 min-w-[60px]">
@@ -692,7 +618,6 @@
                             <button onClick={()=>{vibrate(); setTab('payment')}} className={`flex-1 py-2 rounded-md text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${tab==='payment'?'bg-white text-orange-600 shadow-sm':'text-gray-500'}`}><span>Payments</span> <LucideIcon name="wallet" className="w-3.5 h-3.5"/></button>
                         </div>
 
-                        {/* REMOVED LOADING BLOCK - ALWAYS RENDER CONTENT */}
                         {tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
                             add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
                             upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
@@ -704,9 +629,10 @@
                         />}
 
                         <InstallApp />
-                        
-                        {/* UPDATED FOOTER TO SHOW PROFILE CODE */}
-                        <div className="mt-6 text-center text-[10px] text-gray-400 font-urdu pb-2">Cloud Sync Active • Profile: {key}</div>
+                        <div className="mt-6 text-center text-[10px] text-gray-400 font-urdu pb-2">
+                            <span className={`inline-block w-2 h-2 rounded-full mr-1 ${user ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                            Profile: {key}
+                        </div>
 
                         {/* Settings Modal */}
                         {modal.set && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in"><div className="bg-white rounded-xl w-full max-w-md overflow-hidden shadow-2xl"><div className="p-4 border-b flex justify-between items-center"><h2 className="font-bold text-xl text-gray-800">Settings (سیٹنگز)</h2><button onClick={()=>{vibrate(); setModal({...modal,set:false})}} className="p-1 hover:bg-gray-100 rounded-full"><LucideIcon name="x" className="w-5 h-5 text-gray-500"/></button></div><div className="p-6 overflow-y-auto max-h-[85vh]"><div className="mb-6"><label className="block text-sm font-bold text-gray-700 mb-2 text-right">Default Price Per Liter (فی لیٹر قیمت)</label><div className="relative"><span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg">Rs.</span><input type="number" min="0" step="0.01" value={set.pricePerUnit} onChange={e=>setSet({...set,pricePerUnit:parseFloat(e.target.value)})} className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-left text-lg text-gray-800"/></div><p className="text-xs text-gray-500 mt-2 text-right leading-relaxed font-urdu">نئی قیمت صرف نئے اندراجات پر لاگو ہوگی۔ پرانے ریکارڈ تبدیل نہیں ہوں گے۔</p></div><div><h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4 text-center">MILKMAN DETAILS</h3><div className="space-y-4"><div><label className="block text-sm font-bold text-gray-700 mb-1 text-right">Name (نام)</label><input type="text" value={set.milkmanName} onChange={e=>setSet({...set,milkmanName:e.target.value})} placeholder="Milkman Name" className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-right"/></div><div><label className="block text-sm font-bold text-gray-700 mb-1 text-right">Contact (رابطہ نمبر)</label><input type="tel" value={set.milkmanContact} onChange={e=>setSet({...set,milkmanContact:e.target.value})} placeholder="03XX XXXXXXX" className="w-full p-3 border border-gray-300 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-left" dir="ltr"/></div></div></div><button onClick={()=>{vibrate(); saveDataToCloud(undefined, undefined, set); setModal({...modal,set:false}); notify('Settings Saved')}} className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-lg shadow-lg hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 mt-8"><LucideIcon name="save" className="w-5 h-5"/> Save Settings</button>
@@ -714,12 +640,6 @@
 
                         {/* Profile Modal */}
                         {modal.acc && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm"><div className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl"><div className="p-4 border-b flex justify-between items-center"><h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">Data Access <LucideIcon name="key" className="w-5 h-5 text-blue-600"/></h2><button onClick={()=>{vibrate(); setModal({...modal,acc:false})}} className="p-2 hover:bg-gray-100 rounded-full"><LucideIcon name="x" className="w-5 h-5 text-gray-500"/></button></div><div className="p-6 text-center space-y-4"><div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center"><p className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-2">CURRENT ACTIVE CODE</p><h2 className="text-3xl font-bold text-blue-900 font-mono tracking-widest break-all">{key}</h2><p className="text-blue-400 text-xs mt-2 font-urdu">(یہ کوڈ اپنے پاس محفوظ رکھیں)</p></div><div><h3 className="text-center text-gray-600 font-semibold mb-4">Switch or Load Profile</h3><div className="flex gap-3 mb-4"><input id="nk" placeholder="ENTER CODE" className="flex-1 border border-gray-300 rounded-lg text-center font-mono uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500 text-gray-600 p-3" dir="ltr"/><button type="button" onClick={()=>{vibrate(); genKey((v)=>document.getElementById('nk').value=v)}} className="bg-emerald-100 text-emerald-600 p-3 rounded-lg hover:bg-emerald-200 transition-colors"><LucideIcon name="refresh-cw" className="w-6 h-6"/></button></div><button onClick={()=>{const k=document.getElementById('nk').value.trim().toUpperCase();if(k.length>3){vibrate(); setKey(k);setModal({...modal,acc:false});notify('Loaded')}}} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"><LucideIcon name="log-in" className="w-5 h-5"/> Load / Switch Profile</button></div></div></div></div>}
-
-                        <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
-                            if(del.t==='m') { const n=milk.filter(r=>r.id!==del.id); setMilk(n); saveDataToCloud(n); }
-                            else { const n=pay.filter(r=>r.id!==del.id); setPay(n); saveDataToCloud(undefined, n); }
-                            setDel(null); notify('Deleted');
-                        }}/>
                     </div>
                 </div>
             );
