@@ -7,6 +7,11 @@
     <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
     
+    <!-- PWA Links (Icon & Manifest) -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
+
     <!-- 1. LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -48,6 +53,15 @@
     <!-- 3. APPLICATION LOGIC -->
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker Registered'))
+                    .catch(err => console.log('Service Worker Failed', err));
+            });
+        }
 
         const vibrate = () => { if (navigator.vibrate) navigator.vibrate(15); };
 
@@ -220,9 +234,7 @@
             const [view, setView] = useState('list');
             const listRef = useRef(null);
             
-            // Current Month Records
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
-            // History (Previous Records) - excluding current month
             const hist = useMemo(() => data.filter(r => !r.date.startsWith(month)), [data, month]);
             
             const [showHist, setShowHist] = useState(false);
@@ -238,7 +250,6 @@
                 if(!eid) setQ('');
             };
 
-            // Updated Render Table to support Titles and Toggle
             const renderTable = (list, title, toggle=false, isHidden=false, onToggle=null) => (
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-3 font-urdu">
                     <div 
@@ -325,7 +336,6 @@
                         </div>
                     </div>
                     
-                    {/* CURRENT MONTH RECORDS */}
                     {view==='list' ? renderTable(cur, 'Daily Records (موجودہ ریکارڈ)') : <CalendarView records={cur} month={month} />}
                     
                     {/* PREVIOUS HISTORY (COLLAPSIBLE) */}
@@ -418,26 +428,13 @@
 
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
             const stats = useMemo(() => {
-                // Filter records for the SELECTED MONTH only
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
-                
-                // Calculate Total Milk for SELECTED MONTH
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
-                
-                // Calculate Stats for SELECTED MONTH
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
-
-                // Net Balance remains ALL TIME (Total Cost - Total Paid)
                 const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
                 const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
-
-                return { 
-                    milk: tM, 
-                    days: presentDays, 
-                    absent: absentDays, 
-                    net: totalCostAllTime - totalPaidAllTime 
-                };
+                return { milk: tM, days: presentDays, absent: absentDays, net: totalCostAllTime - totalPaidAllTime };
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
@@ -459,7 +456,6 @@
                 setter(r);
             };
 
-            // NEW: Backup & Restore Logic
             const backupData = () => {
                 vibrate();
                 const data = {
