@@ -112,6 +112,13 @@
             return <span ref={ref} onClick={onClick} className="inline-flex justify-center items-center"></span>;
         };
 
+        // --- HELPER FUNCTIONS ---
+        // Get strict local date format YYYY-MM-DD
+        const getLocalDate = () => {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        };
+
         // --- CONSTANTS & STORAGE ---
         const KEYS = { MILK: 'milk_records_', PAYMENT: 'payment_records_', SETTINGS: 'settings_', GROUP_KEY: 'milk_tracker_key' };
         const DEFAULT_SETTINGS = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
@@ -301,13 +308,25 @@
         };
 
         const MilkManager = ({ data, add, upd, del, price, month }) => {
-            const [dt, setDt] = useState(new Date().toISOString().split('T'));
+            const [dt, setDt] = useState(getLocalDate());
             const [q, setQ] = useState('');
             const [dts, setDts] = useState(''); // NEW: Details state
             const [eid, setEid] = useState(null);
             const [view, setView] = useState('list');
             const listRef = useRef(null);
             
+            // Sync default date with selected month
+            useEffect(() => {
+                if (!eid) {
+                    const today = getLocalDate();
+                    if (today.startsWith(month)) {
+                        setDt(today);
+                    } else {
+                        setDt(`${month}-01`); // Defaults to 1st of selected month
+                    }
+                }
+            }, [month, eid]);
+
             // Current Month Records
             const cur = useMemo(() => data.filter(r => r.date.startsWith(month)), [data, month]);
             // History (Previous Records) - excluding current month
@@ -327,7 +346,13 @@
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
                 
-                if(!eid) { setQ(''); setDts(''); }
+                if(!eid) { 
+                    setQ(''); 
+                    setDts(''); 
+                    // Auto reset date to selected month default
+                    const today = getLocalDate();
+                    setDt(today.startsWith(month) ? today : `${month}-01`);
+                }
             };
 
             // Updated Render Table to support Titles and Toggle
@@ -436,10 +461,22 @@
             );
         };
 
-        const PaymentManager = ({ data, add, upd, del }) => {
-            const [dt, setDt] = useState(new Date().toISOString().split('T'));
+        const PaymentManager = ({ data, add, upd, del, month }) => {
+            const [dt, setDt] = useState(getLocalDate());
             const [a, setA] = useState('');
             const [eid, setEid] = useState(null);
+
+            // Sync default date with selected month
+            useEffect(() => {
+                if (!eid) {
+                    const today = getLocalDate();
+                    if (today.startsWith(month)) {
+                        setDt(today);
+                    } else {
+                        setDt(`${month}-01`); // Defaults to 1st of selected month
+                    }
+                }
+            }, [month, eid]);
             
             const sub = (e) => {
                 e.preventDefault();
@@ -452,7 +489,13 @@
 
                 const pl = { date: dt, amount: val };
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); } else add(pl);
-                if(!eid) setA('');
+                
+                if(!eid) { 
+                    setA(''); 
+                    // Auto reset date to selected month default
+                    const today = getLocalDate();
+                    setDt(today.startsWith(month) ? today : `${month}-01`);
+                }
             };
 
             return (
@@ -463,7 +506,7 @@
                             <div className="flex gap-3">
                                 <div className="flex-1">
                                     <label className="block text-xs font-bold text-right text-gray-500 mb-1">تاریخ (Date)</label>
-                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-orange-500 text-sm" dir="ltr" lang="en-GB"/>
+                                    <input type="date" value={dt} onChange={e=>setDt(e.target.value)} className="w-full p-2.5 border border-gray-300 rounded-lg text-center outline-none focus:ring-2 focus:ring-orange-500 text-sm font-bold text-gray-700" dir="ltr" lang="en-GB"/>
                                 </div>
                                 <div className="flex-1">
                                     <label className="block text-xs font-bold text-right text-gray-500 mb-1">رقم (Amount)</label>
@@ -482,7 +525,7 @@
                             <thead className="bg-gray-50 border-b sticky top-0 z-10"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Paid</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
                             <tbody>{data.length===0 ? <tr><td colSpan={3} className="p-4 text-center text-gray-400 italic">No payments</td></tr> : data.map(r=>(
                                 <tr key={r.id}>
-                                    <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                    <td className="px-3 py-2 font-bold text-gray-700" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
                                     <td className="px-3 py-2 font-bold text-emerald-700" dir="ltr">{r.amount.toLocaleString()}</td>
                                     <td className="px-3 py-2 flex justify-center gap-2">
                                         <button type="button" onClick={()=>{vibrate(); setDt(r.date);setA(r.amount);setEid(r.id);window.scrollTo(0,0)}} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4"/></button>
@@ -505,11 +548,16 @@
             const [menuOpen, setMenuOpen] = useState(false);
             const [toast, setToast] = useState({m:'', s:false});
             const [del, setDel] = useState(null);
-            const [mon, setMon] = useState(new Date().toISOString().substring(0,7));
             const [modal, setModal] = useState({set:false, acc:false});
             const [batchMon, setBatchMon] = useState('');
             const [showAdv, setShowAdv] = useState(false);
             const [loading, setLoading] = useState(false); 
+
+            // Initialize selected month to accurate local YYYY-MM
+            const [mon, setMon] = useState(() => {
+                const d = new Date();
+                return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+            });
 
             // Real-time Sync
             useEffect(() => {
@@ -576,8 +624,10 @@
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
-                const d = new Date(); d.setMonth(d.getMonth()-i);
-                return {v: d.toISOString().substring(0,7), l: d.toLocaleString('default',{month:'long',year:'numeric'})};
+                const d = new Date(); 
+                d.setMonth(d.getMonth()-i);
+                const v = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                return {v, l: d.toLocaleString('default',{month:'long',year:'numeric'})};
             }), []);
 
             const batchUpdate = (m, p) => {
@@ -674,7 +724,7 @@
                                 add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
                                 upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
                                 del={id=>setDel({id,t:'m'})}
-                            /> : <PaymentManager data={pay} 
+                            /> : <PaymentManager data={pay} month={mon}
                                 add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
                                 upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
                                 del={id=>setDel({id,t:'p'})}
@@ -694,11 +744,6 @@
                         {/* Profile Modal */}
                         {modal.acc && <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm"><div className="bg-white rounded-xl w-full max-w-sm overflow-hidden shadow-2xl"><div className="p-4 border-b flex justify-between items-center"><h2 className="font-bold text-lg text-gray-800 flex items-center gap-2">Data Access <LucideIcon name="key" className="w-5 h-5 text-blue-600"/></h2><button onClick={()=>{vibrate(); setModal({...modal,acc:false})}} className="p-2 hover:bg-gray-100 rounded-full"><LucideIcon name="x" className="w-5 h-5 text-gray-500"/></button></div><div className="p-6 text-center space-y-4"><div className="bg-blue-50 border border-blue-200 rounded-xl p-6 text-center"><p className="text-blue-600 font-bold text-xs uppercase tracking-wider mb-2">CURRENT ACTIVE CODE</p><h2 className="text-3xl font-bold text-blue-900 font-mono tracking-widest break-all">{key}</h2><p className="text-blue-400 text-xs mt-2 font-urdu">(یہ کوڈ اپنے پاس محفوظ رکھیں)</p></div><div><h3 className="text-center text-gray-600 font-semibold mb-4">Switch or Load Profile</h3><div className="flex gap-3 mb-4"><input id="nk" placeholder="ENTER CODE" className="flex-1 border border-gray-300 rounded-lg text-center font-mono uppercase tracking-widest outline-none focus:ring-2 focus:ring-blue-500 text-gray-600 p-3" dir="ltr"/><button type="button" onClick={()=>{vibrate(); genKey((v)=>document.getElementById('nk').value=v)}} className="bg-emerald-100 text-emerald-600 p-3 rounded-lg hover:bg-emerald-200 transition-colors"><LucideIcon name="refresh-cw" className="w-6 h-6"/></button></div><button onClick={()=>{const k=document.getElementById('nk').value.trim().toUpperCase();if(k.length>3){vibrate(); setKey(k);setModal({...modal,acc:false});notify('Loaded')}}} className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-lg shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"><LucideIcon name="log-in" className="w-5 h-5"/> Load / Switch Profile</button></div></div></div></div>}
 
-                        <ConfirmModal open={del} close={()=>setDel(null)} confirm={()=>{
-                            if(del.t==='m') { const n=milk.filter(r=>r.id!==del.id); setMilk(n); saveDataToCloud(n); }
-                            else { const n=pay.filter(r=>r.id!==del.id); setPay(n); saveDataToCloud(undefined, n); }
-                            setDel(null); notify('Deleted');
-                        }}/>
                     </div>
                 </div>
             );
