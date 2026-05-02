@@ -161,7 +161,7 @@
             useEffect(() => { if(show) setTimeout(close, 2000); }, [show, close]);
             if (!show) return null;
             return (
-                <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-fade-in w-11/12 max-w-xs">
+                <div className="fixed top-4 left-1/2 -translate-x-1/2 z- animate-fade-in w-11/12 max-w-xs">
                     <div className="bg-emerald-600 text-white px-4 py-2.5 rounded-lg shadow-xl flex items-center gap-3 border border-emerald-500">
                         <LucideIcon name="check-circle-2" className="w-5 h-5 text-emerald-100" />
                         <span className="font-bold text-sm">{msg}</span>
@@ -173,7 +173,7 @@
         const ConfirmModal = ({ open, close, confirm }) => {
             if (!open) return null;
             return (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+                <div className="fixed inset-0 z- flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-xs p-5 text-center">
                         <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
                             <LucideIcon name="alert-triangle" className="w-5 h-5 text-red-600" />
@@ -223,35 +223,45 @@
         };
 
         const SummaryCards = ({ stats }) => {
-            const isPos = stats.net > 0;
-            const balLabel = isPos ? 'Amount Due' : 'Credit Advance';
-            const balColor = isPos ? 'bg-red-100 border-red-300' : 'bg-emerald-100 border-emerald-200';
-            const balTextColor = isPos ? 'text-red-800' : 'text-emerald-900';
-            const balIconColor = isPos ? 'text-red-600' : 'text-emerald-600';
+            const isOverallPos = stats.overallNet > 0;
+            const overallColor = isOverallPos ? 'bg-red-100 border-red-300 text-red-800' : 'bg-emerald-100 border-emerald-300 text-emerald-900';
 
             return (
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                    <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
-                        <LucideIcon name="droplet" className="w-5 h-5 text-indigo-500 mb-1" />
-                        <div className="text-indigo-800 font-bold text-xs">Milk<span className="block text-[10px] font-normal font-urdu">(دودھ)</span></div>
-                        <div className="text-lg font-extrabold text-indigo-900 leading-tight">{stats.milk.toFixed(2)} <span className="text-xs">Ltr</span></div>
+                <>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-100 flex flex-col items-center text-center">
+                            <LucideIcon name="droplet" className="w-5 h-5 text-indigo-500 mb-1" />
+                            <div className="text-indigo-800 font-bold text-xs">Milk<span className="block text-[10px] font-normal font-urdu">(دودھ)</span></div>
+                            <div className="text-lg font-extrabold text-indigo-900 leading-tight">{stats.milk.toFixed(2)} <span className="text-xs">Ltr</span></div>
+                        </div>
+                        <div className="bg-lime-50 p-3 rounded-xl border border-lime-100 flex flex-col items-center text-center">
+                            <LucideIcon name="calendar" className="w-5 h-5 text-lime-600 mb-1" />
+                            <div className="text-lime-800 font-bold text-xs">Present<span className="block text-[10px] font-normal font-urdu">(حاضری)</span></div>
+                            <div className="text-lg font-extrabold text-lime-900 leading-tight">{stats.days} <span className="text-xs">Days</span></div>
+                        </div>
+                        <div className="bg-rose-50 p-3 rounded-xl border border-rose-100 flex flex-col items-center text-center">
+                            <LucideIcon name="x-circle" className="w-5 h-5 text-rose-500 mb-1" />
+                            <div className="text-rose-800 font-bold text-xs">Absent<span className="block text-[10px] font-normal font-urdu">(غیر حاضری)</span></div>
+                            <div className="text-lg font-extrabold text-rose-900 leading-tight">{stats.absent} <span className="text-xs">Days</span></div>
+                        </div>
+                        <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 flex flex-col items-center text-center">
+                            <LucideIcon name="calculator" className="w-5 h-5 text-blue-600 mb-1" />
+                            <div className="text-blue-800 font-bold text-xs">Month Bill<span className="block text-[10px] font-normal font-urdu">(اس ماہ کا بل)</span></div>
+                            <div className="text-lg font-extrabold text-blue-900 leading-tight">Rs. {Math.round(stats.monthCost).toLocaleString()}</div>
+                        </div>
                     </div>
-                    <div className="bg-lime-50 p-3 rounded-xl border border-lime-100 flex flex-col items-center text-center">
-                        <LucideIcon name="calendar" className="w-5 h-5 text-lime-600 mb-1" />
-                        <div className="text-lime-800 font-bold text-xs">Present<span className="block text-[10px] font-normal font-urdu">(حاضری)</span></div>
-                        <div className="text-lg font-extrabold text-lime-900 leading-tight">{stats.days} <span className="text-xs">Days</span></div>
+                    
+                    <div className={`${overallColor} p-3 rounded-xl border flex justify-between items-center mb-4 shadow-sm`}>
+                        <div className="flex items-center gap-2">
+                            <LucideIcon name="wallet" className="w-6 h-6 opacity-80" />
+                            <div>
+                                <div className="font-bold text-sm">{isOverallPos ? 'Total Due' : 'Advance'}</div>
+                                <div className="text-[10px] font-urdu">{isOverallPos ? 'کل بقایا رقم (تمام مہینوں کی)' : 'آپ کے جمع شدہ پیسے (ایڈوانس)'}</div>
+                            </div>
+                        </div>
+                        <div className="text-xl font-extrabold">Rs. {Math.round(Math.abs(stats.overallNet)).toLocaleString()}</div>
                     </div>
-                    <div className="bg-rose-50 p-3 rounded-xl border border-rose-100 flex flex-col items-center text-center">
-                        <LucideIcon name="x-circle" className="w-5 h-5 text-rose-500 mb-1" />
-                        <div className="text-rose-800 font-bold text-xs">Absent<span className="block text-[10px] font-normal font-urdu">(غیر حاضری)</span></div>
-                        <div className="text-lg font-extrabold text-rose-900 leading-tight">{stats.absent} <span className="text-xs">Days</span></div>
-                    </div>
-                    <div className={`${balColor} p-3 rounded-xl border flex flex-col items-center text-center`}>
-                        <LucideIcon name="banknote" className={`w-5 h-5 ${balIconColor} mb-1`} />
-                        <div className="text-gray-800 font-bold text-xs">{balLabel}<span className="block text-[10px] font-normal font-urdu">(رقم)</span></div>
-                        <div className={`text-lg font-extrabold ${balTextColor} leading-tight`}>Rs. {Math.round(Math.abs(stats.net)).toLocaleString()}</div>
-                    </div>
-                </div>
+                </>
             );
         };
 
@@ -291,8 +301,9 @@
         };
 
         const MilkManager = ({ data, add, upd, del, price, month }) => {
-            const [dt, setDt] = useState(new Date().toISOString().split('T')[0]);
+            const [dt, setDt] = useState(new Date().toISOString().split('T'));
             const [q, setQ] = useState('');
+            const [dts, setDts] = useState(''); // NEW: Details state
             const [eid, setEid] = useState(null);
             const [view, setView] = useState('list');
             const listRef = useRef(null);
@@ -311,12 +322,12 @@
                 const val = parseFloat(q) || 0;
                 if (!abs && val <= 0) return;
 
-                const pl = { date: dt, quantity: abs ? 0 : val, isAbsent: abs };
+                const pl = { date: dt, quantity: abs ? 0 : val, isAbsent: abs, details: dts };
                 
                 if(eid) { upd({...data.find(r=>r.id===eid), ...pl}); setEid(null); }
                 else add(pl);
                 
-                if(!eid) setQ('');
+                if(!eid) { setQ(''); setDts(''); }
             };
 
             // Updated Render Table to support Titles and Toggle
@@ -333,9 +344,9 @@
                     {!isHidden && (
                         <div className="overflow-x-auto max-h-64 overflow-y-auto" ref={list === cur ? listRef : null}>
                             <table className="w-full text-xs text-gray-600 text-right">
-                                <thead className="bg-gray-50 border-b sticky top-0">
+                                <thead className="bg-gray-50 border-b sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-3 py-2 text-right">Date</th>
+                                        <th className="px-3 py-2 text-right">Date / Note</th>
                                         <th className="px-3 py-2 text-right">Qty</th>
                                         <th className="px-3 py-2 text-right">Amt</th>
                                         <th className="px-3 py-2 text-center">Act</th>
@@ -347,12 +358,17 @@
                                     ) : (
                                         list.map(r => (
                                             <tr key={r.id} className={r.isAbsent ? 'bg-red-50' : 'border-b last:border-0'}>
-                                                <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
+                                                <td className="px-3 py-2" dir="ltr">
+                                                    <div className="font-bold text-gray-700">{r.date.split('-').reverse().join('/')}</div>
+                                                    {r.details && <div className="text-[10px] text-gray-500 mt-0.5 whitespace-normal break-words max-w-[120px] text-right font-urdu" dir="rtl">{r.details}</div>}
+                                                </td>
                                                 <td className="px-3 py-2" dir="ltr">{r.isAbsent ? <span className="text-red-600 font-bold" dir="rtl">ABSENT</span> : r.quantity.toFixed(2)}</td>
                                                 <td className="px-3 py-2 font-mono" dir="ltr">{Math.round(r.quantity * (r.pricePerUnit || price)).toLocaleString()}</td>
-                                                <td className="px-3 py-2 flex justify-center gap-2">
-                                                    <button onClick={() => { vibrate(); setDt(r.date); setQ(r.quantity); setEid(r.id); window.scrollTo(0, 0); }} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4" /></button>
-                                                    <button onClick={() => { vibrate(); del(r.id) }} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4" /></button>
+                                                <td className="px-3 py-2">
+                                                    <div className="flex justify-center gap-2">
+                                                        <button onClick={() => { vibrate(); setDt(r.date); setQ(r.quantity); setDts(r.details || ''); setEid(r.id); window.scrollTo(0, 0); }} className="text-blue-600"><LucideIcon name="square-pen" className="w-4 h-4" /></button>
+                                                        <button onClick={() => { vibrate(); del(r.id) }} className="text-red-600"><LucideIcon name="trash-2" className="w-4 h-4" /></button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -392,9 +408,15 @@
                                     </button>
                                 </div>
                             </div>
+
                             <div className="pt-1">
+                                <label className="block text-xs font-bold text-gray-500 mb-1 text-right">تفصیل / نوٹ (اختیاری)</label>
+                                <input type="text" value={dts} onChange={e=>setDts(e.target.value)} placeholder="کوئی خاص بات یا پچھلا حساب..." className="w-full p-2.5 border border-gray-300 rounded-lg text-right outline-none focus:ring-2 focus:ring-green-500 text-sm font-urdu"/>
+                            </div>
+
+                            <div className="pt-2">
                                 <button type="button" onClick={e=>sub(e,false)} className={`w-full py-3 rounded-lg font-bold text-white shadow-md active:scale-95 transition-transform text-sm ${eid?'bg-blue-600':'bg-green-600 hover:bg-green-700'}`}>{eid?'Update Entry':'Submit Entry'}</button>
-                                {eid && <button type="button" onClick={()=>{vibrate(); setEid(null);setQ('')}} className="w-full mt-2 py-2 text-gray-500 font-bold bg-gray-100 rounded-lg text-xs">Cancel</button>}
+                                {eid && <button type="button" onClick={()=>{vibrate(); setEid(null);setQ('');setDts('');}} className="w-full mt-2 py-2 text-gray-500 font-bold bg-gray-100 rounded-lg text-xs">Cancel</button>}
                             </div>
                         </form>
                     </div>
@@ -415,7 +437,7 @@
         };
 
         const PaymentManager = ({ data, add, upd, del }) => {
-            const [dt, setDt] = useState(new Date().toISOString().split('T')[0]);
+            const [dt, setDt] = useState(new Date().toISOString().split('T'));
             const [a, setA] = useState('');
             const [eid, setEid] = useState(null);
             
@@ -457,7 +479,7 @@
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mb-2 font-urdu">
                         <div className="p-3 bg-gray-50 border-b"><h3 className="font-bold text-sm text-right">Payment History</h3></div>
                         <div className="overflow-x-auto max-h-56 overflow-y-auto"><table className="w-full text-xs text-gray-600 text-right">
-                            <thead className="bg-gray-50 border-b sticky top-0"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Paid</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
+                            <thead className="bg-gray-50 border-b sticky top-0 z-10"><tr><th className="px-3 py-2 text-right">Date</th><th className="px-3 py-2 text-right">Paid</th><th className="px-3 py-2 text-center">Act</th></tr></thead>
                             <tbody>{data.length===0 ? <tr><td colSpan={3} className="p-4 text-center text-gray-400 italic">No payments</td></tr> : data.map(r=>(
                                 <tr key={r.id}>
                                     <td className="px-3 py-2" dir="ltr">{r.date.split('-').reverse().join('/')}</td>
@@ -489,13 +511,9 @@
             const [showAdv, setShowAdv] = useState(false);
             const [loading, setLoading] = useState(false); 
 
-            // Remove wait for auth since rules are true.
-            // Firebase Init is enough.
-
             // Real-time Sync
             useEffect(() => {
                 if (CloudService && window.db) {
-                    // 1. Clear Local State immediately on Key Change
                     setMilk([]);
                     setPay([]);
                     setSet(DEFAULT_SETTINGS);
@@ -506,9 +524,6 @@
                            if(data.milk) setMilk(data.milk);
                            if(data.payment) setPay(data.payment);
                            if(data.settings) setSet(data.settings);
-                        } else {
-                           // No Data found (New profile) -> Keep Empty/Default
-                           // (State is already cleared above)
                         }
                         setLoading(false);
                     }, (err) => {
@@ -535,13 +550,29 @@
             const notify = (m) => { vibrate(); setToast({m, s:true}); };
             
             const stats = useMemo(() => {
+                // Current selected month's records
                 const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
+
+                // Milk stats for selected month
                 const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
+
+                // Overall Net Calculation
                 const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
                 const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
-                return { milk: tM, days: presentDays, absent: absentDays, net: totalCostAllTime - totalPaidAllTime };
+                const overallNet = totalCostAllTime - totalPaidAllTime;
+
+                // Selected Month Net Calculation
+                const monthCost = curMonthRecords.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
+
+                return { 
+                    milk: tM, 
+                    days: presentDays, 
+                    absent: absentDays, 
+                    monthCost: monthCost,
+                    overallNet: overallNet
+                };
             }, [milk, pay, set.pricePerUnit, mon]);
 
             const months = useMemo(() => Array.from({length:12}, (_,i)=>{
@@ -573,7 +604,7 @@
             };
 
             const restoreData = (e) => {
-                const file = e.target.files[0]; if(!file) return;
+                const file = e.target.files; if(!file) return;
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     try {
