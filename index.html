@@ -7,17 +7,15 @@
     <meta name="theme-color" content="#1e40af">
     <meta name="google" content="notranslate">
     
-    <!-- PWA Links (Icon & Manifest) -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
     <link rel="icon" type="image/png" href="icon.png">
 
     <!-- 1. LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Icons Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js"></script>
     <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
 
     <!-- 2. STYLES -->
@@ -50,21 +48,12 @@
 <body>
     <div id="root"></div>
 
-    <!-- 3. APPLICATION LOGIC (FIREBASE COMPATIBLE IMPORTMAP FOR GITHUB PAGES) -->
-    <script type="importmap">
-      {
-        "imports": {
-          "firebase/app": "https://cdnjs.cloudflare.com/ajax/libs/firebase/10.8.0/firebase-app.js",
-          "firebase/firestore": "https://cdnjs.cloudflare.com/ajax/libs/firebase/10.8.0/firebase-firestore.js",
-          "firebase/auth": "https://cdnjs.cloudflare.com/ajax/libs/firebase/10.8.0/firebase-auth.js"
-        }
-      }
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-    <script type="module">
-        import { initializeApp } from "firebase/app";
-        import { getFirestore, doc, setDoc, onSnapshot, collection, enableIndexedDbPersistence } from "firebase/firestore";
-        import { getAuth, signInAnonymously } from "firebase/auth";
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
 
         // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
@@ -77,53 +66,56 @@
             measurementId: "G-7E16VDKPCG"
         };
 
-        // Initialize Firebase
-        try {
-            const app = initializeApp(firebaseConfig);
-            window.db = getFirestore(app);
-            window.auth = getAuth(app);
-            
-            // Expose functions globally
-            window.doc = doc;
-            window.setDoc = setDoc;
-            window.onSnapshot = onSnapshot;
-            
-            // Enable Persistence (Offline Mode)
-            enableIndexedDbPersistence(window.db).catch((err) => {
-                console.log("Offline persistence note:", err.code);
-            });
-
-            // Silent Login (For tracking, non-blocking)
-            signInAnonymously(window.auth).catch(e => console.log("Auth note:", e));
-            
-            console.log("Firebase Ready");
-        } catch (e) {
-            console.error("Firebase Init Error", e);
+        // Initialize Firebase Failsafe Mode
+        if (window.firebase && !firebase.apps.length) {
+            try {
+                firebase.initializeApp(firebaseConfig);
+                firebase.firestore().enablePersistence().catch((err) => {
+                    console.log("Offline persistence note:", err.code);
+                });
+                firebase.auth().signInAnonymously().catch(e => console.log("Auth note:", e));
+            } catch(e) { console.error("Firebase init err:", e); }
         }
-    </script>
 
-    <script type="text/babel">
-        const { useState, useEffect, useMemo, useRef } = React;
+        // Bridge to avoid crashes if FB fails
+        window.db = window.firebase ? firebase.firestore() : null;
+        window.doc = function(d, c, id) { return d.collection(c).doc(id); };
+        window.setDoc = function(r, data, opts) { return r.set(data, opts); };
+        window.onSnapshot = function(r, cb, err) { 
+            return r.onSnapshot(function(s){ cb({ exists: ()=>s.exists, data: ()=>s.data() }); }, err); 
+        };
 
-        const vibrate = () => { if (navigator.vibrate) navigator.vibrate(15); };
+        const vibrate = () => { try { if (navigator.vibrate) navigator.vibrate(15); } catch(e){} };
 
+        // --- SMART ICONS AUTO-LOADER (Fixed for HTML Viewer) ---
         const LucideIcon = ({ name, className, onClick }) => {
             const ref = useRef(null);
             useEffect(() => {
-                if (window.lucide && ref.current) {
-                    const i = document.createElement('i');
-                    i.setAttribute('data-lucide', name);
-                    if (className) i.className = className;
-                    ref.current.innerHTML = '';
-                    ref.current.appendChild(i);
-                    window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' });
+                let interval;
+                const drawIcon = () => {
+                    if (window.lucide && ref.current) {
+                        const i = document.createElement('i');
+                        i.setAttribute('data-lucide', name);
+                        if (className) i.className = className;
+                        ref.current.innerHTML = '';
+                        ref.current.appendChild(i);
+                        window.lucide.createIcons({ root: ref.current, nameAttr: 'data-lucide' });
+                        return true;
+                    }
+                    return false;
+                };
+                
+                // If library isn't loaded yet, keep trying every 100ms until it appears
+                if (!drawIcon()) {
+                    interval = setInterval(() => { if (drawIcon()) clearInterval(interval); }, 100);
                 }
+                
+                return () => { if (interval) clearInterval(interval); };
             }, [name, className]);
             return <span ref={ref} onClick={onClick} className="inline-flex justify-center items-center"></span>;
         };
 
         // --- HELPER FUNCTIONS ---
-        // Get strict local date format YYYY-MM-DD
         const getLocalDate = () => {
             const d = new Date();
             return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -134,38 +126,29 @@
         const DEFAULT_SETTINGS = { pricePerUnit: 120, milkmanName: '', milkmanContact: '' };
 
         const Storage = {
-            getKey: () => localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE',
-            setKey: (k) => localStorage.setItem(KEYS.GROUP_KEY, k),
+            getKey: () => { try { return localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE'; } catch(e){ return 'GUEST_MODE'; } },
+            setKey: (k) => { try { localStorage.setItem(KEYS.GROUP_KEY, k); } catch(e){} },
             getMilk: (k) => { try { return JSON.parse(localStorage.getItem(KEYS.MILK + k) || '[]'); } catch(e){ return []; } },
-            saveMilk: (k, d) => localStorage.setItem(KEYS.MILK + k, JSON.stringify(d)),
+            saveMilk: (k, d) => { try { localStorage.setItem(KEYS.MILK + k, JSON.stringify(d)); } catch(e){} },
             getPay: (k) => { try { return JSON.parse(localStorage.getItem(KEYS.PAYMENT + k) || '[]'); } catch(e){ return []; } },
-            savePay: (k, d) => localStorage.setItem(KEYS.PAYMENT + k, JSON.stringify(d)),
+            savePay: (k, d) => { try { localStorage.setItem(KEYS.PAYMENT + k, JSON.stringify(d)); } catch(e){} },
             getSet: (k) => { try { return {...DEFAULT_SETTINGS, ...JSON.parse(localStorage.getItem(KEYS.SETTINGS + k) || '{}')}; } catch(e){ return DEFAULT_SETTINGS; } },
-            saveSet: (k, d) => localStorage.setItem(KEYS.SETTINGS + k, JSON.stringify(d))
+            saveSet: (k, d) => { try { localStorage.setItem(KEYS.SETTINGS + k, JSON.stringify(d)); } catch(e){} }
         };
 
         // --- CLOUD STORAGE SERVICE ---
         const CloudService = {
-            // Listen to Real-time updates
             subscribe: (profileCode, callback, onError) => {
                 if (!window.db || !profileCode) return () => {};
-                
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
-                
                 return window.onSnapshot(docRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        callback(docSnap.data());
-                    } else {
-                        // Profile doesn't exist on cloud yet
-                        callback(null); 
-                    }
+                    if (docSnap.exists()) { callback(docSnap.data()); } 
+                    else { callback(null); }
                 }, (error) => {
                     console.error("Sync Error:", error);
                     if(onError) onError(error);
                 });
             },
-
-            // Save Data
             save: async (profileCode, data) => {
                 if (!window.db || !profileCode) return;
                 const docRef = window.doc(window.db, 'milk_tracker_users', profileCode);
@@ -550,10 +533,11 @@
         };
 
         const App = () => {
-            const [key, setKey] = useState(localStorage.getItem(KEYS.GROUP_KEY) || 'GUEST_MODE');
-            const [milk, setMilk] = useState([]);
-            const [pay, setPay] = useState([]);
-            const [set, setSet] = useState(DEFAULT_SETTINGS);
+            const [key, setKey] = useState(Storage.getKey());
+            const [milk, setMilk] = useState(Storage.getMilk(key));
+            const [pay, setPay] = useState(Storage.getPay(key));
+            const [set, setSet] = useState(Storage.getSet(key));
+            
             const [tab, setTab] = useState('milk');
             const [menuOpen, setMenuOpen] = useState(false);
             const [toast, setToast] = useState({m:'', s:false});
@@ -572,9 +556,6 @@
             // Real-time Sync
             useEffect(() => {
                 if (CloudService && window.db) {
-                    setMilk([]);
-                    setPay([]);
-                    setSet(DEFAULT_SETTINGS);
                     setLoading(true);
                     
                     const unsubscribe = CloudService.subscribe(key, (data) => {
@@ -593,10 +574,10 @@
             }, [key]);
 
             // Local Storage as Backup
-            useEffect(() => localStorage.setItem(KEYS.GROUP_KEY, key), [key]);
+            useEffect(() => { Storage.setKey(key); }, [key]);
 
             const saveDataToCloud = (newMilk, newPay, newSet) => {
-                if(CloudService) {
+                if(window.db) {
                     CloudService.save(key, {
                         milk: newMilk !== undefined ? newMilk : milk,
                         payment: newPay !== undefined ? newPay : pay,
@@ -609,20 +590,20 @@
             
             const stats = useMemo(() => {
                 // Current selected month's records
-                const curMonthRecords = milk.filter(r => r.date.startsWith(mon));
+                const curMonthRecords = milk.filter(r => r.date && r.date.startsWith(mon));
 
                 // Milk stats for selected month
-                const tM = curMonthRecords.reduce((a, r) => a + r.quantity, 0);
+                const tM = curMonthRecords.reduce((a, r) => a + (r.quantity || 0), 0);
                 const presentDays = new Set(curMonthRecords.filter(r => !r.isAbsent).map(r => r.date)).size;
                 const absentDays = curMonthRecords.filter(r => r.isAbsent).length;
 
                 // Overall Net Calculation
-                const totalCostAllTime = milk.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
-                const totalPaidAllTime = pay.reduce((a, r) => a + r.amount, 0);
+                const totalCostAllTime = milk.reduce((a, r) => a + ((r.quantity || 0) * (r.pricePerUnit || set.pricePerUnit || 120)), 0);
+                const totalPaidAllTime = pay.reduce((a, r) => a + (r.amount || 0), 0);
                 const overallNet = totalCostAllTime - totalPaidAllTime;
 
                 // Selected Month Net Calculation
-                const monthCost = curMonthRecords.reduce((a, r) => a + (r.quantity * (r.pricePerUnit || set.pricePerUnit)), 0);
+                const monthCost = curMonthRecords.reduce((a, r) => a + ((r.quantity || 0) * (r.pricePerUnit || set.pricePerUnit || 120)), 0);
 
                 return { 
                     milk: tM, 
@@ -731,12 +712,12 @@
                              </div>
                         : 
                             (tab==='milk' ? <MilkManager data={milk} price={set.pricePerUnit} month={mon} 
-                                add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Added'); }}
-                                upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
+                                add={r=>{ const n=[{...r,pricePerUnit:set.pricePerUnit,id:Date.now().toString()},...milk].sort((a,b)=>(b.date||'').localeCompare(a.date||'')); setMilk(n); saveDataToCloud(n); notify('Added'); }}
+                                upd={u=>{ const n=milk.map(r=>r.id===u.id?u:r).sort((a,b)=>(b.date||'').localeCompare(a.date||'')); setMilk(n); saveDataToCloud(n); notify('Updated'); }}
                                 del={id=>setDel({id,t:'m'})}
                             /> : <PaymentManager data={pay} month={mon}
-                                add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
-                                upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>b.date.localeCompare(a.date)); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
+                                add={r=>{ const n=[{...r,id:Date.now().toString()},...pay].sort((a,b)=>(b.date||'').localeCompare(a.date||'')); setPay(n); saveDataToCloud(undefined, n); notify('Paid'); }}
+                                upd={u=>{ const n=pay.map(r=>r.id===u.id?u:r).sort((a,b)=>(b.date||'').localeCompare(a.date||'')); setPay(n); saveDataToCloud(undefined, n); notify('Updated'); }}
                                 del={id=>setDel({id,t:'p'})}
                             />)
                         }
